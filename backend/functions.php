@@ -1187,5 +1187,5 @@
 ?>
 <?php
     //Set new script time limit
-    set_time_limit(get_system_setting("timelimit"));
+    //set_time_limit(get_system_setting("timelimit"));
 ?>

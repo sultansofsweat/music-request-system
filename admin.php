@@ -226,7 +226,7 @@
 	$overflow=get_system_setting("limit");
 	$api=get_system_setting("interface");
 	$apiuid=get_system_setting("sysid");
-	$apipages=array(0,1,2,3); //$apipages=explode("|",get_system_setting("apipages"));
+	$apipages=explode(",",get_system_setting("apipages"));
 	$upgrade=get_system_setting("stable");
 	$datetime=get_system_setting("datetime");
 	$timelimit=30; //$timelimit=get_system_setting("timelimit");
@@ -277,7 +277,7 @@
 				$overflow=get_system_default("limit");
 				$api=get_system_default("interface");
 				$apiuid=get_system_default("sysid");
-				$apipages=array(0,1,2,3); //$apipages=explode("|",get_system_default("apipages"));
+				$apipages=explode(",",get_system_default("apipages"));
 				$upgrade=get_system_default("stable");
 				$datetime=get_system_default("datetime");
 				$timelimit=30; //$timelimit=get_system_default("timelimit");
@@ -1170,7 +1170,7 @@
 				$overflow=get_system_default("limit");
 				$api=get_system_default("interface");
 				$apiuid=get_system_default("sysid");
-				$apipages=array(0,1,2,3); //$apipages=explode("|",get_system_default("apipages"));
+				$apipages=explode(",",get_system_default("apipages"));
 				$upgrade=get_system_default("stable");
 				$datetime=get_system_default("datetime");
 				$timelimit=30; //$timelimit=get_system_default("timelimit");
@@ -1933,9 +1933,9 @@
   Confirm new API Password: <input type="password" name="capipass"><br>
   Pages:<br>
   <input type="checkbox" name="apipages[]" value="0" <?php if(in_array(0,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Version information<br>
-  <input type="checkbox" name="apipages[]" value="1" <?php if(in_array(1,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Request view<br>
-  <input type="checkbox" name="apipages[]" value="2" <?php if(in_array(2,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Request actions (queue, decline, mark as played)<br>
-  <input type="checkbox" name="apipages[]" value="3" <?php if(in_array(3,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Open/close system<br>
+  <input type="checkbox" name="apipages[]" value="1" <?php if(in_array(1,$apipages)) { echo("checked=\"checked\""); } ?>>Request view<br>
+  <input type="checkbox" name="apipages[]" value="2" <?php if(in_array(2,$apipages)) { echo("checked=\"checked\""); } ?>>Request actions (queue, decline, mark as played)<br>
+  <input type="checkbox" name="apipages[]" value="3" <?php if(in_array(3,$apipages)) { echo("checked=\"checked\""); } ?>>Open/close system<br>
   <input type="checkbox" name="apipages[]" value="4" <?php if(in_array(4,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Archive/delete requests<br>
   <input type="checkbox" name="apipages[]" value="5" <?php if(in_array(5,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Remote administration console<br>
   <input type="checkbox" name="apipages[]" value="6" <?php if(in_array(6,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Remote API configuration<br>
