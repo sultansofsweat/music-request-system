@@ -1187,5 +1187,8 @@
 ?>
 <?php
     //Set new script time limit
-    //set_time_limit(get_system_setting("timelimit"));
+	if(function_exists("set_time_limit"))
+	{
+		set_time_limit(get_system_setting("timelimit"));
+	}
 ?>
