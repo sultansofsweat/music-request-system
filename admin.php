@@ -291,10 +291,6 @@
 				//Set all current settings as the defaults
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set current settings as default");
 				trigger_error("This feature is not yet implemented.");
-				if(!isset($_POST['debug']) || $_POST['debug'] != "y")
-				{
-					die("<script type=\"text/javascript\">window.location = \"index.php?admsave=no\"</script>");
-				}
 			}
 			else
 			{
@@ -1181,10 +1177,6 @@
 			{
 				//Set all current settings as the defaults
 				trigger_error("This feature is not yet implemented.");
-				if(!isset($_POST['debug']) || $_POST['debug'] != "y")
-				{
-					die("<script type=\"text/javascript\">window.location = \"index.php?admsave=no\"</script>");
-				}
 			}
 			else
 			{
