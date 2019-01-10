@@ -129,7 +129,7 @@
   <?php
 	foreach($bans as $ban)
 	{
-		echo("<b>$ban</b> <a href=\"vun.php?unban=$ban\">Unban this username</a><br>\r\n");
+		echo("<b>" . $ban[0] . "</b> for reason \"" . $ban[1] . "\" <a href=\"vun.php?unban=" . $ban[0] . "\">Unban this IP address</a><br>\r\n");
 	}
   ?>
   </p>

@@ -222,6 +222,15 @@
 		}
 		return "";
 	}
+	//Function for checking if a system setting is contained within a file
+	function does_setting_exist($setting)
+	{
+		if(file_exists("backend/$setting.txt"))
+		{
+			return true;
+		}
+		return false;
+	}
 	//Define an HTTP response code changing function if it does not exist
 	if (!function_exists('http_response_code'))
 	{
@@ -478,7 +487,16 @@
 					"extlists" => "",
 					"rss" => "no",
 					"christmas" => "yes",
-					"hidenr" => 0);
+					"hidenr" => 0,
+					"autoban" => "no",
+					"banwords" => "",
+					"partial" => "no",
+					"beforeban" => 3,
+					"apipages" => "0,1,2,3");
+		if($setting == "RETURN_ALL")
+		{
+			return array_keys($defaults);
+		}
 		return $defaults[$setting];
 	}
 	function get_songs_formatted()
@@ -555,7 +573,7 @@
 		$fh=fopen("ban/uname.txt",'a');
 		if($fh)
 		{
-			fwrite($fh,$username . "\r\n");
+			fwrite($fh,$username . "|" . $reason . "\r\n");
 			fclose($fh);
 			return true;
 		}
@@ -569,7 +587,7 @@
 		$fh=fopen("ban/ip.txt",'a');
 		if($fh)
 		{
-			fwrite($fh,$ip . "\r\n");
+			fwrite($fh,$ip . "|" . $reason . "\r\n");
 			fclose($fh);
 			return true;
 		}
@@ -581,85 +599,122 @@
 	function unban_user($username)
 	{
 		$bans=get_all_user_bans();
-		$remove=array(strtolower($username));
-		if(in_array($remove[0],$bans))
+		$remove=strtolower($username);
+		$found=false;
+		for($i=0;$i<count($bans);$i++)
 		{
-			$bans=array_diff($bans,$remove);
-			$bans=implode("\r\n",$bans);
-			$fh=fopen("ban/uname.txt",'w');
-			if($fh)
+			if($bans[$i][0] == $remove)
 			{
-				fwrite($fh,$bans);
-				fclose($fh);
-				return 0;
-			}
-			else
-			{
-				return 1;
+				$bans[$i]="";
+				$found=true;
 			}
 		}
-		else
+		$bans=array_filter($bans);
+		for($i=0;$i<count($bans);$i++)
+		{
+			$bans[$i]=implode("|",$bans[$i]);
+		}
+		$bans=implode("\r\n",$bans);
+		if($found === false)
 		{
 			return 2;
 		}
+		$fh=fopen("ban/uname.txt",'w');
+		if($fh)
+		{
+			fwrite($fh,$bans);
+			fclose($fh);
+			return 0;
+		}
+		return 1;
 	}
 	function unban_ip($ip)
 	{
 		$bans=get_all_ip_bans();
-		$remove=array($ip);
-		if(in_array($remove[0],$bans))
+		$remove=$ip;
+		$found=false;
+		for($i=0;$i<count($bans);$i++)
 		{
-			$bans=array_diff($bans,$remove);
-			$bans=implode("\r\n",$bans);
-			$fh=fopen("ban/ip.txt",'w');
-			if($fh)
+			if($bans[$i][0] == $remove)
 			{
-				fwrite($fh,$bans);
-				fclose($fh);
-				return 0;
-			}
-			else
-			{
-				return 1;
+				$bans[$i]="";
+				$found=true;
 			}
 		}
-		else
+		$bans=array_filter($bans);
+		for($i=0;$i<count($bans);$i++)
+		{
+			$bans[$i]=implode("|",$bans[$i]);
+		}
+		$bans=implode("\r\n",$bans);
+		if($found === false)
 		{
 			return 2;
 		}
+		$fh=fopen("ban/ip.txt",'w');
+		if($fh)
+		{
+			fwrite($fh,$bans);
+			fclose($fh);
+			return 0;
+		}
+		return 1;
 	}
 	
 	function is_user_banned($username)
 	{
-		$result=array(false,"");
 		$bans=get_all_user_bans();
-		if(in_array(strtolower($username),$bans))
+		foreach($bans as $ban)
+		{
+			if($ban[0] == $username)
+			{
+				return true;
+			}
+		}
+		return false;
+		/*if(in_array(strtolower($username),$bans))
 		{
 			$result[0]=true;
 		}
-		return $result;
+		return $result;*/
 	}
 	function is_ip_banned($ip)
 	{
-		$result=array(false,"");
 		$bans=get_all_ip_bans();
-		if(in_array($ip,$bans))
+		foreach($bans as $ban)
+		{
+			if($ban[0] == $ip)
+			{
+				return true;
+			}
+		}
+		return false;
+		/*if(in_array($ip,$bans))
 		{
 			$result[0]=true;
 		}
-		return $result;
+		return $result;*/
 	}
 	
 	function get_all_user_bans()
 	{
 		if(file_exists("ban/uname.txt"))
 		{
-			$contents=explode("\r\n",file_get_contents("ban/uname.txt"));
-			return array_filter(array_map("strtolower",$contents));
+			$contents=array_filter(explode("\r\n",file_get_contents("ban/uname.txt")));
+			for($i=0;$i<count($contents);$i++)
+			{
+				$contents[$i]=explode("|",$contents[$i]);
+				if(!isset($contents[$i][1]))
+				{
+					$contents[$i][1]="";
+				}
+				$contents[$i][0]=strtolower($contents[$i][0]);
+			}
+			return $contents;
 		}
 		else
 		{
-			trigger_error("Username ban list doesn't exist",E_USER_WARNING);
+			trigger_error("Username ban list doesn't exist, assuming empty",E_USER_NOTICE);
 			return array();
 		}
 	}
@@ -667,12 +722,20 @@
 	{
 		if(file_exists("ban/ip.txt"))
 		{
-			$contents=explode("\r\n",file_get_contents("ban/ip.txt"));
-			return array_filter($contents);
+			$contents=array_filter(explode("\r\n",file_get_contents("ban/ip.txt")));
+			for($i=0;$i<count($contents);$i++)
+			{
+				$contents[$i]=explode("|",$contents[$i]);
+				if(!isset($contents[$i][1]))
+				{
+					$contents[$i][1]="";
+				}
+			}
+			return $contents;
 		}
 		else
 		{
-			trigger_error("IP address ban list doesn't exist",E_USER_WARNING);
+			trigger_error("IP address ban list doesn't exist, assuming empty",E_USER_NOTICE);
 			return array();
 		}
 	}
@@ -1184,6 +1247,68 @@
 			return false;
 		}
     }
+	
+	function autoban($username)
+	{
+		//If auto banning disabled, pass the username no matter what
+		if(get_system_setting("autoban") == "no")
+		{
+			return true;
+		}
+		//Get banned word list
+		$banwords=explode(",",get_system_setting("banwords"));
+		//Get partial flag
+		$partial=get_system_setting("partial");
+		//Format username
+		$formatteduname=strtolower($username);
+		//Loop through each word
+		foreach($banwords as $word)
+		{
+			if($partial == "yes" && strpos($formatteduname,$word) !== false)
+			{
+				//Username contains banned word, block it
+				return false;
+			}
+			elseif($formatteduname == $word)
+			{
+				//Username contains banned word, block it
+				return false;
+			}
+		}
+		//Username passes test
+		return true;
+	}
+	
+	//Function for creating all system setting files (if they are missing)
+	function verify_system_config()
+	{
+		$settings=get_system_default("RETURN_ALL");
+		foreach($settings as $setting)
+		{
+			if(does_setting_exist($setting) === false)
+			{
+				$debug=save_system_setting($setting,get_system_default($setting));
+				if($debug === true)
+				{
+					trigger_error("Setting $setting was missing and was set to default. Report this to the administrator.",E_USER_NOTICE);
+				}
+				else
+				{
+					trigger_error("Setting $setting is missing in the system and it could not be created. Something probably got microwaved. Expect problems.",E_USER_WARNING);
+				}
+			}
+		}
+		if(!file_exists("ban/ip.txt") || file_get_contents("ban/ip.txt") == " ")
+		{
+			$fh=fopen("ban/ip.txt",'w');
+			fclose($fh);
+		}
+		if(!file_exists("ban/uname.txt") || file_get_contents("ban/uname.txt") == " ")
+		{
+			$fh=fopen("ban/uname.txt",'w');
+			fclose($fh);
+		}
+	}
 ?>
 <?php
     //Set new script time limit

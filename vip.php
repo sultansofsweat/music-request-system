@@ -90,6 +90,7 @@
 			$ip=filter_var($_GET['unban'],FILTER_SANITIZE_STRING);
 			if(filter_var($ip,FILTER_VALIDATE_IP))
 			{
+				echo "LOSER";
 				$debug=unban_ip($ip);
 				if($debug == 0)
 				{
@@ -137,7 +138,7 @@
   <?php
 	foreach($bans as $ban)
 	{
-		echo("<b>$ban</b> <a href=\"vip.php?unban=$ban\">Unban this IP address</a><br>\r\n");
+		echo("<b>" . $ban[0] . "</b> for reason \"" . $ban[1] . "\" <a href=\"vip.php?unban=" . $ban[0] . "\">Unban this IP address</a><br>\r\n");
 	}
   ?>
   </p>

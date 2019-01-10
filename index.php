@@ -118,9 +118,9 @@
 		}
 		else
 		{
-			$ban=array(false);
+			$ban=false;
 		}
-		if($ban[0] === true)
+		if($ban === true)
 		{
 			$level=1;
 		}
@@ -131,9 +131,9 @@
 		}
 		else
 		{
-			$ban=array(false);
+			$ban=false;
 		}
-		if($ban[0] === true)
+		if($ban === true)
 		{
 			$level=1;
 		}
@@ -659,6 +659,9 @@
 		$logging=is_logging_enabled();
 		$message=system_message();
 		$viewcomments=view_comments_as_peasant();
+		
+		//Verify config
+		verify_system_config();
 	?>
 	<h1 style="text-align:center; text-decoration:underline;"><?php echo system_name(); ?>Music Request System</h1>
 	<!-- Display header -->

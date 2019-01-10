@@ -232,6 +232,10 @@
 	$timelimit=30; //$timelimit=get_system_setting("timelimit");
 	$popular=get_system_setting("popular");
     $rss=get_system_setting("rss");
+	$autoban=get_system_setting("autoban");
+	$banwords=get_system_setting("banwords");
+	$partial=get_system_setting("partial");
+	$beforeban=get_system_setting("beforeban");
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
@@ -283,6 +287,10 @@
 				$timelimit=30; //$timelimit=get_system_default("timelimit");
                 $popular=get_system_default("popular");
                 $rss=get_system_default("rss");
+				$autoban=get_system_default("autoban");
+				$banwords=get_system_default("banwords");
+				$partial=get_system_default("partial");
+				$beforeban=get_system_default("beforeban");
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set settings to default");
 				trigger_error("Set all settings to their default values.");
 			}
@@ -1097,6 +1105,76 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"rss\" to \"$rss\"");
 					}
 				}
+				if(isset($_POST['autoban']))
+				{
+					if($_POST['autoban'] == "yes")
+					{
+						$autoban="yes";
+					}
+					else
+					{
+						$autoban="no";
+					}
+					$debug=save_system_setting("autoban",$autoban);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"autoban\" to \"$autoban\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"autoban\" to \"$autoban\"");
+					}
+				}
+				if(isset($_POST['banwords']))
+				{
+					$banwords=preg_replace("/\s+/","", filter_var($_POST['banwords'],FILTER_SANITIZE_STRING));
+					$debug=save_system_setting("banwords",$banwords);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"banwords\" to \"$banwords\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"banwords\" to \"$banwords\"");
+					}
+				}
+				if(isset($_POST['partial']) && $_POST['partial'] == "yes")
+				{
+					$partial="yes";
+				}
+				else
+				{
+					$partial="no";
+				}
+				if($partial != get_system_setting("partial"))
+				{
+					$debug=save_system_setting("partial",$partial);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"partial\" to \"$partial\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"partial\" to \"$partial\"");
+					}
+				}
+				if(isset($_POST['beforeban']))
+				{
+					$beforeban=preg_replace("/[^0-9]/","",$_POST['beforeban']);
+					$debug=save_system_setting("beforeban",$beforeban);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"beforeban\" to \"$beforeban\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"beforeban\" to \"$beforeban\"");
+					}
+				}
 				if($error === true)
 				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change all system settings");
@@ -1171,6 +1249,10 @@
 				$datetime=get_system_default("datetime");
 				$timelimit=30; //$timelimit=get_system_default("timelimit");
                 $popular=get_system_default("popular");
+				$autoban=get_system_default("autoban");
+				$banwords=get_system_default("banwords");
+				$partial=get_system_default("partial");
+				$beforeban=get_system_default("beforeban");
 				trigger_error("Set all settings to their default values.");
 			}
 			elseif(isset($_POST['setdef']) && $_POST['setdef'] == "y")
@@ -1773,6 +1855,56 @@
 						$error=true;
 					}
 				}
+				if(isset($_POST['autoban']))
+				{
+					if($_POST['autoban'] == "yes")
+					{
+						$autoban="yes";
+					}
+					else
+					{
+						$autoban="no";
+					}
+					$debug=save_system_setting("autoban",$autoban);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['banwords']))
+				{
+					$banwords=preg_replace("/\s+/","", filter_var($_POST['banwords'],FILTER_SANITIZE_STRING));
+					$debug=save_system_setting("banwords",$banwords);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['partial']) && $_POST['partial'] == "yes")
+				{
+					$partial="yes";
+				}
+				else
+				{
+					$partial="no";
+				}
+				if($partial != get_system_setting("partial"))
+				{
+					$debug=save_system_setting("partial",$partial);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['beforeban']))
+				{
+					$beforeban=preg_replace("/[^0-9]/","",$_POST['beforeban']);
+					$debug=save_system_setting("beforeban",$beforeban);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
 				if($error === true)
 				{
 					$return="no";
@@ -1866,7 +1998,7 @@
   Enable requestee-submitted comments: <input type="radio" name="comments" value="yes" <?php if ($comments == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="comments" value="no"  <?php if ($comments == "no") { echo ("checked=\"checked\""); } ?>>No<br>
   Anonymous requesting: <input type="radio" name="anon" value="yes" <?php if ($anon == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="anon" value="no"  <?php if ($anon == "no") { echo ("checked=\"checked\""); } ?>>No<br>
   Allow off-list requests: <input type="radio" name="open" value="yes"  <?php if ($open == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="open" value="no"  <?php if ($open == "no") { echo ("checked=\"checked\""); } ?>>No<br>
-  Allow multiple active requests for users: <input type="radio" name="pdreq" value="yes"  <?php if ($pdreq == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="pdreq" value="no"  <?php if ($pdreq == "no") { echo ("checked=\"checked\""); } ?>>No<br><br>
+  Allow multiple active requests for users: <input type="radio" name="pdreq" value="no"  <?php if ($pdreq == "no") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="pdreq" value="yes"  <?php if ($pdreq == "yes") { echo ("checked=\"checked\""); } ?>>No<br><br>
   Allow:&nbsp;
   <select name="unlock">
   <option value="">-Select one-</option>
@@ -1916,6 +2048,21 @@
   <a href="ruledit.php">Edit system rules</a><br>
   <a href="archive.php">Archive requests</a><br>
   <a href="delall.php">Delete all requests</a><br>
+  <hr>
+  <a name="autoban"></a><h3>Automatic Banning/Username Filtering</h3>
+  Allow the MRS to automatically ban IPs based on the rules below: <input type="radio" name="autoban" value="yes" <?php if(isset($autoban) && $autoban == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="autoban" value="no" <?php if(isset($autoban) && $autoban == "no") { echo "checked=\"checked\""; } ?>>No<br>
+  List of words to disallow in usernames:<br>
+  <textarea name="banwords" rows="10" cols="50"><?php if(isset($banwords)) { echo $banwords; } ?></textarea><br>
+  <input type="checkbox" name="partial" value="yes" <?php if(isset($partial) && $partial == "yes") { echo "checked=\"checked\""; } ?>> Do partial word matching (note that this is POTENTIALLY DANGEROUS)<br>
+  Allow:&nbsp;
+  <select name="beforeban">
+  <option value="">-Select one-</option>
+  <option value="0" <?php if ($beforeban == "0") { echo ("selected=\"selected\""); } ?>>0</option>
+  <option value="1" <?php if ($beforeban == "1") { echo ("selected=\"selected\""); } ?>>1</option>
+  <option value="2" <?php if ($beforeban == "2") { echo ("selected=\"selected\""); } ?>>2</option>
+  <option value="3" <?php if ($beforeban == "3") { echo ("selected=\"selected\""); } ?>>3</option>
+  <option value="5" <?php if ($beforeban == "5") { echo ("selected=\"selected\""); } ?>>5</option>
+  </select> attempted posts before automatically banning<br>
   <hr>
   <a name="api"></a><h3>API</h3>
   System API: <input type="radio" name="api" value="yes" <?php if($api == "yes") {echo("checked=\"checked\""); } ?>>Enabled | <input type="radio" name="api" value="no" <?php if($api == "no") {echo("checked=\"checked\""); } ?>>Disabled<br>
