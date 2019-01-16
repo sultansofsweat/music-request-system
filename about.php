@@ -127,6 +127,7 @@
   </head>
   <body>
   <h1 style="text-align:center; text-decoration:underline;">About the <?php echo $sysname; ?>Music Request System</h1>
+  <h3 style="text-decoration:underline;">Version Information</h3>
   <?php
 	echo ("<p>Version: " . $verinfo[0][0] . "." . $verinfo[0][1]);
 	if(trim($verinfo[1]) != "")
@@ -135,9 +136,14 @@
 	}
 	echo ("<br>\r\nRevision: " . $verinfo[0][2] . "<br>\r\nReleased: " . $verinfo[2] . "</p>\r\n");
   ?>
-  <p>The Music Request System (MRS) is copyright &copy; 2015-2018 Brad Hunter/<a href="http://www.youtube.com/user/carnelprod666">CarnelProd666</a>. The MRS is licensed under the <a href="license.php" target="_blank">DBAD Public License</a>, version 1.1, except for the components listed below. Learn more about the MRS <a href="http://firealarms.redbat.ca/mrs">here</a>. Comments should be directed to the system administrator and/or <a href="http://firealarms.redbat.ca/contact.php">the software writer</a>.</p>
+  <h3 style="text-decoration:underline;">MRS Software Copyright Information</h3>
+  <p>The Music Request System (MRS) is copyright &copy; 2015-2019 Brad Hunter/<a href="http://www.youtube.com/user/carnelprod666">CarnelProd666</a>. The MRS is licensed under the <a href="license.php" target="_blank">DBAD Public License</a>, version 1.1, except for the components listed below. Learn more about the MRS <a href="http://firealarms.redbat.ca/mrs">here</a>. Comments should be directed to the system administrator and/or <a href="http://firealarms.redbat.ca/contact.php">the software writer</a>.</p>
   <p>The MRS makes use of <a href="http://jquery.com/">JQuery</a> and the <a href="http://tablesorter.com/docs/">TableSorter</a> plugin, each of which is copyright their respective owners.<br>
   For systems running on non-compliant PHP versions, the MRS makes use of <a href="https://github.com/ircmaxell/password_compat/">password_compat</a>, produced by ircmaxwell and licensed under the <a href="https://github.com/ircmaxell/password_compat/blob/master/LICENSE.md">MIT license</a>.</p>
+  <div <?php if(!isset($display) || $display !== true) { echo "style=\"display: none;"; } ?>>
+  <h3 style="text-decoration:underline;"><?php echo $sysname; ?>Copyright Information</h3>
+  <p><?php if(isset($copyinfo)) { echo nl2br(stripcslashes($copyinfo)); } ?></p>
+  </div>
   <p></p>
   <a href="index.php">Go back</a>
   </form>

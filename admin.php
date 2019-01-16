@@ -1954,9 +1954,12 @@
   Limit script execution time to: <input type="text" name="timelimit" maxlength="3" size="3" value="<?php echo $timelimit; ?>" <?php if(!function_exists("set_time_limit")) { echo("disabled=\"disabled\""); } ?>> seconds <?php if(!function_exists("set_time_limit")) { echo("(disabled for security reasons)"); } else { echo("(enter 0 for no limit, but note that doing so is potentially VERY dangerous)"); } ?><br>
   Error reporting level: <input type="radio" name="errlvl" value="0"<?php if(isset($errlvl) && $errlvl == 0) { echo " checked=\"checked\""; } ?>>Only errors | <input type="radio" name="errlvl" value="1"<?php if(isset($errlvl) && $errlvl == 1) { echo " checked=\"checked\""; } ?>>System messages only | <input type="radio" name="errlvl" value="2"<?php if(isset($errlvl) && $errlvl == 2) { echo " checked=\"checked\""; } ?>>All messages<br>
   Write all errors to a log file: <input type="radio" name="logerr" value="yes"  <?php if ($logerr == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="logerr" value="no"  <?php if ($logerr == "no") { echo ("checked=\"checked\""); } ?>>No<br>  
+  Log system login attempts: <input type="radio" name="logatt" value="yes" disabled="disabled" <?php if (isset($logatt) && $logatt == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="logatt" value="no" disabled="disabled" <?php if (isset($logatt) && $logatt == "no") { echo ("checked=\"checked\""); } ?>>No<br>  
   <a href="password.php">Change administrator password</a><br>
   <a href="security.php">Change security options</a><br>
+  <a href="copyright.php">Edit system copyright information</a><br>
   <a href="viewlog.php">View system logs</a><br>
+  <a href="viewatt.php">View login attempts</a><br>
   <a href="viewerr.php">View error logs</a><br>
   <a href="purgesess.php">Clear session storage location</a> (ONLY applicable when using alternative storage locations)<br>
   <hr>
@@ -2044,7 +2047,10 @@
   <option value="19" <?php if ($overflow == "19") { echo ("selected=\"selected\""); } ?>>19</option>
   <option value="20" <?php if ($overflow == "20") { echo ("selected=\"selected\""); } ?>>20</option>
   <option value="0" <?php if ($overflow == "0") { echo ("selected=\"selected\""); } ?>>Unlimited</option>
-  </select> active requests submitted<br>
+  </select> active requests submitted<br><br>
+  Require password to submit requests: <input type="radio" name="passreq" value="yes" disabled="disabled" <?php if(isset($passreq) && $passreq == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="passreq" value="no" disabled="disabled" <?php if(isset($passreq) && $passreq == "no") { echo "checked=\"checked\""; } ?>>No<br>
+  Password: <input type="password" name="reqpass" disabled="disabled"><br>
+  Confirm password: <input type="password" name="creqpass" disabled="disabled"><br>
   <a href="ruledit.php">Edit system rules</a><br>
   <a href="archive.php">Archive requests</a><br>
   <a href="delall.php">Delete all requests</a><br>
