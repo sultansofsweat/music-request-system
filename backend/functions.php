@@ -1309,6 +1309,67 @@
 			fclose($fh);
 		}
 	}
+	
+	//Function for dealing with the allowed codes in the system
+	function replace_code($input)
+	{
+		//SUPPORTED: [b] [i] [u] [url="blah"]
+		
+		$output=str_replace("[url","<a href",$input);
+		$output=str_replace("[/url]","</a>",$output);
+		$output=str_replace("[","<",$output);
+		$output=str_replace("]",">",$output);
+		$output=str_replace("&#34;","\"",$output);
+		
+		return $output;
+	}
+	
+	//Function for getting copyright information
+	function get_copyright_information()
+	{
+		if(file_exists("backend/copyinfo.txt"))
+		{
+			$copyinfo=replace_code(file_get_contents("backend/copyinfo.txt"));
+			return $copyinfo;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	//Function for getting raw copyright information
+	function get_raw_copyright_information()
+	{
+		if(file_exists("backend/copyinfo.txt"))
+		{
+			$copyinfo=file_get_contents("backend/copyinfo.txt");
+			return $copyinfo;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	//Function for setting copyright information
+	function set_copyright_information($info)
+	{
+		if($info != "")
+		{
+			$fh=fopen("backend/copyinfo.txt",'w');
+			if($fh)
+			{
+				fwrite($fh,stripcslashes($info));
+				fclose($fh);
+				return true;
+			}
+		}
+		return false;
+	}
+	//Function for clearing copyright information
+	function clear_copyright_information()
+	{
+		return unlink("backend/copyinfo.txt");
+	}
 ?>
 <?php
     //Set new script time limit

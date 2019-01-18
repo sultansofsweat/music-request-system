@@ -163,6 +163,17 @@
 			echo ("Failed to change automation settings. Throw a GPX clock radio at the server.<br>\r\n");
 		}
 	}
+	if(isset($_GET['copyset']))
+	{
+		if($_GET['copyset'] == "yes")
+		{
+			echo ("Successfully changed copyright information.<br>\r\n");
+		}
+		else
+		{
+			echo ("Failed to change copyright information. It's time to hit the server with a bug bomb. Or, maybe even a real bomb.<br>\r\n");
+		}
+	}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>

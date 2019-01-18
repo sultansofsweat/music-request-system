@@ -88,6 +88,19 @@
 			trigger_error("No version information found.",E_USER_WARNING);
 			$verinfo=array(array("0","0","0",false),"","January 1, 1970 at 12:00 AM Eastern Time");
 		}
+		//Get copyright information
+		$copyinfo=get_copyright_information();
+		if($copyinfo === false)
+		{
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to obtain copyright information, assuming it doesn't exist");
+			unset($copyinfo);
+			$display=false;
+		}
+		else
+		{
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Obtained copyright information");
+			$display=true;
+		}
 	}
 	else
 	{
@@ -97,6 +110,17 @@
 		{
 			trigger_error("No version information found.",E_USER_WARNING);
 			$verinfo=array(array("0","0","0",false),"","January 1, 1970 at 12:00 AM Eastern Time");
+		}
+		//Get copyright information
+		$copyinfo=get_copyright_information();
+		if($copyinfo === false)
+		{
+			unset($copyinfo);
+			$display=false;
+		}
+		else
+		{
+			$display=true;
 		}
 	}
 ?>
