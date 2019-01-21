@@ -146,6 +146,16 @@
 		//First line: Login/out, Request, Admin console (if applicable)
 		//Second line: Banning stuff for admin, Rules+About otherwise
 		//Third line: Quick view (for admins only)
+		echo("Hello, ");
+		if(isset($_SESSION['uname']) && $_SESSION['uname'] != "")
+		{
+			echo $_SESSION['uname'];
+		}
+		else
+		{
+			echo "unidentified user";
+		}
+		echo("!<br>\r\n");
 		if($admin === true)
 		{
 			echo ("<a href=\"logout.php\">Exit Admin Mode</a> | <a href=\"post.php\">Request</a> | <a href=\"admin.php\">Administration</a> | <a href=\"about.php\">About the MRS</a><br>\r\n");
@@ -603,6 +613,10 @@
 	elseif(isset($_GET['banip']) && $_GET['banip'] == "no")
 	{
 		trigger_error("Failed to ban IP address: microwaves and/or Russians got involved.",E_USER_WARNING);
+	}
+	if(isset($_GET['banzored']) && $_GET['banzored'] == "yes")
+	{
+		trigger_error("You're banned. Don't bother trying to sign in, go away instead.",E_USER_WARNING);
 	}
 ?>
 <?php
