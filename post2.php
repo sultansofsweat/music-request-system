@@ -220,6 +220,35 @@
                 die("<script type=\"text/javascript\">window.location = \"index.php?status=8\"</script>");
 			}
 			
+			//Check auto banning status
+			if(autoban($name) !== true)
+			{
+				//Get current number of blocked attempts
+				if(isset($_POST['autoban']))
+				{
+					$autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
+				}
+				else
+				{
+					$autoban=0;
+				}
+				//Log this abrogation of system laws
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Auto ban caught user $ip attempting to use username $name, blocked $autoban times previously");
+				//Increment count
+				$autoban++;
+				if($autoban >= get_system_setting("beforeban"))
+				{
+					//Ban the user by IP address
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Auto ban banned user $ip");
+					ban_ip($ip,"Automatically banned by the MRS for repeated attempts at using prohibited words in username.");
+					die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
+				}
+				else
+				{
+					die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&reqid=" . $_POST['reqid'] . "&autoban=$autoban\"</script>");
+				}
+			}
+			
 			//Get new post ID
 			$postid=increment_post_count();
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set new post ID");
@@ -293,6 +322,11 @@
 			else
 			{
 				$reqid=false;
+			}
+			
+			if(isset($_GET['autoban']))
+			{
+				trigger_error("The MRS blocked your attempted request as it contained a blocked word. This has happened " . $_GET['autoban'] . " time(s). Watch your mouth.");
 			}
 			
 			$posting=true;
@@ -446,6 +480,33 @@
                 die("<script type=\"text/javascript\">window.location = \"index.php?status=8\"</script>");
 			}
 			
+			//Check auto banning status
+			if(autoban($name) !== true)
+			{
+				//Get current number of blocked attempts
+				if(isset($_POST['autoban']))
+				{
+					$autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
+				}
+				else
+				{
+					$autoban=0;
+				}
+				//Increment count
+				$autoban++;
+				if($autoban >= get_system_setting("beforeban"))
+				{
+					//Ban the user by IP address
+					ban_ip($ip,"Automatically banned by the MRS for repeated attempts at using prohibited words in username.");
+					die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
+					
+				}
+				else
+				{
+					die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&reqid=" . $_POST['reqid'] . "&autoban=$autoban\"</script>");
+				}
+			}
+			
 			//Get new post ID
 			$postid=increment_post_count();
 			
@@ -514,6 +575,11 @@
 				$reqid=false;
 			}
 			
+			if(isset($_GET['autoban']))
+			{
+				trigger_error("The MRS blocked your attempted request as it contained a blocked word. This has happened " . $_GET['autoban'] . " time(s). Watch your mouth.");
+			}
+			
 			$posting=true;
 			if(is_user_banned($_SESSION['uname']) === true || is_ip_banned($_SERVER['REMOTE_ADDR']) === true)
 			{
@@ -550,6 +616,7 @@
   IP Address: <?php echo $_SERVER['REMOTE_ADDR']; ?> (this WILL be submitted with your request!)<br>
   <input type="hidden" name="reqid" value="<?php echo $reqid; ?>">
   <input type="hidden" name="list" value="<?php echo $list; ?>">
+  <input type="hidden" name="autoban" <?php if(isset($_GET['autoban'])) { echo "value=\"" . $_GET['autoban'] . "\""; } else { echo "disabled=\"disabled\""; } ?>>
   Request:<br>
   <?php
 	if($request !== false)

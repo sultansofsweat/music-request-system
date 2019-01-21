@@ -88,7 +88,14 @@
 				if(($uname=preg_replace("/[^A-Za-z0-9 ]/","",$_POST['name'])) != "")
 				{
 					//Valid
-					$debug=ban_user($uname);
+					if(isset($_POST['reason']))
+					{
+						$debug=ban_user($uname,filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
+					}
+					else
+					{
+						$debug=ban_user($uname);
+					}
 					if($debug === true)
 					{
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Added username \"$uname\" to banlist");
@@ -135,7 +142,14 @@
 				if(($uname=preg_replace("/[^A-Za-z0-9 ]/","",$_POST['name'])) != "")
 				{
 					//Valid
-					$debug=ban_user($uname);
+					if(isset($_POST['reason']))
+					{
+						$debug=ban_user($uname,filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
+					}
+					else
+					{
+						$debug=ban_user($uname);
+					}
 					if($debug === true)
 					{
 						echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=0\"</script>");
@@ -174,6 +188,7 @@
   <form method="post" action="bun.php">
   <input type="hidden" name="s" value="y">
   Username to ban: <input type="text" name="name" value="<?php echo $uname; ?>"><br>
+  Reason: <input type="text" name="reason"><br>
   <input type="submit" value="Ban"> or <input type="button" value="Cancel" onclick="window.location.href='index.php'">
   </form>
   </body>
