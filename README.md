@@ -7,5 +7,5 @@ Note that while the project is now on Github, the primary source of information 
 Old releases are available here: https://drive.google.com/drive/folders/0B1LpD-cgOVpMNVl0Z2VEQjhia28
 Other downloads can be found here: http://firealarms.redbat.ca/mrs/#downloading
 
-# About the master branch
-This is the master branch. All development as it happens is published here. When components are completed, they are published to the "nightly" branch. Despite being called nightly, there likely won't be nightly releases; it is called such for lack of a better term. The beta branch contains tested code ON A COMPONENT LEVEL, but code that has not been tested as a system. The stable branch contains the final tested code.
+# About the nightly branch
+This is the nightly branch, meant for untested code. For more information about the MRS and the branches, see the Readme in the master branch.
