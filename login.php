@@ -166,6 +166,10 @@
 					{
 						$ref="index";
 					}
+					if(get_system_setting("logatt") == "yes")
+					{
+						track_login($_SERVER['REMOTE_ADDR'],date("m/d/Y g:i:s A"),true);
+					}
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully entered admin mode");
 					echo("<p><b>You have been logged in successfully.</b> Click <a href=\"$ref.php\">here</a> to continue.</p>\r\n");
 					$disabled=true;
@@ -175,6 +179,10 @@
 					//Trigger incorrect password error
 					trigger_error("Invalid password entered",E_USER_WARNING);
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Entered invalid admin password");
+					if(get_system_setting("logatt") == "yes")
+					{
+						track_login($_SERVER['REMOTE_ADDR'],date("m/d/Y g:i:s A"),false);
+					}
 				}
 			}
 			else
@@ -203,6 +211,10 @@
 					{
 						$ref="index";
 					}
+					if(get_system_setting("logatt") == "yes")
+					{
+						track_login($_SERVER['REMOTE_ADDR'],date("m/d/Y g:i:s A"),true);
+					}
 					echo("<p><b>You have been logged in successfully.</b> Click <a href=\"$ref.php\">here</a> to continue.</p>\r\n");
 					$disabled=true;
 				}
@@ -210,6 +222,10 @@
 				{
 					//Trigger incorrect password error
 					trigger_error("Invalid password entered",E_USER_WARNING);
+					if(get_system_setting("logatt") == "yes")
+					{
+						track_login($_SERVER['REMOTE_ADDR'],date("m/d/Y g:i:s A"),false);
+					}
 				}
 			}
 		}

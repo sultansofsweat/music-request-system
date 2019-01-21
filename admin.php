@@ -247,6 +247,7 @@
 	$banwords=get_system_setting("banwords");
 	$partial=get_system_setting("partial");
 	$beforeban=get_system_setting("beforeban");
+	$logatt=get_system_setting("logatt");
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
@@ -302,6 +303,7 @@
 				$banwords=get_system_default("banwords");
 				$partial=get_system_default("partial");
 				$beforeban=get_system_default("beforeban");
+				$logatt=get_system_default("logatt");
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set settings to default");
 				trigger_error("Set all settings to their default values.");
 			}
@@ -1186,6 +1188,27 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"beforeban\" to \"$beforeban\"");
 					}
 				}
+				if(isset($_POST['logatt']))
+				{
+					if($_POST['logatt'] == "yes")
+					{
+						$logatt="yes";
+					}
+					else
+					{
+						$logatt="no";
+					}
+					$debug=save_system_setting("logatt",$logatt);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"logatt\" to \"$logatt\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"logatt\" to \"$logatt\"");
+					}
+				}
 				if($error === true)
 				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change all system settings");
@@ -1264,6 +1287,7 @@
 				$banwords=get_system_default("banwords");
 				$partial=get_system_default("partial");
 				$beforeban=get_system_default("beforeban");
+				$logatt=get_system_default("logatt");
 				trigger_error("Set all settings to their default values.");
 			}
 			elseif(isset($_POST['setdef']) && $_POST['setdef'] == "y")
@@ -1916,6 +1940,22 @@
 						$error=true;
 					}
 				}
+				if(isset($_POST['logatt']))
+				{
+					if($_POST['logatt'] == "yes")
+					{
+						$logatt="yes";
+					}
+					else
+					{
+						$logatt="no";
+					}
+					$debug=save_system_setting("logatt",$logatt);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
 				if($error === true)
 				{
 					$return="no";
@@ -1970,7 +2010,7 @@
   Limit script execution time to: <input type="text" name="timelimit" maxlength="3" size="3" value="<?php echo $timelimit; ?>" <?php if(!function_exists("set_time_limit")) { echo("disabled=\"disabled\""); } ?>> seconds <?php if(!function_exists("set_time_limit")) { echo("(disabled for security reasons)"); } else { echo("(enter 0 for no limit, but note that doing so is potentially VERY dangerous)"); } ?><br>
   Error reporting level: <input type="radio" name="errlvl" value="0"<?php if(isset($errlvl) && $errlvl == 0) { echo " checked=\"checked\""; } ?>>Only errors | <input type="radio" name="errlvl" value="1"<?php if(isset($errlvl) && $errlvl == 1) { echo " checked=\"checked\""; } ?>>System messages only | <input type="radio" name="errlvl" value="2"<?php if(isset($errlvl) && $errlvl == 2) { echo " checked=\"checked\""; } ?>>All messages<br>
   Write all errors to a log file: <input type="radio" name="logerr" value="yes"  <?php if ($logerr == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="logerr" value="no"  <?php if ($logerr == "no") { echo ("checked=\"checked\""); } ?>>No<br>  
-  Log system login attempts: <input type="radio" name="logatt" value="yes" disabled="disabled" <?php if (isset($logatt) && $logatt == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="logatt" value="no" disabled="disabled" <?php if (isset($logatt) && $logatt == "no") { echo ("checked=\"checked\""); } ?>>No<br>  
+  Log system login attempts: <input type="radio" name="logatt" value="yes" <?php if (isset($logatt) && $logatt == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="logatt" value="no" <?php if (isset($logatt) && $logatt == "no") { echo ("checked=\"checked\""); } ?>>No<br>  
   <a href="password.php">Change administrator password</a><br>
   <a href="security.php">Change security options</a><br>
   <a href="copyright.php">Edit system copyright information</a><br>

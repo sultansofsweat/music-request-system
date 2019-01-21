@@ -492,7 +492,8 @@
 					"banwords" => "",
 					"partial" => "no",
 					"beforeban" => 3,
-					"apipages" => "0,1,2,3");
+					"apipages" => "0,1,2,3",
+					"logatt" => "yes");
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);
@@ -666,17 +667,13 @@
 		$bans=get_all_user_bans();
 		foreach($bans as $ban)
 		{
-			if($ban[0] == $username)
+			if($ban[0] == strtolower($username))
 			{
+				unset($_SESSION['sradmin']);
 				return true;
 			}
 		}
 		return false;
-		/*if(in_array(strtolower($username),$bans))
-		{
-			$result[0]=true;
-		}
-		return $result;*/
 	}
 	function is_ip_banned($ip)
 	{
@@ -685,15 +682,11 @@
 		{
 			if($ban[0] == $ip)
 			{
+				unset($_SESSION['sradmin']);
 				return true;
 			}
 		}
 		return false;
-		/*if(in_array($ip,$bans))
-		{
-			$result[0]=true;
-		}
-		return $result;*/
 	}
 	
 	function get_all_user_bans()
@@ -1369,6 +1362,86 @@
 	function clear_copyright_information()
 	{
 		return unlink("backend/copyinfo.txt");
+	}
+	
+	//Function for tracking login requests
+	function track_login($ip,$date,$success,$number="Not tracked")
+	{
+		$result="Failure";
+		if($success === true)
+		{
+			$result="Success";
+		}
+		$fh=fopen("backend/login-log.txt",'a');
+		if($fh)
+		{
+			fwrite($fh,"$ip|$date|$result|$number|U\r\n");
+			fclose($fh);
+			return true;
+		}
+		return false;
+	}
+	//Function for getting all login attempts
+	function get_login_attempts()
+	{
+		//FORMAT: [IP,Date,Result,Number,Read]
+		$logins=array();
+		if(file_exists("backend/login-log.txt"));
+		{
+			$raw=array_filter(explode("\r\n",file_get_contents("backend/login-log.txt")));
+			for($i=0;$i<count($raw);$i++)
+			{
+				$raw[$i]=explode("|",$raw[$i]);
+			}
+			$logins=$raw;
+		}
+		return $logins;
+	}
+	//Function for getting a single login attempt
+	function get_login_attempt($id)
+	{
+		$logins=get_login_attempts();
+		if(isset($logins[$id]))
+		{
+			return $logins[$id];
+		}
+		else
+		{
+			trigger_error("Failed to get login $id; something probably got clobbered with multiple different kinds of fruit.",E_USER_WARNING);
+			return array();
+		}
+	}
+	//Function for marking login attempts as read
+	function mark_attempts_as_read()
+	{
+		$logins=get_login_attempts();
+		for($i=0;$i<count($logins);$i++)
+		{
+			$logins[$i][4]="R";
+			$logins[$i]=implode("|",$logins[$i]);
+		}
+		$fh=fopen("backend/login-log.txt",'w');
+		if($fh)
+		{
+			foreach($logins as $login)
+			{
+				fwrite($fh,"$login\r\n");
+			}
+			fclose($fh);
+			return true;
+		}
+		return false;
+	}
+	//Function for clearing login logs
+	function clear_login_log()
+	{
+		$fh=fopen("backend/login-log.txt",'w');
+		if($fh)
+		{
+			fclose($fh);
+			return true;
+		}
+		return false;
 	}
 ?>
 <?php
