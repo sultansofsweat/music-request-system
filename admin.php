@@ -2132,6 +2132,7 @@
   <option value="5" <?php if ($boxstuffer == "5") { echo ("selected=\"selected\""); } ?>>5</option>
   <option value="5" <?php if ($boxstuffer == "10") { echo ("selected=\"selected\""); } ?>>10</option>
   </select> attempts to overload the MRS.<br>
+  Automatically ban IPs that submit invalid passwords: <input type="radio" name="baninvpass" disabled="disabled" value="yes" <?php if(isset($baninvpass) && $baninvpass == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="baninvpass" disabled="disabled" value="no" <?php if(isset($baninvpass) && $baninvpass == "no") { echo "checked=\"checked\""; } ?>>No (NOTE: only has an effect if a request password is set! Also note that the number of attempts before a ban is the same as below.)<br>
   Allow the MRS to automatically ban IPs based on the rules below: <input type="radio" name="autoban" value="yes" <?php if(isset($autoban) && $autoban == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="autoban" value="no" <?php if(isset($autoban) && $autoban == "no") { echo "checked=\"checked\""; } ?>>No<br>
   List of words to disallow in usernames:<br>
   <textarea name="banwords" rows="10" cols="50"><?php if(isset($banwords)) { echo $banwords; } ?></textarea><br>

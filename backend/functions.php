@@ -143,8 +143,34 @@
 			$reqlvl=array($reqlvl);
 		}
 		$reqs=array();
+		$posts=array();
+		//Loop through supplied request levels
+		foreach($reqlvl as $lvl)
+		{
+			$ids=get_req_db($lvl);
+			foreach($ids as $id)
+			{
+				$posts[]=get_request($id);
+			}
+			/*switch($lvl)
+			{
+				case 0:
+				case 2:
+				$openids=get_open_req_db();
+				break;
+				
+				case 1:
+				case 3:
+				$closedids=get_closed_req_db();
+				foreach($closedids as $id)
+				{
+					$posts[]=get_request($id);
+				}
+				break;
+			}*/
+		}
 		//Get all posts
-		$posts=get_requests();
+		//$posts=get_requests();
 		//Loop through posts
 		foreach($posts as $post)
 		{
@@ -200,6 +226,19 @@
 		}
 		fwrite($fh,base64_encode($content));
 		fclose($fh);
+		write_req_db($status,$id);
+		/*switch($status)
+		{
+			case 0:
+			case 2:
+			add_open_req($id);
+			break;
+			
+			case 1:
+			case 3:
+			add_closed_req($id);
+			break;
+		}*/
 		return true;
 	}
 	//Function for getting a system setting
@@ -267,19 +306,18 @@
 		//Get user's IP address
 		$username=$_SERVER['REMOTE_ADDR'];
 		
-		//Get all requests
-		$files=get_requests();
-		foreach($files as $file)
+		//Get all open requests
+		//$openids=get_open_req_db();
+		$openids=array_merge(get_req_db(0),get_req_db(2));
+		foreach($openids as $id)
 		{
-			if($file[2] == $username)
+			//Get request info
+			$req=get_request($id);
+			//Check username
+			if($req[2] == $username)
 			{
-				//Check the status of the request
-				$status=explode("|",$file[5]);
-				if($status[0] == 0 || $status[0] == 2)
-				{
-					//User has a currently active request in the system
-					return true;
-				}
+				//User has an open request
+				return true;
 			}
 		}
 		//User does not have a currently active request in the system
@@ -493,7 +531,8 @@
 					"partial" => "no",
 					"beforeban" => 3,
 					"apipages" => "0,1,2,3",
-					"logatt" => "yes");
+					"logatt" => "yes",
+					"reqpass" => "no");
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);
@@ -1442,6 +1481,62 @@
 			return true;
 		}
 		return false;
+	}
+	
+	//Function for writing to the request database
+	function write_req_db($status,$id)
+	{
+		if(file_exists("backend/req-db.txt"))
+		{
+			$db=unserialize(file_get_contents("backend/req-db.txt"));
+			if($status == -1)
+			{
+				for($i=0;$i<count($db);$i++)
+				{
+					if(($index=array_search($id,$db[$i])) !== false)
+					{
+						unset($db[$i][$index]);
+					}
+				}
+			}
+			else
+			{
+				for($i=0;$i<count($db);$i++)
+				{
+					if(($index=array_search($id,$db[$i])) !== false && $i != $status)
+					{
+						unset($db[$i][$index]);
+					}
+					elseif($i == $status)
+					{
+						$db[$i][]=$id;
+					}
+				}
+			}
+			$fh=fopen("backend/req-db.txt",'w');
+			if($fh)
+			{
+				fwrite($fh,serialize($db));
+				fclose($fh);
+				return true;
+			}
+		}
+		trigger_error("Failed to write to request database. Expect problems.",E_USER_ERROR);
+		return false;
+	}
+	//Function for reading the request database
+	function get_req_db($index)
+	{
+		if(file_exists("backend/req-db.txt"))
+		{
+			$db=unserialize(file_get_contents("backend/req-db.txt"));
+			if(isset($db[$index]))
+			{
+				return $db[$index];
+			}
+		}
+		trigger_error("Failed to read request database. Expect problems.",E_USER_ERROR);
+		return array(array(),array(),array(),array());
 	}
 ?>
 <?php

@@ -145,7 +145,6 @@
 					}
 				}
 				$request=substr($request,0,-1);
-                request_song($list,$reqid);
 			}
 			else
 			{
@@ -245,7 +244,7 @@
 				}
 				else
 				{
-					die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&reqid=" . $_POST['reqid'] . "&autoban=$autoban\"</script>");
+					die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&autoban=$autoban&reason=0\"</script>");
 				}
 			}
 			
@@ -263,6 +262,11 @@
 			else
 			{
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully wrote post $postid");
+				//Mark post last requested date
+				if($override == "" && isset($list) && isset($reqid))
+				{
+					request_song($list,$reqid);
+				}
                 if(get_system_setting("rss") == "yes")
                 {
                     $debug=write_rss_entry($postid,$name,date(get_system_setting("datetime")),stripcslashes($request));
@@ -326,7 +330,26 @@
 			
 			if(isset($_GET['autoban']))
 			{
-				trigger_error("The MRS blocked your attempted request as it contained a blocked word. This has happened " . $_GET['autoban'] . " time(s). Watch your mouth.");
+				$autoban=preg_replace("/[^0-9]/","",$_GET['autoban']);
+				$reason="microwaving someone's microphone";
+				if(isset($_GET['reason']))
+				{
+					switch(preg_replace("/[^0-9]/","",$_GET['reason']))
+					{
+						case 0:
+						$reason="request contains one or more blocked words";
+						break;
+						
+						case 1:
+						$reason="user is attempting to stuff the ballot box";
+						break;
+						
+						case 2:
+						$reason="invalid password submitted";
+						break;
+					}
+				}
+				trigger_error("The MRS blocked your attempted request for the following reason: $reason. This has happened $autoban time(s). Double-check your submission or risk being microwaved.");
 			}
 			
 			$posting=true;
@@ -412,7 +435,6 @@
 					}
 				}
 				$request=substr($request,0,-1);
-                request_song($list,$reqid);
 			}
 			else
 			{
@@ -503,7 +525,7 @@
 				}
 				else
 				{
-					die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&reqid=" . $_POST['reqid'] . "&autoban=$autoban\"</script>");
+					die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&autoban=$autoban&reason=0\"</script>");
 				}
 			}
 			
@@ -518,6 +540,11 @@
 			}
 			else
 			{
+				//Mark post last requested date
+				if($override == "" && isset($list) && isset($reqid))
+				{
+					request_song($list,$reqid);
+				}
                 if(get_system_setting("rss") == "yes")
                 {
                     $debug=write_rss_entry($postid,$name,date(get_system_setting("datetime")),stripcslashes($request));
@@ -577,7 +604,26 @@
 			
 			if(isset($_GET['autoban']))
 			{
-				trigger_error("The MRS blocked your attempted request as it contained a blocked word. This has happened " . $_GET['autoban'] . " time(s). Watch your mouth.");
+				$autoban=preg_replace("/[^0-9]/","",$_GET['autoban']);
+				$reason="microwaving someone's microphone";
+				if(isset($_GET['reason']))
+				{
+					switch(preg_replace("/[^0-9]/","",$_GET['reason']))
+					{
+						case 0:
+						$reason="request contains one or more blocked words";
+						break;
+						
+						case 1:
+						$reason="user is attempting to stuff the ballot box";
+						break;
+						
+						case 2:
+						$reason="invalid password submitted";
+						break;
+					}
+				}
+				trigger_error("The MRS blocked your attempted request for the following reason: $reason. This has happened $autoban time(s). Double-check your submission or risk being microwaved.");
 			}
 			
 			$posting=true;
@@ -616,7 +662,7 @@
   IP Address: <?php echo $_SERVER['REMOTE_ADDR']; ?> (this WILL be submitted with your request!)<br>
   <input type="hidden" name="reqid" value="<?php echo $reqid; ?>">
   <input type="hidden" name="list" value="<?php echo $list; ?>">
-  <input type="hidden" name="autoban" <?php if(isset($_GET['autoban'])) { echo "value=\"" . $_GET['autoban'] . "\""; } else { echo "disabled=\"disabled\""; } ?>>
+  <input type="hidden" name="autoban" <?php if(isset($autoban)) { echo "value=\"$autoban\""; } else { echo "disabled=\"disabled\""; } ?>>
   Request:<br>
   <?php
 	if($request !== false)
@@ -631,6 +677,7 @@
   Comment (optional):<br>
   <textarea name="comment" <?php if($comments == "no") { echo "disabled=\"disabled\""; } ?> rows="10" cols="50"></textarea><br>
   <!--<input type="hidden" name="posting" value="<?php if($posting === true) { echo "yes"; } else { echo "no"; } ?>">-->
+  Submission password: <input type="password" name="password" <?php if(get_system_setting("reqpass") == "no") { echo ("disabled=\"disabled\""); } ?>><br>
   <input type="submit" value="Make request" <?php if($posting === false) { echo "disabled=\"disabled\""; } ?>><input type="button" value="Back to search" onclick="window.location.href='post.php'"><input type="button" value="Cancel" onclick="window.location.href='index.php'">
   </form>
   </body>

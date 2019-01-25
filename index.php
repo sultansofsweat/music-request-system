@@ -189,7 +189,7 @@
 				case 0:
 				echo ("<a href=\"login.php\">Enter Admin Mode</a> | ");
 				echo ("Requesting disabled.");
-				if($vlist === true)
+				if($vlist === true && in_light_mode() === false)
 				{
 					echo (" <a href=\"post.php\">View Songs</a><br>\r\n");
 				}
