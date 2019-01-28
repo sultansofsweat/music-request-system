@@ -504,7 +504,9 @@
 					"apipages" => "0,1,2,3",
 					"logatt" => "yes",
 					"reqpass" => "no",
-                    "banfail" => 0);
+                    "banfail" => 0,
+                    "passreq" => "no",
+                    "baninvpass" => "yes");
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);
@@ -1511,6 +1513,32 @@
 		trigger_error("Failed to read request database. Expect problems.",E_USER_ERROR);
 		return array(array(),array(),array(),array());
 	}
+    
+    //Function for saving the request password
+    function save_request_password($password)
+    {
+        $hash=password_hash($password,PASSWORD_DEFAULT);
+        if($hash !== false)
+        {
+            $fh=fopen("backend/subpass.txt",'w');
+            if($fh)
+            {
+                fwrite($fh,$hash);
+                fclose($fh);
+                return true;
+            }
+        }
+        return false;
+    }
+    //Function for validating the request password
+    function validate_request_password($password)
+    {
+        if(file_exists("backend/subpass.txt"))
+        {
+            return password_verify($password,file_get_contents("backend/subpass.txt"));
+        }
+        return false;
+    }
 ?>
 <?php
     //Set new script time limit

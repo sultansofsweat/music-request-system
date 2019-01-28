@@ -249,6 +249,8 @@
 	$beforeban=get_system_setting("beforeban");
 	$logatt=get_system_setting("logatt");
     $banfail=get_system_setting("banfail");
+    $reqpass=get_system_setting("passreq");
+    $baninvpass=get_system_setting("baninvpass");
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
@@ -306,6 +308,8 @@
 				$beforeban=get_system_default("beforeban");
 				$logatt=get_system_default("logatt");
                 $banfail=get_system_default("banfail");
+                $reqpass=get_system_default("passreq");
+                $baninvpass=get_system_default("baninvpass");
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set settings to default");
 				trigger_error("Set all settings to their default values.");
 			}
@@ -1211,6 +1215,80 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"logatt\" to \"$logatt\"");
 					}
 				}
+				if(isset($_POST['baninvpass']))
+				{
+					if($_POST['baninvpass'] == "yes")
+					{
+						$baninvpass="yes";
+					}
+					else
+					{
+						$baninvpass="no";
+					}
+					$debug=save_system_setting("baninvpass",$baninvpass);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"baninvpass\" to \"$baninvpass\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"baninvpass\" to \"$baninvpass\"");
+					}
+				}
+				if(isset($_POST['reqpass']))
+				{
+					if($_POST['reqpass'] == "yes")
+					{
+						$reqpass="yes";
+					}
+					else
+					{
+						$reqpass="no";
+					}
+                    if($reqpass == "yes" && isset($_POST['ereqpass']) && isset($_POST['creqpass']) && $_POST['ereqpass'] == $_POST['creqpass'])
+                    {
+                        $debug=save_request_password($_POST['ereqpass']);
+                        if($debug !== true)
+                        {
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to save new request password, not enabling request password entry");
+                            $error=true;
+                        }
+                        else
+                        {
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Saved new request password");
+                            $debug=save_system_setting("passreq",$reqpass);
+                            if($debug !== true)
+                            {
+                                write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"passreq\" to \"$reqpass\"");
+                                $error=true;
+                            }
+                            else
+                            {
+                                write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"passreq\" to \"$reqpass\"");
+                            }
+                        }
+                    }
+                    elseif($reqpass == "no")
+                    {
+                        $debug=save_system_setting("passreq",$reqpass);
+                        if($debug !== true)
+                        {
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"passreq\" to \"$reqpass\"");
+                            $error=true;
+                        }
+                        else
+                        {
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"passreq\" to \"$reqpass\"");
+                        }
+                    }
+                    else
+                    {
+                        write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"passreq\" to \"$reqpass\": invalid password supplied");
+                        trigger_error("Cannot set request password as they do not match. Try again.",E_USER_ERROR);
+                        $error=true;
+                    }
+				}
 				if(isset($_POST['banfail']))
 				{
 					$banfail=max(0,preg_replace("/[^0-9]/","",$_POST['banfail']));
@@ -1305,6 +1383,8 @@
 				$beforeban=get_system_default("beforeban");
 				$logatt=get_system_default("logatt");
                 $banfail=get_system_default("banfail");
+                $reqpass=get_system_default("passreq");
+                $baninvpass=get_system_default("baninvpass");
 				trigger_error("Set all settings to their default values.");
 			}
 			elseif(isset($_POST['setdef']) && $_POST['setdef'] == "y")
@@ -1973,6 +2053,62 @@
 						$error=true;
 					}
 				}
+				if(isset($_POST['baninvpass']))
+				{
+					if($_POST['baninvpass'] == "yes")
+					{
+						$baninvpass="yes";
+					}
+					else
+					{
+						$baninvpass="no";
+					}
+					$debug=save_system_setting("baninvpass",$baninvpass);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['reqpass']))
+				{
+					if($_POST['reqpass'] == "yes")
+					{
+						$reqpass="yes";
+					}
+					else
+					{
+						$reqpass="no";
+					}
+                    if($reqpass == "yes" && isset($_POST['ereqpass']) && isset($_POST['creqpass']) && $_POST['ereqpass'] == $_POST['creqpass'])
+                    {
+                        $debug=save_request_password($_POST['ereqpass']);
+                        if($debug !== true)
+                        {
+                            $error=true;
+                        }
+                        else
+                        {
+                            $debug=save_system_setting("passreq",$reqpass);
+                            if($debug !== true)
+                            {
+                                $error=true;
+                            }
+                        }
+                    }
+                    elseif($reqpass == "no")
+                    {
+                        $debug=save_system_setting("passreq",$reqpass);
+                        if($debug !== true)
+                        {
+                            $error=true;
+                        }
+                    }
+                    else
+                    {
+                        trigger_error("Cannot set request password as they do not match. Try again.",E_USER_ERROR);
+                        $error=true;
+                    }
+				}
 				if(isset($_POST['banfail']))
 				{
 					$banfail=max(0,preg_replace("/[^0-9]/","",$_POST['banfail']));
@@ -2125,9 +2261,9 @@
   <option value="20" <?php if ($overflow == "20") { echo ("selected=\"selected\""); } ?>>20</option>
   <option value="0" <?php if ($overflow == "0") { echo ("selected=\"selected\""); } ?>>Unlimited</option>
   </select> active requests submitted<br><br>
-  Require password to submit requests: <input type="radio" name="passreq" value="yes" disabled="disabled" <?php if(isset($passreq) && $passreq == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="passreq" value="no" disabled="disabled" <?php if(isset($passreq) && $passreq == "no") { echo "checked=\"checked\""; } ?>>No<br>
-  Password: <input type="password" name="reqpass" disabled="disabled"><br>
-  Confirm password: <input type="password" name="creqpass" disabled="disabled"><br>
+  Require password to submit requests: <input type="radio" name="reqpass" value="yes" <?php if(isset($reqpass) && $reqpass == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="reqpass" value="no" <?php if(isset($reqpass) && $reqpass == "no") { echo "checked=\"checked\""; } ?>>No<br>
+  Password: <input type="password" name="ereqpass"><br>
+  Confirm password: <input type="password" name="creqpass"><br>
   <a href="ruledit.php">Edit system rules</a><br>
   <a href="archive.php">Archive requests</a><br>
   <a href="delall.php">Delete all requests</a><br>
@@ -2142,7 +2278,7 @@
   <option value="5" <?php if ($banfail == "5") { echo ("selected=\"selected\""); } ?>>5</option>
   <option value="5" <?php if ($banfail == "10") { echo ("selected=\"selected\""); } ?>>10</option>
   </select> failed login attempts.<br>
-  Automatically ban IPs that submit invalid passwords: <input type="radio" name="baninvpass" disabled="disabled" value="yes" <?php if(isset($baninvpass) && $baninvpass == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="baninvpass" disabled="disabled" value="no" <?php if(isset($baninvpass) && $baninvpass == "no") { echo "checked=\"checked\""; } ?>>No (NOTE: only has an effect if a request password is set! Also note that the number of attempts before a ban is the same as below.)<br>
+  Automatically ban IPs that submit invalid passwords: <input type="radio" name="baninvpass" value="yes" <?php if(isset($baninvpass) && $baninvpass == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="baninvpass" value="no" <?php if(isset($baninvpass) && $baninvpass == "no") { echo "checked=\"checked\""; } ?>>No (NOTE: only has an effect if a request password is set! Also note that the number of attempts before a ban is the same as below.)<br>
   Allow the MRS to automatically ban IPs based on the rules below: <input type="radio" name="autoban" value="yes" <?php if(isset($autoban) && $autoban == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="autoban" value="no" <?php if(isset($autoban) && $autoban == "no") { echo "checked=\"checked\""; } ?>>No<br>
   List of words to disallow in usernames:<br>
   <textarea name="banwords" rows="10" cols="50"><?php if(isset($banwords)) { echo $banwords; } ?></textarea><br>
