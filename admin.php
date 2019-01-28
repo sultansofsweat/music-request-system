@@ -248,6 +248,7 @@
 	$partial=get_system_setting("partial");
 	$beforeban=get_system_setting("beforeban");
 	$logatt=get_system_setting("logatt");
+    $banfail=get_system_setting("banfail");
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
@@ -304,6 +305,7 @@
 				$partial=get_system_default("partial");
 				$beforeban=get_system_default("beforeban");
 				$logatt=get_system_default("logatt");
+                $banfail=get_system_default("banfail");
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set settings to default");
 				trigger_error("Set all settings to their default values.");
 			}
@@ -1209,6 +1211,20 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"logatt\" to \"$logatt\"");
 					}
 				}
+				if(isset($_POST['banfail']))
+				{
+					$banfail=max(0,preg_replace("/[^0-9]/","",$_POST['banfail']));
+					$debug=save_system_setting("banfail",$banfail);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"banfail\" to \"$banfail\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"banfail\" to \"$banfail\"");
+					}
+				}
 				if($error === true)
 				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change all system settings");
@@ -1288,6 +1304,7 @@
 				$partial=get_system_default("partial");
 				$beforeban=get_system_default("beforeban");
 				$logatt=get_system_default("logatt");
+                $banfail=get_system_default("banfail");
 				trigger_error("Set all settings to their default values.");
 			}
 			elseif(isset($_POST['setdef']) && $_POST['setdef'] == "y")
@@ -1956,6 +1973,15 @@
 						$error=true;
 					}
 				}
+				if(isset($_POST['banfail']))
+				{
+					$banfail=max(0,preg_replace("/[^0-9]/","",$_POST['banfail']));
+					$debug=save_system_setting("banfail",$banfail);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
 				if($error === true)
 				{
 					$return="no";
@@ -1979,11 +2005,6 @@
 			}
 		}
 	}
-  ?>
-  <?php
-	//Junk to make sure variables are defined. Delete as necessary.
-	$banfail="";
-	$boxstuffer="";
   ?>
   <body>
   <h1 style="text-align:center; text-decoration:underline;"><?php echo $sysname; ?>MRS-Administration Console</h1>
@@ -2113,25 +2134,14 @@
   <hr>
   <a name="autoban"></a><h3>Automatic Banning/Username Filtering</h3>
   Allow the MRS to automatically ban IPs after:&nbsp;
-  <select name="banfail" disabled="disabled">
+  <select name="banfail">
   <option value="">-Select one-</option>
   <option value="0" <?php if ($banfail == "0") { echo ("selected=\"selected\""); } ?>>Don't bother</option>
-  <option value="1" <?php if ($banfail == "1") { echo ("selected=\"selected\""); } ?>>1</option>
   <option value="2" <?php if ($banfail == "2") { echo ("selected=\"selected\""); } ?>>2</option>
   <option value="3" <?php if ($banfail == "3") { echo ("selected=\"selected\""); } ?>>3</option>
   <option value="5" <?php if ($banfail == "5") { echo ("selected=\"selected\""); } ?>>5</option>
   <option value="5" <?php if ($banfail == "10") { echo ("selected=\"selected\""); } ?>>10</option>
   </select> failed login attempts.<br>
-  Allow the MRS to automatically ban IPs after:&nbsp;
-  <select name="boxstuffer" disabled="disabled">
-  <option value="">-Select one-</option>
-  <option valuev="0" <?php if ($boxstuffer == "0") { echo ("selected=\"selected\""); } ?>>Don't bother</option>
-  <option value="1" <?php if ($boxstuffer == "1") { echo ("selected=\"selected\""); } ?>>1</option>
-  <option value="2" <?php if ($boxstuffer == "2") { echo ("selected=\"selected\""); } ?>>2</option>
-  <option value="3" <?php if ($boxstuffer == "3") { echo ("selected=\"selected\""); } ?>>3</option>
-  <option value="5" <?php if ($boxstuffer == "5") { echo ("selected=\"selected\""); } ?>>5</option>
-  <option value="5" <?php if ($boxstuffer == "10") { echo ("selected=\"selected\""); } ?>>10</option>
-  </select> attempts to overload the MRS.<br>
   Automatically ban IPs that submit invalid passwords: <input type="radio" name="baninvpass" disabled="disabled" value="yes" <?php if(isset($baninvpass) && $baninvpass == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="baninvpass" disabled="disabled" value="no" <?php if(isset($baninvpass) && $baninvpass == "no") { echo "checked=\"checked\""; } ?>>No (NOTE: only has an effect if a request password is set! Also note that the number of attempts before a ban is the same as below.)<br>
   Allow the MRS to automatically ban IPs based on the rules below: <input type="radio" name="autoban" value="yes" <?php if(isset($autoban) && $autoban == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="autoban" value="no" <?php if(isset($autoban) && $autoban == "no") { echo "checked=\"checked\""; } ?>>No<br>
   List of words to disallow in usernames:<br>

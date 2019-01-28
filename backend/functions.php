@@ -152,25 +152,8 @@
 			{
 				$posts[]=get_request($id);
 			}
-			/*switch($lvl)
-			{
-				case 0:
-				case 2:
-				$openids=get_open_req_db();
-				break;
-				
-				case 1:
-				case 3:
-				$closedids=get_closed_req_db();
-				foreach($closedids as $id)
-				{
-					$posts[]=get_request($id);
-				}
-				break;
-			}*/
 		}
 		//Get all posts
-		//$posts=get_requests();
 		//Loop through posts
 		foreach($posts as $post)
 		{
@@ -227,18 +210,6 @@
 		fwrite($fh,base64_encode($content));
 		fclose($fh);
 		write_req_db($status,$id);
-		/*switch($status)
-		{
-			case 0:
-			case 2:
-			add_open_req($id);
-			break;
-			
-			case 1:
-			case 3:
-			add_closed_req($id);
-			break;
-		}*/
 		return true;
 	}
 	//Function for getting a system setting
@@ -532,7 +503,8 @@
 					"beforeban" => 3,
 					"apipages" => "0,1,2,3",
 					"logatt" => "yes",
-					"reqpass" => "no");
+					"reqpass" => "no",
+                    "banfail" => 0);
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);
@@ -1280,6 +1252,7 @@
 		}
     }
 	
+    //Function for autobanning a user for using an inappropriate word in their username
 	function autoban($username)
 	{
 		//If auto banning disabled, pass the username no matter what
