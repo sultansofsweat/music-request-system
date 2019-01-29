@@ -218,6 +218,46 @@
                 write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User attempting to submit custom request when not allowed");
                 die("<script type=\"text/javascript\">window.location = \"index.php?status=8\"</script>");
 			}
+            
+            //Check submitted password if required
+            if(get_system_setting("passreq") == "yes")
+            {
+                if(!isset($_POST['password']) || validate_request_password($_POST['password']) !== true)
+                {
+                    //Wrong password submitted
+                    write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Request password missing or incorrect");
+                    if(get_system_setting("baninvpass") == "yes")
+                    {
+                        if(isset($_POST['autoban']))
+                        {
+                            $autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
+                        }
+                        else
+                        {
+                            $autoban=0;
+                        }
+                        //Log this abrogation of system laws
+                        write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Auto ban caught user $ip submitting invalid password, blocked $autoban times previously");
+                        //Increment count
+                        $autoban++;
+                        if($autoban >= get_system_setting("beforeban"))
+                        {
+                            //Ban the user by IP address
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Auto ban banned user $ip");
+                            ban_ip($ip,"Automatically banned by the MRS for repeated submissions with invalid password.");
+                            die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
+                        }
+                        else
+                        {
+                            die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&autoban=$autoban&reason=2\"</script>");
+                        }
+                    }
+                    else
+                    {
+                        die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&pass=wrong\"</script>");
+                    }
+                }
+            }
 			
 			//Check auto banning status
 			if(autoban($name) !== true)
@@ -349,8 +389,12 @@
 						break;
 					}
 				}
-				trigger_error("The MRS blocked your attempted request for the following reason: $reason. This has happened $autoban time(s). Double-check your submission or risk being microwaved.");
+				trigger_error("The MRS blocked your attempted request for the following reason: $reason. This has happened $autoban time(s). Double-check your submission or risk being microwaved.",E_USER_WARNING);
 			}
+            if(isset($_GET['pass']))
+            {
+                trigger_error("The MRS blocked your attempted request for the following reason: invalid password submitted. Double-check your submission.",E_USER_WARNING);
+            }
 			
 			$posting=true;
 			if(is_user_banned($_SESSION['uname']) === true || is_ip_banned($_SERVER['REMOTE_ADDR']) === true)
@@ -501,6 +545,42 @@
 			{
                 die("<script type=\"text/javascript\">window.location = \"index.php?status=8\"</script>");
 			}
+            
+            //Check submitted password if required
+            if(get_system_setting("passreq") == "yes")
+            {
+                if(!isset($_POST['password']) || validate_request_password($_POST['password']) !== true)
+                {
+                    //Wrong password submitted
+                    if(get_system_setting("baninvpass") == "yes")
+                    {
+                        if(isset($_POST['autoban']))
+                        {
+                            $autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
+                        }
+                        else
+                        {
+                            $autoban=0;
+                        }
+                        //Increment count
+                        $autoban++;
+                        if($autoban >= get_system_setting("beforeban"))
+                        {
+                            //Ban the user by IP address
+                            ban_ip($ip,"Automatically banned by the MRS for repeated submissions with invalid password.");
+                            die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
+                        }
+                        else
+                        {
+                            die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&autoban=$autoban&reason=2\"</script>");
+                        }
+                    }
+                    else
+                    {
+                        die("<script type=\"text/javascript\">window.location = \"post2.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&pass=wrong\"</script>");
+                    }
+                }
+            }
 			
 			//Check auto banning status
 			if(autoban($name) !== true)
@@ -625,6 +705,10 @@
 				}
 				trigger_error("The MRS blocked your attempted request for the following reason: $reason. This has happened $autoban time(s). Double-check your submission or risk being microwaved.");
 			}
+            if(isset($_GET['pass']))
+            {
+                trigger_error("The MRS blocked your attempted request for the following reason: invalid password submitted. Double-check your submission.",E_USER_WARNING);
+            }
 			
 			$posting=true;
 			if(is_user_banned($_SESSION['uname']) === true || is_ip_banned($_SERVER['REMOTE_ADDR']) === true)
@@ -657,7 +741,6 @@
   ?>
   <form action="post2.php" method="post">
   <input type="hidden" name="s" value="y">
-  <!--<input type="hidden" name="filename" value="<?php echo base64_encode($filename); ?>">-->
   Name: <input type="text" name="name" value="<?php echo $_SESSION['uname']; ?>"<?php if($anon == "no") { echo(" required=\"required\""); } ?>> OR <input type="checkbox" name="anon" value="y" <?php if($anon == "no") { echo("disabled=\"disabled\""); } ?>>Anonymous<br>
   IP Address: <?php echo $_SERVER['REMOTE_ADDR']; ?> (this WILL be submitted with your request!)<br>
   <input type="hidden" name="reqid" value="<?php echo $reqid; ?>">
@@ -677,7 +760,7 @@
   Comment (optional):<br>
   <textarea name="comment" <?php if($comments == "no") { echo "disabled=\"disabled\""; } ?> rows="10" cols="50"></textarea><br>
   <!--<input type="hidden" name="posting" value="<?php if($posting === true) { echo "yes"; } else { echo "no"; } ?>">-->
-  Submission password: <input type="password" name="password" <?php if(get_system_setting("reqpass") == "no") { echo ("disabled=\"disabled\""); } ?>><br>
+  Submission password: <input type="password" name="password" <?php if(get_system_setting("passreq") == "no") { echo ("disabled=\"disabled\""); } else  { echo ("required=\"required\""); } ?>><br>
   <input type="submit" value="Make request" <?php if($posting === false) { echo "disabled=\"disabled\""; } ?>><input type="button" value="Back to search" onclick="window.location.href='post.php'"><input type="button" value="Cancel" onclick="window.location.href='index.php'">
   </form>
   </body>
