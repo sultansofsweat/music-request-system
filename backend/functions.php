@@ -483,7 +483,6 @@
 					"comments" => "no",
 					"viewcomments" => "no",
 					"interface" => "no",
-					"autokey" => "",
 					"songformat" => "artist|title|album|year",
 					"songformathr" => "Artist|Title|Album|Year",
 					"sysid" => "",
@@ -503,7 +502,6 @@
 					"beforeban" => 3,
 					"apipages" => "0,1,2,3",
 					"logatt" => "yes",
-					"reqpass" => "no",
                     "banfail" => 0,
                     "passreq" => "no",
                     "baninvpass" => "yes");
