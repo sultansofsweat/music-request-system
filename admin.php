@@ -986,7 +986,7 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"sysid\" to \"$apiuid\"");
 					}
 				}
-				if(isset($_POST['oapipass']) && password_verify($_POST['oapipass'],get_system_setting("autokey")) === true && isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
+				if(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
 				{
 					$apikey=password_hash($_POST['napipass'],PASSWORD_DEFAULT);
 					$debug=save_system_setting("autokey",$apikey);
@@ -1000,21 +1000,15 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting setting \"autokey\" to \"********\"");
 					}
 				}
-                elseif(isset($_POST['oapipass']))
-                {
-                    write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"autokey\" to \"********\": invalid original password supplied");
-					$error=true;
-                }
-                elseif(isset($_POST['napipass']) && isset($_POST['capipass']))
+                elseif(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['capipass'] != "")
                 {
                     write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"autokey\" to \"********\": passwords did not match");
 					$error=true;
                 }
-				if(isset($_POST['apipages']))
+				if(isset($_POST['apipages']) && is_array($_POST['apipages']))
 				{
-					$rawpages=explode(",",filter_var($_POST['apipages'],FILTER_SANITIZE_STRING));
 					$apipages=array();
-					foreach($rawpages as $page)
+					foreach($_POST['apipages'] as $page)
 					{
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
@@ -1029,6 +1023,7 @@
 					{
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"apipages\" to \"$apipages\"");
 					}
+                    $apipages=explode(",",$apipages);
 				}
 				if(isset($_POST['upgrade']))
 				{
@@ -1887,7 +1882,7 @@
 						$error=true;
 					}
 				}
-				if(isset($_POST['oapipass']) && password_verify($_POST['oapipass'],get_system_setting("autokey")) === true && isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
+				if(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
 				{
 					$apikey=password_hash($_POST['napipass'],PASSWORD_DEFAULT);
 					$debug=save_system_setting("autokey",$apikey);
@@ -1896,19 +1891,14 @@
 						$error=true;
 					}
 				}
-                elseif(isset($_POST['oapipass']) && $_POST['oapipass'] != "")
-                {
-					$error=true;
-                }
                 elseif(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['capipass'] != "")
                 {
 					$error=true;
                 }
-				if(isset($_POST['apipages']))
+				if(isset($_POST['apipages']) && is_array($_POST['apipages']))
 				{
-					$rawpages=explode(",",filter_var($_POST['apipages'],FILTER_SANITIZE_STRING));
 					$apipages=array();
-					foreach($rawpages as $page)
+					foreach($_POST['apipages'] as $page)
 					{
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
@@ -1918,6 +1908,7 @@
 					{
 						$error=true;
 					}
+                    $apipages=explode(",",$apipages);
 				}
 				if(isset($_POST['upgrade']))
 				{
@@ -2296,7 +2287,6 @@
   <a name="api"></a><h3>API</h3>
   System API: <input type="radio" name="api" value="yes" <?php if($api == "yes") {echo("checked=\"checked\""); } ?>>Enabled | <input type="radio" name="api" value="no" <?php if($api == "no") {echo("checked=\"checked\""); } ?>>Disabled<br>
   API ID: <input type="text" name="apiuid" value="<?php echo $apiuid; ?>"><br>
-  Current API Password: <input type="password" name="oapipass"> (only required for changes)<br>
   New API Password: <input type="password" name="napipass"><br>
   Confirm new API Password: <input type="password" name="capipass"><br>
   Pages:<br>

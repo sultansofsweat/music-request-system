@@ -747,14 +747,14 @@
 	function delete_all_posts()
 	{
 		$results=array(0,0,0);
-		$posts=glob("posts/*.txt");
-		if(count($posts) > 0)
-		{
-			foreach($posts as $post)
-			{
-				$results[1]++;
-				$debug=unlink($post);
-				if($debug === true)
+        $posts=get_all_req_ids();
+        if(count($posts) > 0)
+        {
+            foreach($posts as $post)
+            {
+                $results[1]++;
+                $debug=delete_post($post);
+                if($debug === true)
 				{
 					$results[0]++;
 				}
@@ -762,8 +762,8 @@
 				{
 					$results[2]++;
 				}
-			}
-		}
+            }
+        }
 		return $results;
 	}
 	
@@ -772,6 +772,10 @@
 		if(file_exists("posts/$post.txt"))
 		{
 			$debug=unlink("posts/$post.txt");
+            if($debug === true)
+            {
+                $debug=write_req_db(-1,$post);
+            }
 		}
 		else
 		{

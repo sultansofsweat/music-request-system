@@ -68,7 +68,7 @@
 	{
 		$sysenabled=false;
 	}
-	$pagenable=get_system_setting("apipages");
+	$pagenable=explode(",",get_system_setting("apipages"));
 	$default="<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n
 <html>\r\n
   <head>\r\n
@@ -112,7 +112,7 @@
 			{
 				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					if($sysenable === false)
+					if($sysenabled === false)
 					{
 						http_response_code(500);
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get status: something has been microwaved");
@@ -122,7 +122,7 @@
 					{
 						http_response_code(200);
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully got system status");
-						echo $sysenable;
+						echo $sysenabled;
 					}
 				}
 				else
@@ -151,7 +151,7 @@
 			{
 				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					if($sysenable === false)
+					if($sysenabled === false)
 					{
 						http_response_code(500);
 						echo $default;
@@ -159,7 +159,7 @@
 					else
 					{
 						http_response_code(200);
-						echo $sysenable;
+						echo $sysenabled;
 					}
 				}
 				else
@@ -180,94 +180,4 @@
 			echo $default;
 		}
 	}
-	
-	/*if(is_logging_enabled() === true)
-	{
-		//Logging enabled
-		$_SERVER['REMOTE_ADDR']=$_SERVER['REMOTE_ADDR'];
-		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to check system status");
-		if($allowed === true)
-		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
-			{
-				//Key is valid, make sure system is in a determinate state
-				if($sysenabled === false)
-				{
-					http_response_code(404);
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to check system status: the MRS has been microwaved");
-					echo $default;
-				}
-				else
-				{
-					//Successfully declined post
-					http_response_code(200);
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully checked status.");
-					echo $sysenabled;
-				}
-			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to check system status: key not configured");
-				echo $default;
-			}
-			else
-			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to check system status: incorrect key supplied");
-				echo $default;
-			}
-		}
-		else
-		{
-			//This is not permitted
-			http_response_code(410);
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to check system status: system not configured to allow this");
-			echo $default;
-		}
-	}
-	else
-	{
-		//Logging disabled
-		if($allowed === true)
-		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
-			{
-				//Key is valid, make sure system is in a determinate state
-				if($sysenabled === false)
-				{
-					http_response_code(404);
-					echo $default;
-				}
-				else
-				{
-					//Successfully declined post
-					http_response_code(200);
-					echo $sysenabled;
-				}
-			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				echo $default;
-			}
-			else
-			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
-				echo $default;
-			}
-		}
-		else
-		{
-			//This is not permitted
-			http_response_code(410);
-			echo $default;
-		}
-	}*/
 ?>
