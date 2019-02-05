@@ -143,8 +143,17 @@
 			$reqlvl=array($reqlvl);
 		}
 		$reqs=array();
+		$posts=array();
+		//Loop through supplied request levels
+		foreach($reqlvl as $lvl)
+		{
+			$ids=get_req_db($lvl);
+			foreach($ids as $id)
+			{
+				$posts[]=get_request($id);
+			}
+		}
 		//Get all posts
-		$posts=get_requests();
 		//Loop through posts
 		foreach($posts as $post)
 		{
@@ -200,6 +209,7 @@
 		}
 		fwrite($fh,base64_encode($content));
 		fclose($fh);
+		write_req_db($status,$id);
 		return true;
 	}
 	//Function for getting a system setting
@@ -267,19 +277,18 @@
 		//Get user's IP address
 		$username=$_SERVER['REMOTE_ADDR'];
 		
-		//Get all requests
-		$files=get_requests();
-		foreach($files as $file)
+		//Get all open requests
+		//$openids=get_open_req_db();
+		$openids=array_merge(get_req_db(0),get_req_db(2));
+		foreach($openids as $id)
 		{
-			if($file[2] == $username)
+			//Get request info
+			$req=get_request($id);
+			//Check username
+			if($req[2] == $username)
 			{
-				//Check the status of the request
-				$status=explode("|",$file[5]);
-				if($status[0] == 0 || $status[0] == 2)
-				{
-					//User has a currently active request in the system
-					return true;
-				}
+				//User has an open request
+				return true;
 			}
 		}
 		//User does not have a currently active request in the system
@@ -474,7 +483,6 @@
 					"comments" => "no",
 					"viewcomments" => "no",
 					"interface" => "no",
-					"autokey" => "",
 					"songformat" => "artist|title|album|year",
 					"songformathr" => "Artist|Title|Album|Year",
 					"sysid" => "",
@@ -493,7 +501,10 @@
 					"partial" => "no",
 					"beforeban" => 3,
 					"apipages" => "0,1,2,3",
-					"logatt" => "yes");
+					"logatt" => "yes",
+                    "banfail" => 0,
+                    "passreq" => "no",
+                    "baninvpass" => "yes");
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);
@@ -736,14 +747,14 @@
 	function delete_all_posts()
 	{
 		$results=array(0,0,0);
-		$posts=glob("posts/*.txt");
-		if(count($posts) > 0)
-		{
-			foreach($posts as $post)
-			{
-				$results[1]++;
-				$debug=unlink($post);
-				if($debug === true)
+        $posts=get_all_req_ids();
+        if(count($posts) > 0)
+        {
+            foreach($posts as $post)
+            {
+                $results[1]++;
+                $debug=delete_post($post);
+                if($debug === true)
 				{
 					$results[0]++;
 				}
@@ -751,8 +762,8 @@
 				{
 					$results[2]++;
 				}
-			}
-		}
+            }
+        }
 		return $results;
 	}
 	
@@ -761,6 +772,10 @@
 		if(file_exists("posts/$post.txt"))
 		{
 			$debug=unlink("posts/$post.txt");
+            if($debug === true)
+            {
+                $debug=write_req_db(-1,$post);
+            }
 		}
 		else
 		{
@@ -1241,6 +1256,7 @@
 		}
     }
 	
+    //Function for autobanning a user for using an inappropriate word in their username
 	function autoban($username)
 	{
 		//If auto banning disabled, pass the username no matter what
@@ -1443,6 +1459,88 @@
 		}
 		return false;
 	}
+	
+	//Function for writing to the request database
+	function write_req_db($status,$id)
+	{
+		if(file_exists("backend/req-db.txt"))
+		{
+			$db=unserialize(file_get_contents("backend/req-db.txt"));
+			if($status == -1)
+			{
+				for($i=0;$i<count($db);$i++)
+				{
+					if(($index=array_search($id,$db[$i])) !== false)
+					{
+						unset($db[$i][$index]);
+					}
+				}
+			}
+			else
+			{
+				for($i=0;$i<count($db);$i++)
+				{
+					if(($index=array_search($id,$db[$i])) !== false && $i != $status)
+					{
+						unset($db[$i][$index]);
+					}
+					elseif($i == $status)
+					{
+						$db[$i][]=$id;
+					}
+				}
+			}
+			$fh=fopen("backend/req-db.txt",'w');
+			if($fh)
+			{
+				fwrite($fh,serialize($db));
+				fclose($fh);
+				return true;
+			}
+		}
+		trigger_error("Failed to write to request database. Expect problems.",E_USER_ERROR);
+		return false;
+	}
+	//Function for reading the request database
+	function get_req_db($index)
+	{
+		if(file_exists("backend/req-db.txt"))
+		{
+			$db=unserialize(file_get_contents("backend/req-db.txt"));
+			if(isset($db[$index]))
+			{
+				return $db[$index];
+			}
+		}
+		trigger_error("Failed to read request database. Expect problems.",E_USER_ERROR);
+		return array(array(),array(),array(),array());
+	}
+    
+    //Function for saving the request password
+    function save_request_password($password)
+    {
+        $hash=password_hash($password,PASSWORD_DEFAULT);
+        if($hash !== false)
+        {
+            $fh=fopen("backend/subpass.txt",'w');
+            if($fh)
+            {
+                fwrite($fh,$hash);
+                fclose($fh);
+                return true;
+            }
+        }
+        return false;
+    }
+    //Function for validating the request password
+    function validate_request_password($password)
+    {
+        if(file_exists("backend/subpass.txt"))
+        {
+            return password_verify($password,file_get_contents("backend/subpass.txt"));
+        }
+        return false;
+    }
 ?>
 <?php
     //Set new script time limit

@@ -143,6 +143,7 @@
   <body>
 <?php
 	$disabled=false;
+    $autoban=0;
 	if(isset($_POST['s']) && $_POST['s'] == "y")
 	{
 		//Start submission
@@ -176,9 +177,39 @@
 				}
 				else
 				{
-					//Trigger incorrect password error
-					trigger_error("Invalid password entered",E_USER_WARNING);
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Entered invalid admin password");
+					if(get_system_setting("banfail") > 0)
+                    {
+                        //Get current number of blocked attempts
+                        if(isset($_POST['autoban']))
+                        {
+                            $autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
+                        }
+                        else
+                        {
+                            $autoban=0;
+                        }
+                        //Log this abrogation of system laws
+                        write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Login failed, invalid password. Attempted $autoban times previously.");
+                        //Increment count
+                        $autoban++;
+                        if($autoban >= get_system_setting("banfail"))
+                        {
+                            //Ban the user by IP address
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Auto ban banned user $ip");
+                            ban_ip($_SERVER['REMOTE_ADDR'],"Automatically banned by the MRS for repeated failed login attempts.");
+                            die("<script type=\"text/javascript\">window.location = \"login.php\"</script>");
+                        }
+                        else
+                        {
+                            trigger_error("Invalid password entered. Note you are on attempt $autoban of a finite number of attempts. Tread carefully.",E_USER_ERROR);
+                        }
+                    }
+                    else
+                    {
+                        //Automatic banning disabled, just display error message
+                        trigger_error("Invalid password entered",E_USER_WARNING);
+                        write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Entered invalid admin password");
+                    }
 					if(get_system_setting("logatt") == "yes")
 					{
 						track_login($_SERVER['REMOTE_ADDR'],date("m/d/Y g:i:s A"),false);
@@ -220,8 +251,36 @@
 				}
 				else
 				{
-					//Trigger incorrect password error
-					trigger_error("Invalid password entered",E_USER_WARNING);
+					//Invalid password
+                    if(get_system_setting("banfail") > 0)
+                    {
+                        //Get current number of blocked attempts
+                        if(isset($_POST['autoban']))
+                        {
+                            $autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
+                        }
+                        else
+                        {
+                            $autoban=0;
+                        }
+                        //Increment count
+                        $autoban++;
+                        if($autoban >= get_system_setting("banfail"))
+                        {
+                            //Ban the user by IP address
+                            ban_ip($_SERVER['REMOTE_ADDR'],"Automatically banned by the MRS for repeated failed login attempts.");
+                            die("<script type=\"text/javascript\">window.location = \"login.php\"</script>");
+                        }
+                        else
+                        {
+                            trigger_error("Invalid password entered. Note you are on attempt $autoban of a finite number of attempts. Tread carefully.",E_USER_ERROR);
+                        }
+                    }
+                    else
+                    {
+                        //Automatic banning disabled, just display error message
+                        trigger_error("Invalid password entered",E_USER_WARNING);
+                    }
 					if(get_system_setting("logatt") == "yes")
 					{
 						track_login($_SERVER['REMOTE_ADDR'],date("m/d/Y g:i:s A"),false);
@@ -262,7 +321,8 @@
   <?php if(isset($disabled) && $disabled === true) { echo("<!--\r\n"); } ?>
   <form method="post" action="login.php">
   <input type="hidden" name="s" value="y">
-  <input type="hidden" name="ref" value="<?php if(isset($_GET['ref'])) { echo preg_replace("/[^a-z]/","",$_GET['ref']); } ?>">
+  <input type="hidden" name="ref" value="<?php if(isset($ref)) { echo $ref; } elseif(isset($_GET['ref'])) { echo preg_replace("/[^a-z]/","",$_GET['ref']); } ?>">
+  <input type="hidden" name="autoban" value="<?php echo $autoban; ?>">
   Password: <input type="password" name="pass" required="required"><br>
   <input type="submit" value="Log in"><input type="button" value="Cancel" onclick="window.location.href='index.php'">
   </form>

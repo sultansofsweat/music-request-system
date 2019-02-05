@@ -56,7 +56,7 @@
 	$allowed=get_system_setting("interface");
 	$key=get_system_setting("autokey");
 	$sysenable=get_system_setting("posting");
-	$pagenable=get_system_setting("apipages");
+	$pagenable=explode(",",get_system_setting("apipages"));
 	$default="<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n
 <html>\r\n
   <head>\r\n
@@ -186,114 +186,4 @@
 			echo $default;
 		}
 	}
-	
-	/*if(is_logging_enabled() === true)
-	{
-		//Logging enabled
-		$_SERVER['REMOTE_ADDR']=$_SERVER['REMOTE_ADDR'];
-		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to open/close system");
-		if($allowed === true)
-		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
-			{
-				//Key is valid, chreck current status, and flip it for saving
-				if($sysenable == "no")
-				{
-					$sysenable="yes";
-				}
-				else
-				{
-					$sysenable="no";
-				}
-				//Write new post contents [id,name,ip,date,request,status,admincomment,usercomment]
-				$debug=save_system_setting("posting",$sysenable);
-				if($debug === false)
-				{
-					http_response_code(404);
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to open/close system: the file has been microwaved");
-					echo $default;
-				}
-				else
-				{
-					//Successfully opened/closed system
-					http_response_code(200);
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully opened/closed system");
-					echo $default;
-				}
-			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to open/close system: key not configured");
-				echo $default;
-			}
-			else
-			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to open/close system: incorrect key supplied");
-				echo $default;
-			}
-		}
-		else
-		{
-			//This is not permitted
-			http_response_code(410);
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to open/close system: system not configured to allow this");
-			echo $default;
-		}
-	}
-	else
-	{
-		//Logging disabled
-		if($allowed === true)
-		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
-			{
-				//Key is valid, chreck current status, and flip it for saving
-				if($sysenable == "no")
-				{
-					$sysenable="yes";
-				}
-				else
-				{
-					$sysenable="no";
-				}
-				//Write new post contents [id,name,ip,date,request,status,admincomment,usercomment]
-				$debug=save_system_setting("posting",$sysenable);
-				if($debug === false)
-				{
-					http_response_code(404);
-					echo $default;
-				}
-				else
-				{
-					//Successfully opened/closed system
-					http_response_code(200);
-					echo $default;
-				}
-			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				echo $default;
-			}
-			else
-			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
-				echo $default;
-			}
-		}
-		else
-		{
-			//This is not permitted
-			http_response_code(410);
-			echo $default;
-		}
-	}*/
 ?>
