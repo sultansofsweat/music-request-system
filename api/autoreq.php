@@ -100,8 +100,8 @@
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
-		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to decline post $post via API");
-		if($allowed == "yes")
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to get all requests via API");
+		if($allowed === true)
 		{
 			if(in_array(1,$pagenable))
 			{
@@ -119,7 +119,7 @@
 							$details[]=$post[0];
 							$details[]=$post[1];
 							$details[]=$post[3];
-							$details[]=$post[4];
+							$details[]=format_request($post[4]);
 							$details[]=$post[8];
 							$details[]=$post[5];
 							if($post[7] != "")
@@ -177,7 +177,7 @@
 	}
 	else
 	{
-		if($allowed == "yes")
+		if($allowed === true)
 		{
 			if(in_array(1,$pagenable))
 			{
@@ -194,7 +194,7 @@
 							$details[]=$post[0];
 							$details[]=$post[1];
 							$details[]=$post[3];
-							$details[]=$post[4];
+							$details[]=format_request($post[4]);
 							$details[]=$post[8];
 							$details[]=$post[5];
 							if($post[7] != "")
