@@ -341,7 +341,7 @@
 			if(file_exists("songs/$list.txt") && $reqid != "")
 			{
 				$song=get_song($list,$reqid);
-				$request=array("artist" => "SystemHad","title" => "OneJob");
+				$request=array("Artist" => "SystemHad","Title" => "OneJob");
 				$rawfields=explode("|",get_system_setting("songformat"));
 				$fields=array();
 				foreach($rawfields as $field)

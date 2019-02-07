@@ -325,12 +325,8 @@
 		{
 			if(time() <= strtotime($request[3]) + $exptime || (($request[5] == 0 || $request[5] == 2) && $open == 2))
 			{
-				if($_SERVER['REMOTE_ADDR'] == $request[2])
-				{
-					$string .= "<a href=\"delete.php?p=" . $request[0] . "\">Delete</a>\r\n";
-				}
-				else
-				{
+				if($_SERVER['REMOTE_ADDR'] != $request[2])
+                {
 					$string .= "<a href=\"report.php?p=" . $request[0] . "\">Report request</a>\r\n";
 				}
 			}

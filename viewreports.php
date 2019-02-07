@@ -193,6 +193,6 @@
   ?>
   </tbody>
   </table>
-  <p><a href="index.php">Go home</a></p>
+  <p><a href="admin.php">Go home</a></p>
   </body>
 </html>
