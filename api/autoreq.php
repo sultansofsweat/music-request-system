@@ -53,14 +53,6 @@
 	}
 	
 	//Get all necessary settings
-	if(isset($_POST['post']))
-	{
-		$post=preg_replace("/[^0-9]/","",$_POST['post']);
-	}
-	else
-	{
-		$post="";
-	}
 	$allowed=get_system_setting("interface");
 	if($allowed == "yes")
 	{
@@ -71,19 +63,7 @@
 		$allowed=false;
 	}
 	$key=get_system_setting("autokey");
-	if($post != "")
-	{
-		$post_exists=does_post_exist($_POST['post']);
-	}
-	else
-	{
-		$post_exists=false;
-	}
-	$sysenabled=get_system_setting("posting");
-	if($sysenabled != "yes" && $sysenabled != "no")
-	{
-		$sysenabled=false;
-	}
+	$pagenable=explode(",",get_system_setting("apipages"));
 	$default="<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n
 <html>\r\n
   <head>\r\n
@@ -116,147 +96,154 @@
   <p>You have attempted to access something you do not have permissions to access. Your computer will be microwaved if you do not <a href=\"../index.php\">leave</a> immediately. Save your computer the trouble!</p>\r\n
   </body>\r\n
 </html>";
-	
+
 	if(is_logging_enabled() === true)
 	{
-		//Logging enabled
-		$ip=$_SERVER['REMOTE_ADDR'];
-		write_log($ip,date("g:i:s"),"Attempted to get requests");
+		set_timezone();
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to get all requests via API");
 		if($allowed === true)
 		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
+			if(in_array(1,$pagenable))
 			{
-				//Key is valid, get all requests
-                $rawposts=get_requests();
-				$posts=array();
-				write_log($ip,date("g:i:s"),"Obtained all posts");
-				if(count($rawposts) > 0)
+				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					//OUTPUT FORMAT: ID|User|Date|Request|Filename|Status|Comment|Response
-					foreach($rawposts as $post)
+					$rawposts=get_requests();
+					$posts=array();
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Obtained all posts");
+					if(count($rawposts) > 0)
 					{
-						//Make new array for details
-						$details=array();
-                        //Only keep the details that we want
-                        $details[]=$post[0];
-                        $details[]=$post[1];
-                        $details[]=$post[3];
-                        $details[]=$post[4];
-                        $details[]=$post[8];
-                        $details[]=$post[5];
-                        $details[]=$post[7];
-                        $details[]=$post[6];
-						//Add details array to posts array
-						$posts[]=$details;
+						//OUTPUT FORMAT: ID|User|Date|Request|Filename|Status|Comment|Response
+						foreach($rawposts as $post)
+						{
+							$details=array();
+							$details[]=$post[0];
+							$details[]=$post[1];
+							$details[]=$post[3];
+							$details[]=format_request($post[4]);
+							$details[]=$post[8];
+							$details[]=$post[5];
+							if($post[7] != "")
+							{
+								$details[]=$post[7];
+							}
+							else
+							{
+								$details[]="None";
+							}
+							
+							if($post[6] != "")
+							{
+								$details[]=$post[6];
+							}
+							else
+							{
+								$details[]="None";
+							}
+							$posts[]=$details;
+						}
+						for($i=0;$i<count($posts);$i++)
+						{
+							$posts[$i]=implode("&",$posts[$i]);
+						}
+						$posts=implode("\n",$posts);
+						http_response_code(200);
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully got requests.");
+						echo stripcslashes($posts);
 					}
-					//Format details
-					for($i=0;$i<count($posts);$i++)
+					else
 					{
-						$posts[$i]=implode("&",$posts[$i]);
+						http_response_code(204);
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get requests: none of the darned things exist!");
+						echo $default;
 					}
-					$posts=implode("\n",$posts);
-					//Output posts
-					http_response_code(200);
-					write_log($ip,date("g:i:s"),"Successfully got requests.");
-					echo stripcslashes($posts);
 				}
 				else
 				{
-					//No posts exist
-					http_response_code(404);
-					write_log($ip,date("g:i:s"),"Failed to get requests: none of the darned things exist!");
+					http_response_code(403);
 					echo $default;
 				}
 			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				write_log($ip,date("g:i:s"),"Failed to check system status: key not configured");
-				echo $default;
-			}
 			else
 			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
-				write_log($ip,date("g:i:s"),"Failed to check system status: incorrect key supplied");
+				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
-			//This is not permitted
 			http_response_code(410);
-			write_log($ip,date("g:i:s"),"Failed to check system status: system not configured to allow this");
 			echo $default;
 		}
 	}
 	else
 	{
-		//Logging disabled
 		if($allowed === true)
 		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
+			if(in_array(1,$pagenable))
 			{
-				//Key is valid, get all requests
-				//Key is valid, get all requests
-                $rawposts=get_requests();
-				$posts=array();
-				write_log($ip,date("g:i:s"),"Obtained all posts");
-				if(count($rawposts) > 0)
+				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					//OUTPUT FORMAT: ID|User|Date|Request|Filename|Status|Comment|Response
-					foreach($rawposts as $post)
+					$rawposts=get_requests();
+					$posts=array();
+					if(count($rawposts) > 0)
 					{
-						//Make new array for details
-						$details=array();
-                        //Only keep the details that we want
-                        $details[]=$post[0];
-                        $details[]=$post[1];
-                        $details[]=$post[3];
-                        $details[]=format_request($post[4]);
-                        $details[]=$post[8];
-                        $details[]=$post[5];
-                        $details[]=$post[7];
-                        $details[]=$post[6];
-						//Add details array to posts array
-						$posts[]=$details;
+						//OUTPUT FORMAT: ID|User|Date|Request|Filename|Status|Comment|Response
+						foreach($rawposts as $post)
+						{
+							$details=array();
+							$details[]=$post[0];
+							$details[]=$post[1];
+							$details[]=$post[3];
+							$details[]=format_request($post[4]);
+							$details[]=$post[8];
+							$details[]=$post[5];
+							if($post[7] != "")
+							{
+								$details[]=$post[7];
+							}
+							else
+							{
+								$details[]="None";
+							}
+							
+							if($post[6] != "")
+							{
+								$details[]=$post[6];
+							}
+							else
+							{
+								$details[]="None";
+							}
+							$posts[]=$details;
+						}
+						for($i=0;$i<count($posts);$i++)
+						{
+							$posts[$i]=implode("&",$posts[$i]);
+						}
+						$posts=implode("\n",$posts);
+						http_response_code(200);
+						echo stripcslashes($posts);
 					}
-					//Format details
-					for($i=0;$i<count($posts);$i++)
+					else
 					{
-						$posts[$i]=implode("&",$posts[$i]);
+						http_response_code(204);
+						echo $default;
 					}
-					$posts=implode("\n",$posts);
-					//Output posts
-					http_response_code(200);
-					echo stripcslashes($posts);
 				}
 				else
 				{
-					//No posts exist
-					http_response_code(404);
+					http_response_code(403);
 					echo $default;
 				}
 			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				echo $default;
-			}
 			else
 			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
+				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
-			//This is not permitted
 			http_response_code(410);
 			echo $default;
 		}

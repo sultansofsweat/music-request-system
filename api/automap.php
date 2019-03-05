@@ -79,6 +79,7 @@
 	{
 		$post_exists=false;
 	}
+	$pagenable=explode(",",get_system_setting("apipages"));
 	$default="<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n
 <html>\r\n
   <head>\r\n
@@ -111,131 +112,111 @@
   <p>You have attempted to access something you do not have permissions to access. Your computer will be microwaved if you do not <a href=\"../index.php\">leave</a> immediately. Save your computer the trouble!</p>\r\n
   </body>\r\n
 </html>";
-	
+
 	if(is_logging_enabled() === true)
 	{
-		//Logging enabled
-		$ip=$_SERVER['REMOTE_ADDR'];
-		write_log($ip,date("g:i:s"),"Attempted to decline post $post");
-		if($allowed === true)
+		set_timezone();
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to mark post $post as played via API");
+		if($allowed == "yes")
 		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
+			if(in_array(2,$pagenable))
 			{
-				//Key is valid, check if post exists
-				if($post_exists === true)
+				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					//Sanitize comment
-					$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
-					//Get post contents
-					$post=get_request($_POST['post']);
-					while(count($post) < 9)
+					if($post_exists === true)
 					{
-						$post[]="";
-					}
-					//Write new post contents [id,name,ip,date,request,status,admincomment,usercomment]
-					$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$comment,$post[7],$post[8]);
-					if($debug === false)
-					{
-						http_response_code(500);
-						write_log($ip,date("g:i:s"),"Failed to decline post $post: the file has been microwaved");
-						echo $default;
+						$post=get_request($post);
+						while(count($post) < 9)
+						{
+							$post[]="";
+						}
+						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$post[6],$post[7],$post[8]);
+						if($debug === false)
+						{
+							http_response_code(500);
+							write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to mark post $post as played: the file has been microwaved");
+							echo $default;
+						}
+						else
+						{
+							http_response_code(200);
+							write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully marked post $post as played");
+							echo $default;
+						}
 					}
 					else
 					{
-						//Successfully declined post
-						http_response_code(200);
-						write_log($ip,date("g:i:s"),"Successfully declined post $post");
+						http_response_code(500);
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to mark post $post as played: the file has been abducted by Russians");
 						echo $default;
 					}
 				}
 				else
 				{
-					//Post does not exist
-					http_response_code(404);
-					write_log($ip,date("g:i:s"),"Failed to decline post $post: the file has been abducted by Russians");
+					http_response_code(403);
 					echo $default;
 				}
 			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				write_log($ip,date("g:i:s"),"Failed to decline post $post: key not configured");
-				echo $default;
-			}
 			else
 			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
-				write_log($ip,date("g:i:s"),"Failed to decline post $post: incorrect key supplied");
+				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
-			//This is not permitted
 			http_response_code(410);
-			write_log($ip,date("g:i:s"),"Failed to decline post $post: system not configured to allow this");
 			echo $default;
 		}
 	}
 	else
 	{
-		//Logging disabled
-		if($allowed === true)
+		if($allowed == "yes")
 		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
+			if(in_array(2,$pagenable))
 			{
-				//Key is valid, check if post exists
-				if($post_exists === true)
+				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					//Sanitize comment
-					$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
-					//Get post contents
-					$post=get_request($_POST['post']);
-					while(count($post) < 9)
+					if($post_exists === true)
 					{
-						$post[]="";
-					}
-					//Write new post contents [id,name,ip,date,request,status,admincomment,usercomment]
-					$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$comment,$post[7],$post[8]);
-					if($debug === false)
-					{
-						http_response_code(500);
-						echo $default;
+						$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
+						$post=get_request($post);
+						while(count($post) < 9)
+						{
+							$post[]="";
+						}
+						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$comment,$post[7],$post[8]);
+						if($debug === false)
+						{
+							http_response_code(500);
+							echo $default;
+						}
+						else
+						{
+							http_response_code(200);
+							echo $default;
+						}
 					}
 					else
 					{
-						//Successfully declined post
-						http_response_code(200);
+						http_response_code(500);
 						echo $default;
 					}
 				}
 				else
 				{
-					//Post does not exist
-					http_response_code(404);
+					http_response_code(403);
 					echo $default;
 				}
 			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				echo $default;
-			}
 			else
 			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
+				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
-			//This is not permitted
 			http_response_code(410);
 			echo $default;
 		}

@@ -143,8 +143,17 @@
 			$reqlvl=array($reqlvl);
 		}
 		$reqs=array();
+		$posts=array();
+		//Loop through supplied request levels
+		foreach($reqlvl as $lvl)
+		{
+			$ids=get_req_db($lvl);
+			foreach($ids as $id)
+			{
+				$posts[]=get_request($id);
+			}
+		}
 		//Get all posts
-		$posts=get_requests();
 		//Loop through posts
 		foreach($posts as $post)
 		{
@@ -200,6 +209,7 @@
 		}
 		fwrite($fh,base64_encode($content));
 		fclose($fh);
+		write_req_db($status,$id);
 		return true;
 	}
 	//Function for getting a system setting
@@ -221,6 +231,15 @@
 			return file_get_contents("backend/$setting.txt");
 		}
 		return "";
+	}
+	//Function for checking if a system setting is contained within a file
+	function does_setting_exist($setting)
+	{
+		if(file_exists("backend/$setting.txt"))
+		{
+			return true;
+		}
+		return false;
 	}
 	//Define an HTTP response code changing function if it does not exist
 	if (!function_exists('http_response_code'))
@@ -258,19 +277,18 @@
 		//Get user's IP address
 		$username=$_SERVER['REMOTE_ADDR'];
 		
-		//Get all requests
-		$files=get_requests();
-		foreach($files as $file)
+		//Get all open requests
+		//$openids=get_open_req_db();
+		$openids=array_merge(get_req_db(0),get_req_db(2));
+		foreach($openids as $id)
 		{
-			if($file[2] == $username)
+			//Get request info
+			$req=get_request($id);
+			//Check username
+			if($req[2] == $username)
 			{
-				//Check the status of the request
-				$status=explode("|",$file[5]);
-				if($status[0] == 0 || $status[0] == 2)
-				{
-					//User has a currently active request in the system
-					return true;
-				}
+				//User has an open request
+				return true;
 			}
 		}
 		//User does not have a currently active request in the system
@@ -465,7 +483,6 @@
 					"comments" => "no",
 					"viewcomments" => "no",
 					"interface" => "no",
-					"autokey" => "",
 					"songformat" => "artist|title|album|year",
 					"songformathr" => "Artist|Title|Album|Year",
 					"sysid" => "",
@@ -478,7 +495,20 @@
 					"extlists" => "",
 					"rss" => "no",
 					"christmas" => "yes",
-					"hidenr" => 0);
+					"hidenr" => 0,
+					"autoban" => "no",
+					"banwords" => "",
+					"partial" => "no",
+					"beforeban" => 3,
+					"apipages" => "0,1,2,3",
+					"logatt" => "yes",
+                    "banfail" => 0,
+                    "passreq" => "no",
+                    "baninvpass" => "yes");
+		if($setting == "RETURN_ALL")
+		{
+			return array_keys($defaults);
+		}
 		return $defaults[$setting];
 	}
 	function get_songs_formatted()
@@ -555,7 +585,7 @@
 		$fh=fopen("ban/uname.txt",'a');
 		if($fh)
 		{
-			fwrite($fh,$username . "\r\n");
+			fwrite($fh,$username . "|" . $reason . "\r\n");
 			fclose($fh);
 			return true;
 		}
@@ -569,7 +599,7 @@
 		$fh=fopen("ban/ip.txt",'a');
 		if($fh)
 		{
-			fwrite($fh,$ip . "\r\n");
+			fwrite($fh,$ip . "|" . $reason . "\r\n");
 			fclose($fh);
 			return true;
 		}
@@ -581,85 +611,114 @@
 	function unban_user($username)
 	{
 		$bans=get_all_user_bans();
-		$remove=array(strtolower($username));
-		if(in_array($remove[0],$bans))
+		$remove=strtolower($username);
+		$found=false;
+		for($i=0;$i<count($bans);$i++)
 		{
-			$bans=array_diff($bans,$remove);
-			$bans=implode("\r\n",$bans);
-			$fh=fopen("ban/uname.txt",'w');
-			if($fh)
+			if($bans[$i][0] == $remove)
 			{
-				fwrite($fh,$bans);
-				fclose($fh);
-				return 0;
-			}
-			else
-			{
-				return 1;
+				$bans[$i]="";
+				$found=true;
 			}
 		}
-		else
+		$bans=array_filter($bans);
+		for($i=0;$i<count($bans);$i++)
+		{
+			$bans[$i]=implode("|",$bans[$i]);
+		}
+		$bans=implode("\r\n",$bans);
+		if($found === false)
 		{
 			return 2;
 		}
+		$fh=fopen("ban/uname.txt",'w');
+		if($fh)
+		{
+			fwrite($fh,$bans);
+			fclose($fh);
+			return 0;
+		}
+		return 1;
 	}
 	function unban_ip($ip)
 	{
 		$bans=get_all_ip_bans();
-		$remove=array($ip);
-		if(in_array($remove[0],$bans))
+		$remove=$ip;
+		$found=false;
+		for($i=0;$i<count($bans);$i++)
 		{
-			$bans=array_diff($bans,$remove);
-			$bans=implode("\r\n",$bans);
-			$fh=fopen("ban/ip.txt",'w');
-			if($fh)
+			if($bans[$i][0] == $remove)
 			{
-				fwrite($fh,$bans);
-				fclose($fh);
-				return 0;
-			}
-			else
-			{
-				return 1;
+				$bans[$i]="";
+				$found=true;
 			}
 		}
-		else
+		$bans=array_filter($bans);
+		for($i=0;$i<count($bans);$i++)
+		{
+			$bans[$i]=implode("|",$bans[$i]);
+		}
+		$bans=implode("\r\n",$bans);
+		if($found === false)
 		{
 			return 2;
 		}
+		$fh=fopen("ban/ip.txt",'w');
+		if($fh)
+		{
+			fwrite($fh,$bans);
+			fclose($fh);
+			return 0;
+		}
+		return 1;
 	}
 	
 	function is_user_banned($username)
 	{
-		$result=array(false,"");
 		$bans=get_all_user_bans();
-		if(in_array(strtolower($username),$bans))
+		foreach($bans as $ban)
 		{
-			$result[0]=true;
+			if($ban[0] == strtolower($username))
+			{
+				unset($_SESSION['sradmin']);
+				return true;
+			}
 		}
-		return $result;
+		return false;
 	}
 	function is_ip_banned($ip)
 	{
-		$result=array(false,"");
 		$bans=get_all_ip_bans();
-		if(in_array($ip,$bans))
+		foreach($bans as $ban)
 		{
-			$result[0]=true;
+			if($ban[0] == $ip)
+			{
+				unset($_SESSION['sradmin']);
+				return true;
+			}
 		}
-		return $result;
+		return false;
 	}
 	
 	function get_all_user_bans()
 	{
 		if(file_exists("ban/uname.txt"))
 		{
-			$contents=explode("\r\n",file_get_contents("ban/uname.txt"));
-			return array_filter(array_map("strtolower",$contents));
+			$contents=array_filter(explode("\r\n",file_get_contents("ban/uname.txt")));
+			for($i=0;$i<count($contents);$i++)
+			{
+				$contents[$i]=explode("|",$contents[$i]);
+				if(!isset($contents[$i][1]))
+				{
+					$contents[$i][1]="";
+				}
+				$contents[$i][0]=strtolower($contents[$i][0]);
+			}
+			return $contents;
 		}
 		else
 		{
-			trigger_error("Username ban list doesn't exist",E_USER_WARNING);
+			trigger_error("Username ban list doesn't exist, assuming empty",E_USER_NOTICE);
 			return array();
 		}
 	}
@@ -667,12 +726,20 @@
 	{
 		if(file_exists("ban/ip.txt"))
 		{
-			$contents=explode("\r\n",file_get_contents("ban/ip.txt"));
-			return array_filter($contents);
+			$contents=array_filter(explode("\r\n",file_get_contents("ban/ip.txt")));
+			for($i=0;$i<count($contents);$i++)
+			{
+				$contents[$i]=explode("|",$contents[$i]);
+				if(!isset($contents[$i][1]))
+				{
+					$contents[$i][1]="";
+				}
+			}
+			return $contents;
 		}
 		else
 		{
-			trigger_error("IP address ban list doesn't exist",E_USER_WARNING);
+			trigger_error("IP address ban list doesn't exist, assuming empty",E_USER_NOTICE);
 			return array();
 		}
 	}
@@ -680,14 +747,14 @@
 	function delete_all_posts()
 	{
 		$results=array(0,0,0);
-		$posts=glob("posts/*.txt");
-		if(count($posts) > 0)
-		{
-			foreach($posts as $post)
-			{
-				$results[1]++;
-				$debug=unlink($post);
-				if($debug === true)
+        $posts=get_all_req_ids();
+        if(count($posts) > 0)
+        {
+            foreach($posts as $post)
+            {
+                $results[1]++;
+                $debug=delete_post($post);
+                if($debug === true)
 				{
 					$results[0]++;
 				}
@@ -695,8 +762,8 @@
 				{
 					$results[2]++;
 				}
-			}
-		}
+            }
+        }
 		return $results;
 	}
 	
@@ -705,6 +772,10 @@
 		if(file_exists("posts/$post.txt"))
 		{
 			$debug=unlink("posts/$post.txt");
+            if($debug === true)
+            {
+                $debug=write_req_db(-1,$post);
+            }
 		}
 		else
 		{
@@ -1184,8 +1255,297 @@
 			return false;
 		}
     }
+	
+    //Function for autobanning a user for using an inappropriate word in their username
+	function autoban($username)
+	{
+		//If auto banning disabled, pass the username no matter what
+		if(get_system_setting("autoban") == "no")
+		{
+			return true;
+		}
+		//Get banned word list
+		$banwords=explode(",",get_system_setting("banwords"));
+		//Get partial flag
+		$partial=get_system_setting("partial");
+		//Format username
+		$formatteduname=strtolower($username);
+		//Loop through each word
+		foreach($banwords as $word)
+		{
+			if($partial == "yes" && strpos($formatteduname,$word) !== false)
+			{
+				//Username contains banned word, block it
+				return false;
+			}
+			elseif($formatteduname == $word)
+			{
+				//Username contains banned word, block it
+				return false;
+			}
+		}
+		//Username passes test
+		return true;
+	}
+	
+	//Function for creating all system setting files (if they are missing)
+	function verify_system_config()
+	{
+		$settings=get_system_default("RETURN_ALL");
+		foreach($settings as $setting)
+		{
+			if(does_setting_exist($setting) === false)
+			{
+				$debug=save_system_setting($setting,get_system_default($setting));
+				if($debug === true)
+				{
+					trigger_error("Setting $setting was missing and was set to default. Report this to the administrator.",E_USER_NOTICE);
+				}
+				else
+				{
+					trigger_error("Setting $setting is missing in the system and it could not be created. Something probably got microwaved. Expect problems.",E_USER_WARNING);
+				}
+			}
+		}
+		if(!file_exists("ban/ip.txt") || file_get_contents("ban/ip.txt") == " ")
+		{
+			$fh=fopen("ban/ip.txt",'w');
+			fclose($fh);
+		}
+		if(!file_exists("ban/uname.txt") || file_get_contents("ban/uname.txt") == " ")
+		{
+			$fh=fopen("ban/uname.txt",'w');
+			fclose($fh);
+		}
+	}
+	
+	//Function for dealing with the allowed codes in the system
+	function replace_code($input)
+	{
+		//SUPPORTED: [b] [i] [u] [url="blah"]
+		
+		$output=str_replace("[url","<a href",$input);
+		$output=str_replace("[/url]","</a>",$output);
+		$output=str_replace("[","<",$output);
+		$output=str_replace("]",">",$output);
+		$output=str_replace("&#34;","\"",$output);
+		
+		return $output;
+	}
+	
+	//Function for getting copyright information
+	function get_copyright_information()
+	{
+		if(file_exists("backend/copyinfo.txt"))
+		{
+			$copyinfo=replace_code(file_get_contents("backend/copyinfo.txt"));
+			return $copyinfo;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	//Function for getting raw copyright information
+	function get_raw_copyright_information()
+	{
+		if(file_exists("backend/copyinfo.txt"))
+		{
+			$copyinfo=file_get_contents("backend/copyinfo.txt");
+			return $copyinfo;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	//Function for setting copyright information
+	function set_copyright_information($info)
+	{
+		if($info != "")
+		{
+			$fh=fopen("backend/copyinfo.txt",'w');
+			if($fh)
+			{
+				fwrite($fh,stripcslashes($info));
+				fclose($fh);
+				return true;
+			}
+		}
+		return false;
+	}
+	//Function for clearing copyright information
+	function clear_copyright_information()
+	{
+		return unlink("backend/copyinfo.txt");
+	}
+	
+	//Function for tracking login requests
+	function track_login($ip,$date,$success,$number="Not tracked")
+	{
+		$result="Failure";
+		if($success === true)
+		{
+			$result="Success";
+		}
+		$fh=fopen("backend/login-log.txt",'a');
+		if($fh)
+		{
+			fwrite($fh,"$ip|$date|$result|$number|U\r\n");
+			fclose($fh);
+			return true;
+		}
+		return false;
+	}
+	//Function for getting all login attempts
+	function get_login_attempts()
+	{
+		//FORMAT: [IP,Date,Result,Number,Read]
+		$logins=array();
+		if(file_exists("backend/login-log.txt"));
+		{
+			$raw=array_filter(explode("\r\n",file_get_contents("backend/login-log.txt")));
+			for($i=0;$i<count($raw);$i++)
+			{
+				$raw[$i]=explode("|",$raw[$i]);
+			}
+			$logins=$raw;
+		}
+		return $logins;
+	}
+	//Function for getting a single login attempt
+	function get_login_attempt($id)
+	{
+		$logins=get_login_attempts();
+		if(isset($logins[$id]))
+		{
+			return $logins[$id];
+		}
+		else
+		{
+			trigger_error("Failed to get login $id; something probably got clobbered with multiple different kinds of fruit.",E_USER_WARNING);
+			return array();
+		}
+	}
+	//Function for marking login attempts as read
+	function mark_attempts_as_read()
+	{
+		$logins=get_login_attempts();
+		for($i=0;$i<count($logins);$i++)
+		{
+			$logins[$i][4]="R";
+			$logins[$i]=implode("|",$logins[$i]);
+		}
+		$fh=fopen("backend/login-log.txt",'w');
+		if($fh)
+		{
+			foreach($logins as $login)
+			{
+				fwrite($fh,"$login\r\n");
+			}
+			fclose($fh);
+			return true;
+		}
+		return false;
+	}
+	//Function for clearing login logs
+	function clear_login_log()
+	{
+		$fh=fopen("backend/login-log.txt",'w');
+		if($fh)
+		{
+			fclose($fh);
+			return true;
+		}
+		return false;
+	}
+	
+	//Function for writing to the request database
+	function write_req_db($status,$id)
+	{
+		if(file_exists("backend/req-db.txt"))
+		{
+			$db=unserialize(file_get_contents("backend/req-db.txt"));
+			if($status == -1)
+			{
+				for($i=0;$i<count($db);$i++)
+				{
+					if(($index=array_search($id,$db[$i])) !== false)
+					{
+						unset($db[$i][$index]);
+					}
+				}
+			}
+			else
+			{
+				for($i=0;$i<count($db);$i++)
+				{
+					if(($index=array_search($id,$db[$i])) !== false && $i != $status)
+					{
+						unset($db[$i][$index]);
+					}
+					elseif($i == $status)
+					{
+						$db[$i][]=$id;
+					}
+				}
+			}
+			$fh=fopen("backend/req-db.txt",'w');
+			if($fh)
+			{
+				fwrite($fh,serialize($db));
+				fclose($fh);
+				return true;
+			}
+		}
+		trigger_error("Failed to write to request database. Expect problems.",E_USER_ERROR);
+		return false;
+	}
+	//Function for reading the request database
+	function get_req_db($index)
+	{
+		if(file_exists("backend/req-db.txt"))
+		{
+			$db=unserialize(file_get_contents("backend/req-db.txt"));
+			if(isset($db[$index]))
+			{
+				return $db[$index];
+			}
+		}
+		trigger_error("Failed to read request database. Expect problems.",E_USER_ERROR);
+		return array(array(),array(),array(),array());
+	}
+    
+    //Function for saving the request password
+    function save_request_password($password)
+    {
+        $hash=password_hash($password,PASSWORD_DEFAULT);
+        if($hash !== false)
+        {
+            $fh=fopen("backend/subpass.txt",'w');
+            if($fh)
+            {
+                fwrite($fh,$hash);
+                fclose($fh);
+                return true;
+            }
+        }
+        return false;
+    }
+    //Function for validating the request password
+    function validate_request_password($password)
+    {
+        if(file_exists("backend/subpass.txt"))
+        {
+            return password_verify($password,file_get_contents("backend/subpass.txt"));
+        }
+        return false;
+    }
 ?>
 <?php
     //Set new script time limit
-    set_time_limit(get_system_setting("timelimit"));
+	if(function_exists("set_time_limit"))
+	{
+		set_time_limit(get_system_setting("timelimit"));
+	}
 ?>

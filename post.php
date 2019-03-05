@@ -409,7 +409,7 @@
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"System in overflow mode");
         }
 		//Check if user has a pending request
-		if(pendingrequest() === true && get_system_setting("pdreq") === true)
+		if(pendingrequest() === true && get_system_setting("pdreq") == "yes")
 		{
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User has a pending request, and further requests are not permitted");
 			trigger_error("You have a presently unplayed/undeclined request. Please wait until this request is played or declined.",E_USER_NOTICE);
@@ -451,7 +451,7 @@
 			$posting="no";
         }
 		//Check if user has a pending request
-		if(pendingrequest() === true && get_system_setting("pdreq") === true)
+		if(pendingrequest() === true && get_system_setting("pdreq") == "yes")
 		{
 			trigger_error("You have a presently unplayed/undeclined request. Please wait until this request is played or declined.",E_USER_NOTICE);
 			$posting="no";

@@ -88,7 +88,14 @@
 				if(filter_var(filter_var($_POST['ip'],FILTER_SANITIZE_STRING), FILTER_VALIDATE_IP))
 				{
 					//Valid
-					$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING));
+					if(isset($_POST['reason']))
+					{
+						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING),filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
+					}
+					else
+					{
+						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING));
+					}
 					if($debug === true)
 					{
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Added IP address \"" . filter_var($_POST['ip'],FILTER_SANITIZE_STRING) . "\" to banlist");
@@ -135,7 +142,14 @@
 				if(filter_var(filter_var($_POST['ip'],FILTER_SANITIZE_STRING), FILTER_VALIDATE_IP))
 				{
 					//Valid
-					$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING));
+					if(isset($_POST['reason']))
+					{
+						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING),filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
+					}
+					else
+					{
+						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING));
+					}
 					if($debug === true)
 					{
 						echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=0\"</script>");
@@ -174,6 +188,7 @@
   <form method="post" action="bip.php">
   <input type="hidden" name="s" value="y">
   IP address to ban: <input type="text" name="ip" value="<?php echo $uip; ?>"><br>
+  Reason: <input type="text" name="reason"><br>
   <input type="submit" value="Ban"> or <input type="button" value="Cancel" onclick="window.location.href='index.php'">
   </form>
   </body>

@@ -163,6 +163,17 @@
 			echo ("Failed to change automation settings. Throw a GPX clock radio at the server.<br>\r\n");
 		}
 	}
+	if(isset($_GET['copyset']))
+	{
+		if($_GET['copyset'] == "yes")
+		{
+			echo ("Successfully changed copyright information.<br>\r\n");
+		}
+		else
+		{
+			echo ("Failed to change copyright information. It's time to hit the server with a bug bomb. Or, maybe even a real bomb.<br>\r\n");
+		}
+	}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
@@ -226,12 +237,20 @@
 	$overflow=get_system_setting("limit");
 	$api=get_system_setting("interface");
 	$apiuid=get_system_setting("sysid");
-	$apipages=array(0,1,2,3); //$apipages=explode("|",get_system_setting("apipages"));
+	$apipages=explode(",",get_system_setting("apipages"));
 	$upgrade=get_system_setting("stable");
 	$datetime=get_system_setting("datetime");
 	$timelimit=30; //$timelimit=get_system_setting("timelimit");
 	$popular=get_system_setting("popular");
     $rss=get_system_setting("rss");
+	$autoban=get_system_setting("autoban");
+	$banwords=get_system_setting("banwords");
+	$partial=get_system_setting("partial");
+	$beforeban=get_system_setting("beforeban");
+	$logatt=get_system_setting("logatt");
+    $banfail=get_system_setting("banfail");
+    $reqpass=get_system_setting("passreq");
+    $baninvpass=get_system_setting("baninvpass");
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
@@ -277,12 +296,20 @@
 				$overflow=get_system_default("limit");
 				$api=get_system_default("interface");
 				$apiuid=get_system_default("sysid");
-				$apipages=array(0,1,2,3); //$apipages=explode("|",get_system_default("apipages"));
+				$apipages=explode(",",get_system_default("apipages"));
 				$upgrade=get_system_default("stable");
 				$datetime=get_system_default("datetime");
 				$timelimit=30; //$timelimit=get_system_default("timelimit");
                 $popular=get_system_default("popular");
                 $rss=get_system_default("rss");
+				$autoban=get_system_default("autoban");
+				$banwords=get_system_default("banwords");
+				$partial=get_system_default("partial");
+				$beforeban=get_system_default("beforeban");
+				$logatt=get_system_default("logatt");
+                $banfail=get_system_default("banfail");
+                $reqpass=get_system_default("passreq");
+                $baninvpass=get_system_default("baninvpass");
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set settings to default");
 				trigger_error("Set all settings to their default values.");
 			}
@@ -291,10 +318,6 @@
 				//Set all current settings as the defaults
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set current settings as default");
 				trigger_error("This feature is not yet implemented.");
-				if(!isset($_POST['debug']) || $_POST['debug'] != "y")
-				{
-					die("<script type=\"text/javascript\">window.location = \"index.php?admsave=no\"</script>");
-				}
 			}
 			else
 			{
@@ -963,7 +986,7 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"sysid\" to \"$apiuid\"");
 					}
 				}
-				if(isset($_POST['oapipass']) && password_verify($_POST['oapipass'],get_system_setting("autokey")) === true && isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
+				if(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
 				{
 					$apikey=password_hash($_POST['napipass'],PASSWORD_DEFAULT);
 					$debug=save_system_setting("autokey",$apikey);
@@ -977,21 +1000,15 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting setting \"autokey\" to \"********\"");
 					}
 				}
-                elseif(isset($_POST['oapipass']))
-                {
-                    write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"autokey\" to \"********\": invalid original password supplied");
-					$error=true;
-                }
-                elseif(isset($_POST['napipass']) && isset($_POST['capipass']))
+                elseif(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['capipass'] != "")
                 {
                     write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"autokey\" to \"********\": passwords did not match");
 					$error=true;
                 }
-				if(isset($_POST['apipages']))
+				if(isset($_POST['apipages']) && is_array($_POST['apipages']))
 				{
-					$rawpages=explode(",",filter_var($_POST['apipages'],FILTER_SANITIZE_STRING));
 					$apipages=array();
-					foreach($rawpages as $page)
+					foreach($_POST['apipages'] as $page)
 					{
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
@@ -1006,6 +1023,7 @@
 					{
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"apipages\" to \"$apipages\"");
 					}
+                    $apipages=explode(",",$apipages);
 				}
 				if(isset($_POST['upgrade']))
 				{
@@ -1101,6 +1119,185 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"rss\" to \"$rss\"");
 					}
 				}
+				if(isset($_POST['autoban']))
+				{
+					if($_POST['autoban'] == "yes")
+					{
+						$autoban="yes";
+					}
+					else
+					{
+						$autoban="no";
+					}
+					$debug=save_system_setting("autoban",$autoban);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"autoban\" to \"$autoban\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"autoban\" to \"$autoban\"");
+					}
+				}
+				if(isset($_POST['banwords']))
+				{
+					$banwords=preg_replace("/\s+/","", filter_var($_POST['banwords'],FILTER_SANITIZE_STRING));
+					$debug=save_system_setting("banwords",$banwords);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"banwords\" to \"$banwords\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"banwords\" to \"$banwords\"");
+					}
+				}
+				if(isset($_POST['partial']) && $_POST['partial'] == "yes")
+				{
+					$partial="yes";
+				}
+				else
+				{
+					$partial="no";
+				}
+				if($partial != get_system_setting("partial"))
+				{
+					$debug=save_system_setting("partial",$partial);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"partial\" to \"$partial\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"partial\" to \"$partial\"");
+					}
+				}
+				if(isset($_POST['beforeban']))
+				{
+					$beforeban=preg_replace("/[^0-9]/","",$_POST['beforeban']);
+					$debug=save_system_setting("beforeban",$beforeban);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"beforeban\" to \"$beforeban\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"beforeban\" to \"$beforeban\"");
+					}
+				}
+				if(isset($_POST['logatt']))
+				{
+					if($_POST['logatt'] == "yes")
+					{
+						$logatt="yes";
+					}
+					else
+					{
+						$logatt="no";
+					}
+					$debug=save_system_setting("logatt",$logatt);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"logatt\" to \"$logatt\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"logatt\" to \"$logatt\"");
+					}
+				}
+				if(isset($_POST['baninvpass']))
+				{
+					if($_POST['baninvpass'] == "yes")
+					{
+						$baninvpass="yes";
+					}
+					else
+					{
+						$baninvpass="no";
+					}
+					$debug=save_system_setting("baninvpass",$baninvpass);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"baninvpass\" to \"$baninvpass\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"baninvpass\" to \"$baninvpass\"");
+					}
+				}
+				if(isset($_POST['reqpass']))
+				{
+					if($_POST['reqpass'] == "yes")
+					{
+						$reqpass="yes";
+					}
+					else
+					{
+						$reqpass="no";
+					}
+                    if($reqpass == "yes" && isset($_POST['ereqpass']) && isset($_POST['creqpass']) && $_POST['ereqpass'] == $_POST['creqpass'])
+                    {
+                        $debug=save_request_password($_POST['ereqpass']);
+                        if($debug !== true)
+                        {
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to save new request password, not enabling request password entry");
+                            $error=true;
+                        }
+                        else
+                        {
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Saved new request password");
+                            $debug=save_system_setting("passreq",$reqpass);
+                            if($debug !== true)
+                            {
+                                write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"passreq\" to \"$reqpass\"");
+                                $error=true;
+                            }
+                            else
+                            {
+                                write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"passreq\" to \"$reqpass\"");
+                            }
+                        }
+                    }
+                    elseif($reqpass == "no")
+                    {
+                        $debug=save_system_setting("passreq",$reqpass);
+                        if($debug !== true)
+                        {
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"passreq\" to \"$reqpass\"");
+                            $error=true;
+                        }
+                        else
+                        {
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"passreq\" to \"$reqpass\"");
+                        }
+                    }
+                    else
+                    {
+                        write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"passreq\" to \"$reqpass\": invalid password supplied");
+                        trigger_error("Cannot set request password as they do not match. Try again.",E_USER_ERROR);
+                        $error=true;
+                    }
+				}
+				if(isset($_POST['banfail']))
+				{
+					$banfail=max(0,preg_replace("/[^0-9]/","",$_POST['banfail']));
+					$debug=save_system_setting("banfail",$banfail);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"banfail\" to \"$banfail\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"banfail\" to \"$banfail\"");
+					}
+				}
 				if($error === true)
 				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change all system settings");
@@ -1170,21 +1367,25 @@
 				$overflow=get_system_default("limit");
 				$api=get_system_default("interface");
 				$apiuid=get_system_default("sysid");
-				$apipages=array(0,1,2,3); //$apipages=explode("|",get_system_default("apipages"));
+				$apipages=explode(",",get_system_default("apipages"));
 				$upgrade=get_system_default("stable");
 				$datetime=get_system_default("datetime");
 				$timelimit=30; //$timelimit=get_system_default("timelimit");
                 $popular=get_system_default("popular");
+				$autoban=get_system_default("autoban");
+				$banwords=get_system_default("banwords");
+				$partial=get_system_default("partial");
+				$beforeban=get_system_default("beforeban");
+				$logatt=get_system_default("logatt");
+                $banfail=get_system_default("banfail");
+                $reqpass=get_system_default("passreq");
+                $baninvpass=get_system_default("baninvpass");
 				trigger_error("Set all settings to their default values.");
 			}
 			elseif(isset($_POST['setdef']) && $_POST['setdef'] == "y")
 			{
 				//Set all current settings as the defaults
 				trigger_error("This feature is not yet implemented.");
-				if(!isset($_POST['debug']) || $_POST['debug'] != "y")
-				{
-					die("<script type=\"text/javascript\">window.location = \"index.php?admsave=no\"</script>");
-				}
 			}
 			else
 			{
@@ -1681,7 +1882,7 @@
 						$error=true;
 					}
 				}
-				if(isset($_POST['oapipass']) && password_verify($_POST['oapipass'],get_system_setting("autokey")) === true && isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
+				if(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
 				{
 					$apikey=password_hash($_POST['napipass'],PASSWORD_DEFAULT);
 					$debug=save_system_setting("autokey",$apikey);
@@ -1690,19 +1891,14 @@
 						$error=true;
 					}
 				}
-                elseif(isset($_POST['oapipass']) && $_POST['oapipass'] != "")
-                {
-					$error=true;
-                }
                 elseif(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['capipass'] != "")
                 {
 					$error=true;
                 }
-				if(isset($_POST['apipages']))
+				if(isset($_POST['apipages']) && is_array($_POST['apipages']))
 				{
-					$rawpages=explode(",",filter_var($_POST['apipages'],FILTER_SANITIZE_STRING));
 					$apipages=array();
-					foreach($rawpages as $page)
+					foreach($_POST['apipages'] as $page)
 					{
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
@@ -1712,6 +1908,7 @@
 					{
 						$error=true;
 					}
+                    $apipages=explode(",",$apipages);
 				}
 				if(isset($_POST['upgrade']))
 				{
@@ -1781,6 +1978,137 @@
 						$error=true;
 					}
 				}
+				if(isset($_POST['autoban']))
+				{
+					if($_POST['autoban'] == "yes")
+					{
+						$autoban="yes";
+					}
+					else
+					{
+						$autoban="no";
+					}
+					$debug=save_system_setting("autoban",$autoban);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['banwords']))
+				{
+					$banwords=preg_replace("/\s+/","", filter_var($_POST['banwords'],FILTER_SANITIZE_STRING));
+					$debug=save_system_setting("banwords",$banwords);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['partial']) && $_POST['partial'] == "yes")
+				{
+					$partial="yes";
+				}
+				else
+				{
+					$partial="no";
+				}
+				if($partial != get_system_setting("partial"))
+				{
+					$debug=save_system_setting("partial",$partial);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['beforeban']))
+				{
+					$beforeban=preg_replace("/[^0-9]/","",$_POST['beforeban']);
+					$debug=save_system_setting("beforeban",$beforeban);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['logatt']))
+				{
+					if($_POST['logatt'] == "yes")
+					{
+						$logatt="yes";
+					}
+					else
+					{
+						$logatt="no";
+					}
+					$debug=save_system_setting("logatt",$logatt);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['baninvpass']))
+				{
+					if($_POST['baninvpass'] == "yes")
+					{
+						$baninvpass="yes";
+					}
+					else
+					{
+						$baninvpass="no";
+					}
+					$debug=save_system_setting("baninvpass",$baninvpass);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
+				if(isset($_POST['reqpass']))
+				{
+					if($_POST['reqpass'] == "yes")
+					{
+						$reqpass="yes";
+					}
+					else
+					{
+						$reqpass="no";
+					}
+                    if($reqpass == "yes" && isset($_POST['ereqpass']) && isset($_POST['creqpass']) && $_POST['ereqpass'] == $_POST['creqpass'])
+                    {
+                        $debug=save_request_password($_POST['ereqpass']);
+                        if($debug !== true)
+                        {
+                            $error=true;
+                        }
+                        else
+                        {
+                            $debug=save_system_setting("passreq",$reqpass);
+                            if($debug !== true)
+                            {
+                                $error=true;
+                            }
+                        }
+                    }
+                    elseif($reqpass == "no")
+                    {
+                        $debug=save_system_setting("passreq",$reqpass);
+                        if($debug !== true)
+                        {
+                            $error=true;
+                        }
+                    }
+                    else
+                    {
+                        trigger_error("Cannot set request password as they do not match. Try again.",E_USER_ERROR);
+                        $error=true;
+                    }
+				}
+				if(isset($_POST['banfail']))
+				{
+					$banfail=max(0,preg_replace("/[^0-9]/","",$_POST['banfail']));
+					$debug=save_system_setting("banfail",$banfail);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
 				if($error === true)
 				{
 					$return="no";
@@ -1827,12 +2155,15 @@
   Logging: <input type="radio" name="logging" value="yes" <?php if ($logging == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="logging" value="no"  <?php if ($logging == "no") { echo ("checked=\"checked\""); } ?>>No<br>
   Use alternate session storage?: <input type="radio" name="uas" value="yes"  <?php if ($uas == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="uas" value="no"  <?php if ($uas == "no") { echo ("checked=\"checked\""); } ?>>No<br>
   Alternate session storage location: <input type="text" name="asl" value="<?php if(isset($asl)) { echo $asl; } ?>"><br>
-  Limit script execution time to: <input type="text" name="timelimit" maxlength="3" size="3" value="<?php echo $timelimit; ?>" disabled="disabled"> seconds (enter 0 for no limit, but note that doing so is potentially VERY dangerous)<br>
+  Limit script execution time to: <input type="text" name="timelimit" maxlength="3" size="3" value="<?php echo $timelimit; ?>" <?php if(!function_exists("set_time_limit")) { echo("disabled=\"disabled\""); } ?>> seconds <?php if(!function_exists("set_time_limit")) { echo("(disabled for security reasons)"); } else { echo("(enter 0 for no limit, but note that doing so is potentially VERY dangerous)"); } ?><br>
   Error reporting level: <input type="radio" name="errlvl" value="0"<?php if(isset($errlvl) && $errlvl == 0) { echo " checked=\"checked\""; } ?>>Only errors | <input type="radio" name="errlvl" value="1"<?php if(isset($errlvl) && $errlvl == 1) { echo " checked=\"checked\""; } ?>>System messages only | <input type="radio" name="errlvl" value="2"<?php if(isset($errlvl) && $errlvl == 2) { echo " checked=\"checked\""; } ?>>All messages<br>
   Write all errors to a log file: <input type="radio" name="logerr" value="yes"  <?php if ($logerr == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="logerr" value="no"  <?php if ($logerr == "no") { echo ("checked=\"checked\""); } ?>>No<br>  
+  Log system login attempts: <input type="radio" name="logatt" value="yes" <?php if (isset($logatt) && $logatt == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="logatt" value="no" <?php if (isset($logatt) && $logatt == "no") { echo ("checked=\"checked\""); } ?>>No<br>  
   <a href="password.php">Change administrator password</a><br>
   <a href="security.php">Change security options</a><br>
+  <a href="copyright.php">Edit system copyright information</a><br>
   <a href="viewlog.php">View system logs</a><br>
+  <a href="viewatt.php">View login attempts</a><br>
   <a href="viewerr.php">View error logs</a><br>
   <a href="purgesess.php">Clear session storage location</a> (ONLY applicable when using alternative storage locations)<br>
   <hr>
@@ -1874,7 +2205,7 @@
   Enable requestee-submitted comments: <input type="radio" name="comments" value="yes" <?php if ($comments == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="comments" value="no"  <?php if ($comments == "no") { echo ("checked=\"checked\""); } ?>>No<br>
   Anonymous requesting: <input type="radio" name="anon" value="yes" <?php if ($anon == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="anon" value="no"  <?php if ($anon == "no") { echo ("checked=\"checked\""); } ?>>No<br>
   Allow off-list requests: <input type="radio" name="open" value="yes"  <?php if ($open == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="open" value="no"  <?php if ($open == "no") { echo ("checked=\"checked\""); } ?>>No<br>
-  Allow multiple active requests for users: <input type="radio" name="pdreq" value="yes"  <?php if ($pdreq == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="pdreq" value="no"  <?php if ($pdreq == "no") { echo ("checked=\"checked\""); } ?>>No<br><br>
+  Allow multiple active requests for users: <input type="radio" name="pdreq" value="no"  <?php if ($pdreq == "no") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="pdreq" value="yes"  <?php if ($pdreq == "yes") { echo ("checked=\"checked\""); } ?>>No<br><br>
   Allow:&nbsp;
   <select name="unlock">
   <option value="">-Select one-</option>
@@ -1920,22 +2251,49 @@
   <option value="19" <?php if ($overflow == "19") { echo ("selected=\"selected\""); } ?>>19</option>
   <option value="20" <?php if ($overflow == "20") { echo ("selected=\"selected\""); } ?>>20</option>
   <option value="0" <?php if ($overflow == "0") { echo ("selected=\"selected\""); } ?>>Unlimited</option>
-  </select> active requests submitted<br>
+  </select> active requests submitted<br><br>
+  Require password to submit requests: <input type="radio" name="reqpass" value="yes" <?php if(isset($reqpass) && $reqpass == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="reqpass" value="no" <?php if(isset($reqpass) && $reqpass == "no") { echo "checked=\"checked\""; } ?>>No<br>
+  Password: <input type="password" name="ereqpass"><br>
+  Confirm password: <input type="password" name="creqpass"><br>
   <a href="ruledit.php">Edit system rules</a><br>
   <a href="archive.php">Archive requests</a><br>
   <a href="delall.php">Delete all requests</a><br>
   <hr>
+  <a name="autoban"></a><h3>Automatic Banning/Username Filtering</h3>
+  Allow the MRS to automatically ban IPs after:&nbsp;
+  <select name="banfail">
+  <option value="">-Select one-</option>
+  <option value="0" <?php if ($banfail == "0") { echo ("selected=\"selected\""); } ?>>Don't bother</option>
+  <option value="2" <?php if ($banfail == "2") { echo ("selected=\"selected\""); } ?>>2</option>
+  <option value="3" <?php if ($banfail == "3") { echo ("selected=\"selected\""); } ?>>3</option>
+  <option value="5" <?php if ($banfail == "5") { echo ("selected=\"selected\""); } ?>>5</option>
+  <option value="5" <?php if ($banfail == "10") { echo ("selected=\"selected\""); } ?>>10</option>
+  </select> failed login attempts.<br>
+  Automatically ban IPs that submit invalid passwords: <input type="radio" name="baninvpass" value="yes" <?php if(isset($baninvpass) && $baninvpass == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="baninvpass" value="no" <?php if(isset($baninvpass) && $baninvpass == "no") { echo "checked=\"checked\""; } ?>>No (NOTE: only has an effect if a request password is set! Also note that the number of attempts before a ban is the same as below.)<br>
+  Allow the MRS to automatically ban IPs based on the rules below: <input type="radio" name="autoban" value="yes" <?php if(isset($autoban) && $autoban == "yes") { echo "checked=\"checked\""; } ?>>Yes | <input type="radio" name="autoban" value="no" <?php if(isset($autoban) && $autoban == "no") { echo "checked=\"checked\""; } ?>>No<br>
+  List of words to disallow in usernames:<br>
+  <textarea name="banwords" rows="10" cols="50"><?php if(isset($banwords)) { echo $banwords; } ?></textarea><br>
+  <input type="checkbox" name="partial" value="yes" <?php if(isset($partial) && $partial == "yes") { echo "checked=\"checked\""; } ?>> Do partial word matching (note that this is POTENTIALLY DANGEROUS)<br>
+  Allow:&nbsp;
+  <select name="beforeban">
+  <option value="">-Select one-</option>
+  <option value="0" <?php if ($beforeban == "0") { echo ("selected=\"selected\""); } ?>>0</option>
+  <option value="1" <?php if ($beforeban == "1") { echo ("selected=\"selected\""); } ?>>1</option>
+  <option value="2" <?php if ($beforeban == "2") { echo ("selected=\"selected\""); } ?>>2</option>
+  <option value="3" <?php if ($beforeban == "3") { echo ("selected=\"selected\""); } ?>>3</option>
+  <option value="5" <?php if ($beforeban == "5") { echo ("selected=\"selected\""); } ?>>5</option>
+  </select> attempted posts before automatically banning<br>
+  <hr>
   <a name="api"></a><h3>API</h3>
   System API: <input type="radio" name="api" value="yes" <?php if($api == "yes") {echo("checked=\"checked\""); } ?>>Enabled | <input type="radio" name="api" value="no" <?php if($api == "no") {echo("checked=\"checked\""); } ?>>Disabled<br>
   API ID: <input type="text" name="apiuid" value="<?php echo $apiuid; ?>"><br>
-  Current API Password: <input type="password" name="oapipass"> (only required for changes)<br>
   New API Password: <input type="password" name="napipass"><br>
   Confirm new API Password: <input type="password" name="capipass"><br>
   Pages:<br>
   <input type="checkbox" name="apipages[]" value="0" <?php if(in_array(0,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Version information<br>
-  <input type="checkbox" name="apipages[]" value="1" <?php if(in_array(1,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Request view<br>
-  <input type="checkbox" name="apipages[]" value="2" <?php if(in_array(2,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Request actions (queue, decline, mark as played)<br>
-  <input type="checkbox" name="apipages[]" value="3" <?php if(in_array(3,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Open/close system<br>
+  <input type="checkbox" name="apipages[]" value="1" <?php if(in_array(1,$apipages)) { echo("checked=\"checked\""); } ?>>Request view<br>
+  <input type="checkbox" name="apipages[]" value="2" <?php if(in_array(2,$apipages)) { echo("checked=\"checked\""); } ?>>Request actions (queue, decline, mark as played)<br>
+  <input type="checkbox" name="apipages[]" value="3" <?php if(in_array(3,$apipages)) { echo("checked=\"checked\""); } ?>>Open/close system<br>
   <input type="checkbox" name="apipages[]" value="4" <?php if(in_array(4,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Archive/delete requests<br>
   <input type="checkbox" name="apipages[]" value="5" <?php if(in_array(5,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Remote administration console<br>
   <input type="checkbox" name="apipages[]" value="6" <?php if(in_array(6,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Remote API configuration<br>

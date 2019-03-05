@@ -201,7 +201,7 @@
   Current password: <input type="password" name="old" required="required"><br>
   New password: <input type="password" name="new" required="required"><br>
   Confirm: <input type="password" name="confirm" required="required"><br>
-  <input type="submit" value="Change"> or <input type="button" value="Cancel" onclick="window.location.href='index.php'">
+  <input type="submit" value="Change"> or <input type="button" value="Cancel" onclick="window.location.href='admin.php'">
   </form>
   </body>
 </html>

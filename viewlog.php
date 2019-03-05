@@ -183,7 +183,7 @@
 			}
 		}
 		//End table output
-		echo ("</tbody>\r\n</table>\r\n");
+		echo ("</tbody>\r\n</table>\r\n<p><a href=\"admin.php\">Exit viewer</a></p>\r\n");
 	}
 	else
 	{
@@ -193,7 +193,7 @@
 		{
 			echo ("<option value=\"" . $log . "\">" . $log . "</option>\r\n");
 		}
-		echo ("</select><br>\r\n<input type=\"submit\"><input type=\"button\" value=\"Cancel\" onclick=\"window.location.href='index.php'\">\r\n</form>\r\n");
+		echo ("</select><br>\r\n<input type=\"submit\"><input type=\"button\" value=\"Cancel\" onclick=\"window.location.href='admin.php'\">\r\n</form>\r\n");
 	}
   ?>
   </body>

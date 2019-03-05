@@ -341,7 +341,7 @@
   <option value="0" <?php if(isset($timeout) && $timeout == 0) {echo("selected=\"selected\"");} ?>>Indefinite</option>
   </select> minutes<br>
   Re-enter password: <input type="password" name="pass" required="required"><br>
-  <input type="submit" value="Change"> or <input type="button" value="Cancel" onclick="window.location.href='index.php'">
+  <input type="submit" value="Change"> or <input type="button" value="Cancel" onclick="window.location.href='admin.php'">
   </form>
   </body>
 </html>

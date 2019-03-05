@@ -53,14 +53,6 @@
 	}
 	
 	//Get all necessary settings
-	if(isset($_POST['post']))
-	{
-		$post=preg_replace("/[^0-9]/","",$_POST['post']);
-	}
-	else
-	{
-		$post="";
-	}
 	$allowed=get_system_setting("interface");
 	if($allowed == "yes")
 	{
@@ -71,19 +63,12 @@
 		$allowed=false;
 	}
 	$key=get_system_setting("autokey");
-	if($post != "")
-	{
-		$post_exists=does_post_exist($_POST['post']);
-	}
-	else
-	{
-		$post_exists=false;
-	}
 	$sysenabled=get_system_setting("posting");
 	if($sysenabled != "yes" && $sysenabled != "no")
 	{
 		$sysenabled=false;
 	}
+	$pagenable=explode(",",get_system_setting("apipages"));
 	$default="<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n
 <html>\r\n
   <head>\r\n
@@ -116,92 +101,81 @@
   <p>You have attempted to access something you do not have permissions to access. Your computer will be microwaved if you do not <a href=\"../index.php\">leave</a> immediately. Save your computer the trouble!</p>\r\n
   </body>\r\n
 </html>";
-	
+
 	if(is_logging_enabled() === true)
 	{
-		//Logging enabled
-		$ip=$_SERVER['REMOTE_ADDR'];
-		write_log($ip,date("g:i:s"),"Attempted to check system status");
-		if($allowed === true)
+		set_timezone();
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to get system status via API");
+		if($allowed == "yes")
 		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
+			if(in_array(3,$pagenable))
 			{
-				//Key is valid, make sure system is in a determinate state
-				if($sysenabled === false)
+				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					http_response_code(404);
-					write_log($ip,date("g:i:s"),"Failed to check system status: the MRS has been microwaved");
-					echo $default;
+					if($sysenabled === false)
+					{
+						http_response_code(500);
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get status: something has been microwaved");
+						echo $default;
+					}
+					else
+					{
+						http_response_code(200);
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully got system status");
+						echo $sysenabled;
+					}
 				}
 				else
 				{
-					//Successfully declined post
-					http_response_code(200);
-					write_log($ip,date("g:i:s"),"Successfully checked status.");
-					echo $sysenabled;
+					http_response_code(403);
+					echo $default;
 				}
-			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				write_log($ip,date("g:i:s"),"Failed to check system status: key not configured");
-				echo $default;
 			}
 			else
 			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
-				write_log($ip,date("g:i:s"),"Failed to check system status: incorrect key supplied");
+				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
-			//This is not permitted
 			http_response_code(410);
-			write_log($ip,date("g:i:s"),"Failed to check system status: system not configured to allow this");
 			echo $default;
 		}
 	}
 	else
 	{
-		//Logging disabled
-		if($allowed === true)
+		if($allowed == "yes")
 		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
+			if(in_array(3,$pagenable))
 			{
-				//Key is valid, make sure system is in a determinate state
-				if($sysenabled === false)
+				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					http_response_code(404);
-					echo $default;
+					if($sysenabled === false)
+					{
+						http_response_code(500);
+						echo $default;
+					}
+					else
+					{
+						http_response_code(200);
+						echo $sysenabled;
+					}
 				}
 				else
 				{
-					//Successfully declined post
-					http_response_code(200);
-					echo $sysenabled;
+					http_response_code(403);
+					echo $default;
 				}
-			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				echo $default;
 			}
 			else
 			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
+				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
-			//This is not permitted
 			http_response_code(410);
 			echo $default;
 		}

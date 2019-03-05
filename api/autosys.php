@@ -53,25 +53,10 @@
 	}
 	
 	//Get all necessary settings
-	if(isset($_POST['post']))
-	{
-		$post=preg_replace("/[^0-9]/","",$_POST['post']);
-	}
-	else
-	{
-		$post="";
-	}
 	$allowed=get_system_setting("interface");
-	if($allowed == "yes")
-	{
-		$allowed=true;
-	}
-	else
-	{
-		$allowed=false;
-	}
 	$key=get_system_setting("autokey");
 	$sysenable=get_system_setting("posting");
+	$pagenable=explode(",",get_system_setting("apipages"));
 	$default="<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n
 <html>\r\n
   <head>\r\n
@@ -104,112 +89,99 @@
   <p>You have attempted to access something you do not have permissions to access. Your computer will be microwaved if you do not <a href=\"../index.php\">leave</a> immediately. Save your computer the trouble!</p>\r\n
   </body>\r\n
 </html>";
-	
+
 	if(is_logging_enabled() === true)
 	{
-		//Logging enabled
-		$ip=$_SERVER['REMOTE_ADDR'];
-		write_log($ip,date("g:i:s"),"Attempted to open/close system");
-		if($allowed === true)
+		set_timezone();
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to open/close system via API");
+		if($allowed == "yes")
 		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
+			if(in_array(3,$pagenable))
 			{
-				//Key is valid, chreck current status, and flip it for saving
-				if($sysenable == "no")
+				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					$sysenable="yes";
+					if($sysenable == "no")
+					{
+						$sysenable="yes";
+					}
+					else
+					{
+						$sysenable="no";
+					}
+					$debug=save_system_setting("posting",$sysenable);
+					if($debug === false)
+					{
+						http_response_code(500);
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to open/close system: the file has been microwaved");
+						echo $default;
+					}
+					else
+					{
+						http_response_code(200);
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully opened/closed system");
+						echo $sysenable;
+					}
 				}
 				else
 				{
-					$sysenable="no";
-				}
-				//Write new post contents [id,name,ip,date,request,status,admincomment,usercomment]
-				$debug=save_system_setting("posting",$sysenable);
-				if($debug === false)
-				{
-					http_response_code(404);
-					write_log($ip,date("g:i:s"),"Failed to open/close system: the file has been microwaved");
+					http_response_code(403);
 					echo $default;
 				}
-				else
-				{
-					//Successfully opened/closed system
-					http_response_code(200);
-					write_log($ip,date("g:i:s"),"Successfully opened/closed system");
-					echo $default;
-				}
-			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				write_log($ip,date("g:i:s"),"Failed to open/close system: key not configured");
-				echo $default;
 			}
 			else
 			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
-				write_log($ip,date("g:i:s"),"Failed to open/close system: incorrect key supplied");
+				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
-			//This is not permitted
 			http_response_code(410);
-			write_log($ip,date("g:i:s"),"Failed to open/close system: system not configured to allow this");
 			echo $default;
 		}
 	}
 	else
 	{
-		//Logging disabled
-		if($allowed === true)
+		if($allowed == "yes")
 		{
-			//This is permitted, check the key
-			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key))
+			if(in_array(3,$pagenable))
 			{
-				//Key is valid, chreck current status, and flip it for saving
-				if($sysenable == "no")
+				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					$sysenable="yes";
+					if($sysenable == "no")
+					{
+						$sysenable="yes";
+					}
+					else
+					{
+						$sysenable="no";
+					}
+					$debug=save_system_setting("posting",$sysenable);
+					if($debug === false)
+					{
+						http_response_code(500);
+						echo $default;
+					}
+					else
+					{
+						http_response_code(200);
+						echo $sysenable;
+					}
 				}
 				else
 				{
-					$sysenable="no";
-				}
-				//Write new post contents [id,name,ip,date,request,status,admincomment,usercomment]
-				$debug=save_system_setting("posting",$sysenable);
-				if($debug === false)
-				{
-					http_response_code(404);
+					http_response_code(403);
 					echo $default;
 				}
-				else
-				{
-					//Successfully opened/closed system
-					http_response_code(200);
-					echo $default;
-				}
-			}
-			elseif($key == "")
-			{
-				//Key is not configured
-				http_response_code(500);
-				echo $default;
 			}
 			else
 			{
-				//Assume the user entered the wrong key
-				http_response_code(403);
+				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
-			//This is not permitted
 			http_response_code(410);
 			echo $default;
 		}
