@@ -210,6 +210,7 @@
 		fwrite($fh,base64_encode($content));
 		fclose($fh);
 		write_req_db($status,$id);
+		write_date_db(false,$id,strtotime($date));
 		return true;
 	}
 	//Function for getting a system setting
@@ -303,25 +304,30 @@
 			return 0;
 		}
 		//Get list of all requests
-		$files=get_requests();
+		//$files=get_requests();
+		//Get list of requests that are "fresh"
+		$files=array_keys(get_recent_date_db($modifier));
 		//Set up the counter
 		$count=0;
 		foreach($files as $file)
 		{
+			//Get request information
+			$contents=get_request($file);
 			//True for username, false for IP address
 			if($uni === true)
 			{
 				//Get username from contents
-				$un=$file[1];
+				$un=$contents[1];
 			}
 			else
 			{
 				//Get IP address from contents
-				$un=$file[2];
+				$un=$contents[2];
 			}
-			$time=strtotime($file[3]);
+			/*$time=strtotime($file[3]);
 			$mtime=$time + $modifier;
-			if($un == $username && time() < $mtime)
+			if($un == $username && time() < $mtime)*/
+			if($un == $username)
 			{
 				//User has made a request before the expiry time
 				$count++;
@@ -510,16 +516,6 @@
 			return array_keys($defaults);
 		}
 		return $defaults[$setting];
-	}
-	function get_songs_formatted()
-	{
-        trigger_error("Function get_songs_formatted() is deprecated and will be removed in a future release.",E_USER_DEPRECATED);
-		$songs=get_song_list();
-		for($i=0;$i<count($songs);$i++)
-		{
-			$songs[$i]=$songs[$i][0] . "-" . $songs[$i][1] . " (From the album " . $songs[$i][2] . ", " . $songs[$i][3] . ")";
-		}
-		return $songs;
 	}
 	
 	//Functions for sorting requests
@@ -775,6 +771,10 @@
             if($debug === true)
             {
                 $debug=write_req_db(-1,$post);
+				if($debug === true)
+				{
+					$debug=write_date_db(true,$post);
+				}
             }
 		}
 		else
@@ -1514,6 +1514,66 @@
 		}
 		trigger_error("Failed to read request database. Expect problems.",E_USER_ERROR);
 		return array(array(),array(),array(),array());
+	}
+	
+	//Function for getting database of request dates
+	function get_date_db()
+	{
+		if(file_exists("backend/date-db.txt"))
+		{
+			return unserialize(file_get_contents("backend/date-db.txt"));
+		}
+		trigger_error("Failed to read date database. Expect problems.",E_USER_ERROR);
+		return array();
+	}
+	//Function for getting "recent" database of request dates
+	function get_recent_date_db($modifier)
+	{
+		if(file_exists("backend/date-db.txt"))
+		{
+			$rawdb=unserialize(file_get_contents("backend/date-db.txt"));
+			$db=array();
+			foreach($db as $key=>$value)
+			{
+				$time=$value + $modifier;
+				if(time() < $time)
+				{
+					$db[$key]=$value;
+				}
+			}
+			return $db;
+		}
+		trigger_error("Failed to read date database. Expect problems.",E_USER_ERROR);
+		return array();
+	}
+	//Function for saving data to date database
+	function write_date_db($delete,$index,$time=0)
+	{
+		$db=get_date_db();
+		if($delete === true)
+		{
+			if(isset($db[$index]))
+			{
+				unset($db[$index]);
+			}
+			else
+			{
+				trigger_error("Failed to find request ID $index in list. Expect problems.",E_USER_ERROR);
+			}
+		}
+		else
+		{
+			$db[$index]=$time;
+		}
+		$fh=fopen("backend/date-db.txt",'w');
+		if($fh)
+		{
+			fwrite($fh,serialize($db));
+			fclose($fh);
+			return true;
+		}
+		trigger_error("Failed to write to date database. Expect problems.",E_USER_ERROR);
+		return false;
 	}
     
     //Function for saving the request password
