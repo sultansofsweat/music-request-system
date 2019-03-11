@@ -467,7 +467,7 @@
   <table id="reqtable" class="tablesorter">
   <thead>
   <tr>
-  <th></th>
+  <th style="width:90px;"></th>
   <?php
 	//Get user-readable song format
 	$humanreadable=explode("|",get_system_setting("songformathr"));
@@ -480,7 +480,7 @@
 		}
 	}
   ?>
-  <th>Count</th>
+  <th>#</th>
   </tr>
   </thead>
   <tbody>
