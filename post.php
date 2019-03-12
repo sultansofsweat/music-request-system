@@ -207,6 +207,10 @@
             $index=0;
             for($i=0;$i<get_system_setting("popular");$i++)
             {
+                if($list[$index]["request_count"] == 0)
+                {
+                    break;
+                }
                 $current=$list[$index]["request_count"];
                 while($index < count($list) && $list[$index]["request_count"] == $current)
                 {
