@@ -144,6 +144,19 @@
 <?php
 	$disabled=false;
     $autoban=0;
+	//Check page reference
+	if(isset($_POST['ref']) && file_exists($_POST['ref'] . ".php"))
+	{
+		$ref=$_POST['ref'];
+	}
+	elseif(isset($_GET['ref']) && file_exists(preg_replace("/[^a-z]/","",$_GET['ref']) . ".php"))
+	{
+		$ref=preg_replace("/[^a-z]/","",$_GET['ref']);
+	}
+	else
+	{
+		$ref="index";
+	}
 	if(isset($_POST['s']) && $_POST['s'] == "y")
 	{
 		//Start submission
@@ -158,15 +171,6 @@
 				{
 					//Run the login routine
 					login();
-					//Check page reference
-					if(isset($_POST['ref']) && file_exists($_POST['ref'] . ".php"))
-					{
-						$ref=$_POST['ref'];
-					}
-					else
-					{
-						$ref="index";
-					}
 					if(get_system_setting("logatt") == "yes")
 					{
 						track_login($_SERVER['REMOTE_ADDR'],date("m/d/Y g:i:s A"),true);
@@ -233,15 +237,6 @@
 				{
 					//Run the login routine
 					login();
-					//Check page reference
-					if(isset($_POST['ref']) && $_POST['ref'] != "" && file_exists($_POST['ref'] . ".php"))
-					{
-						$ref=$_POST['ref'];
-					}
-					else
-					{
-						$ref="index";
-					}
 					if(get_system_setting("logatt") == "yes")
 					{
 						track_login($_SERVER['REMOTE_ADDR'],date("m/d/Y g:i:s A"),true);
@@ -321,7 +316,7 @@
   <?php if(isset($disabled) && $disabled === true) { echo("<!--\r\n"); } ?>
   <form method="post" action="login.php">
   <input type="hidden" name="s" value="y">
-  <input type="hidden" name="ref" value="<?php if(isset($ref)) { echo $ref; } elseif(isset($_GET['ref'])) { echo preg_replace("/[^a-z]/","",$_GET['ref']); } ?>">
+  <input type="hidden" name="ref" value="<?php if(isset($ref)) { echo $ref; } else { echo "index"; } ?>">
   <input type="hidden" name="autoban" value="<?php echo $autoban; ?>">
   Password: <input type="password" name="pass" required="required"><br>
   <input type="submit" value="Log in"><input type="button" value="Cancel" onclick="window.location.href='index.php'">
