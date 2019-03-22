@@ -510,7 +510,8 @@
 					"logatt" => "yes",
                     "banfail" => 0,
                     "passreq" => "no",
-                    "baninvpass" => "yes");
+                    "baninvpass" => "yes",
+					"autoopen" => "no");
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);
@@ -1601,6 +1602,95 @@
         }
         return false;
     }
+	
+	//Function for getting the list of auto open/close rules
+	function get_autoopen_rules()
+	{
+		if(file_exists("backend/autorules.txt"))
+		{
+			$rawrules=explode("\r\n",file_get_contents("backend/autorules.txt"));
+			$rules=array();
+			for($i=0;$i<count($rawrules);$i++)
+			{
+				$rules[]=array_merge(array($i),explode("|",$rawrules[$i]));
+			}
+			return $rules;
+		}
+		trigger_error("Auto open/close rules file doesn't exist.",E_USER_ERROR);
+		return array();
+	}
+	//Function for adding a new auto open/close rule
+	function add_autoopen_rule($days,$openhour,$openminute,$openmerid,$closehour,$closeminute,$closemerid,$nextday)
+	{
+		$rule="$days|$openhour:$openminute $openmerid|$openhour:$openminute $openmerid|$nextday";
+		if(file_exists("backend/autorules.txt") && file_get_contents("backend/autorules.txt") != "")
+		{
+			$rule="\r\n$rule";
+		}
+		$fh=fopen("backend/autorules.txt");
+		if($fh)
+		{
+			fwrite($fh,$rule);
+			fclose($fh);
+			return true;
+		}
+		return false;
+	}
+	//Function for removing an auto open/close rule
+	function remove_autoopen_rule($id)
+	{
+		if(file_exists("backend/autorules.txt"))
+		{
+			$rawrules=explode("\r\n",file_get_contents("backend/autorules.txt"));
+			if(isset($rawrules[$id]))
+			{
+				unset($rawrules[$id]);
+				$fh=fopen("backend/autorules.txt");
+				if($fh)
+				{
+					fwrite($fh,implode("\r\n",$rawrules));
+					fclose($fh);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	//Function for executing auto open/close rules
+	function auto_open_close()
+	{
+		//Get rules
+		$rules=get_autoopen_rules();
+		foreach($rules as $rule)
+		{
+			//Set up a list of open/close options for the rule
+			foreach($rule[1] as $day)
+			{
+				//Check if day matches current day
+				if(date("w") == $day)
+				{
+					//Make timestamps
+					$openstamp=strtotime("Today " . $rule[2]);
+					$closestamp=strtotime("Today " . $rule[3])+($rule[4]*24*60*60);
+					//Compare to current time
+					if(time() > $openstamp && get_system_setting("posting") == "no")
+					{
+						//Open system
+						save_system_setting("posting","yes");
+						return true;
+					}
+					elseif(time() > $closestamp && get_system_setting("posting") == "yes")
+					{
+						//Close system
+						save_system_setting("posting","no");
+						return true;
+					}
+				}
+			}
+		}
+		//No rule activated
+		return false;
+	}
 ?>
 <?php
     //Set new script time limit

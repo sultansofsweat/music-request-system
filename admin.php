@@ -251,6 +251,7 @@
     $banfail=get_system_setting("banfail");
     $reqpass=get_system_setting("passreq");
     $baninvpass=get_system_setting("baninvpass");
+	$autoopen=get_system_setting("autoopen");
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
@@ -310,6 +311,7 @@
                 $banfail=get_system_default("banfail");
                 $reqpass=get_system_default("passreq");
                 $baninvpass=get_system_default("baninvpass");
+				$autoopen=get_system_default("autoopen");
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set settings to default");
 				trigger_error("Set all settings to their default values.");
 			}
@@ -1298,6 +1300,27 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"banfail\" to \"$banfail\"");
 					}
 				}
+				if(isset($_POST['autoopen']))
+				{
+					if($_POST['autoopen'] == "yes")
+					{
+						$autoopen="yes";
+					}
+					else
+					{
+						$autoopen="no";
+					}
+					$debug=save_system_setting("autoopen",$autoopen);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"autoopen\" to \"$autoopen\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"autoopen\" to \"$autoopen\"");
+					}
+				}
 				if($error === true)
 				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change all system settings");
@@ -1380,6 +1403,7 @@
                 $banfail=get_system_default("banfail");
                 $reqpass=get_system_default("passreq");
                 $baninvpass=get_system_default("baninvpass");
+				$autoopen=get_system_default("autoopen");
 				trigger_error("Set all settings to their default values.");
 			}
 			elseif(isset($_POST['setdef']) && $_POST['setdef'] == "y")
@@ -2109,6 +2133,22 @@
 						$error=true;
 					}
 				}
+				if(isset($_POST['autoopen']))
+				{
+					if($_POST['autoopen'] == "yes")
+					{
+						$autoopen="yes";
+					}
+					else
+					{
+						$autoopen="no";
+					}
+					$debug=save_system_setting("autoopen",$autoopen);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
 				if($error === true)
 				{
 					$return="no";
@@ -2199,6 +2239,7 @@
   <hr>
   <a name="requests"></a><h3>Requests</h3>
   Enable requests: <input type="radio" name="posting" value="yes" <?php if ($posting == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="posting" value="no"  <?php if ($posting == "no") { echo ("checked=\"checked\""); } ?>>No<br>
+  Enable automatic opening/closing rules: <input type="radio" name="autoopen" value="yes" <?php if ($autoopen == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="autoopen" value="no"  <?php if ($autoopen == "no") { echo ("checked=\"checked\""); } ?>>No<br>
   Enable RSS feed of requests: <input type="radio" name="rss" value="yes" <?php if ($rss == "yes") { echo ("checked=\"checked\""); } ?>>Yes | <input type="radio" name="rss" value="no"  <?php if ($rss == "no") { echo ("checked=\"checked\""); } ?>>No<br>
   Display requested date using the following format: <input type="text" name="datetime" value="<?php echo $datetime; ?>">(see <a href="https://secure.php.net/manual/en/function.date.php">documentation</a> for valid date constants, invalid stuff will invoke undefined behaviour)<br>
   <input type="checkbox" name="resetdate" value="y" <?php if(isset($resetdate) && $resetdate == "y") { echo "checked=\"checked\""; } ?>> Reformat all current posts to match new date string.<br>
@@ -2256,6 +2297,7 @@
   Password: <input type="password" name="ereqpass"><br>
   Confirm password: <input type="password" name="creqpass"><br>
   <a href="ruledit.php">Edit system rules</a><br>
+  <a href="autoopen.php">Edit automatic opening/closing settings</a>
   <a href="archive.php">Archive requests</a><br>
   <a href="delall.php">Delete all requests</a><br>
   <hr>
