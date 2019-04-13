@@ -51,6 +51,30 @@
 		ini_set("error_reporting",E_ALL & ~E_NOTICE);
 		break;
 	}
+	//Function for extracting filename from a post
+	function extract_filename($post)
+	{
+		$filename="";
+		$formatted=array();
+		$unformatted=explode("|",$post);
+		foreach($unformatted as $item)
+		{
+			$item=explode("=",$item);
+			if(count($item) >= 2)
+			{
+				$formatted[$item[0]]=$item[1];
+			}
+			else
+			{
+				trigger_error("Invalid number of fields in request item. Throwing it away, expect problems.",E_USER_WARNING);
+			}
+		}
+		if(isset($formatted["filename*"]))
+		{
+			$filename=$formatted["filename*"];
+		}
+		return $filename;
+	}
 	
 	//Get all necessary settings
 	$allowed=get_system_setting("interface");
@@ -120,7 +144,7 @@
 							$details[]=$post[1];
 							$details[]=$post[3];
 							$details[]=format_request($post[4]);
-							$details[]=$post[8];
+							$details[]=extract_filename($post[4]);
 							$details[]=$post[5];
 							if($post[7] != "")
 							{
@@ -195,7 +219,7 @@
 							$details[]=$post[1];
 							$details[]=$post[3];
 							$details[]=format_request($post[4]);
-							$details[]=$post[8];
+							$details[]=extract_filename($post[4]);
 							$details[]=$post[5];
 							if($post[7] != "")
 							{
