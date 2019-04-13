@@ -29,6 +29,14 @@
 	}
 ?>
 <?php
+	//Execute automatic open/close
+	$debug=auto_open_close();
+	if($debug === true)
+	{
+		echo("<script type=\"text/javascript\">window.location = \"index.php\"</script>");
+	}
+?>
+<?php
 	//Useful functions
 	
 	//Function for determining if you can view list when system is closed

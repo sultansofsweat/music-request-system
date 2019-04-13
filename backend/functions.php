@@ -1608,7 +1608,7 @@
 	{
 		if(file_exists("backend/autorules.txt"))
 		{
-			$rawrules=explode("\r\n",file_get_contents("backend/autorules.txt"));
+			$rawrules=array_filter(explode("\r\n",file_get_contents("backend/autorules.txt")));
 			$rules=array();
 			for($i=0;$i<count($rawrules);$i++)
 			{
@@ -1622,12 +1622,12 @@
 	//Function for adding a new auto open/close rule
 	function add_autoopen_rule($days,$openhour,$openminute,$openmerid,$closehour,$closeminute,$closemerid,$nextday)
 	{
-		$rule="$days|$openhour:$openminute $openmerid|$openhour:$openminute $openmerid|$nextday";
+		$rule="$days|$openhour:$openminute $openmerid|$closehour:$closeminute $closemerid|$nextday";
 		if(file_exists("backend/autorules.txt") && file_get_contents("backend/autorules.txt") != "")
 		{
 			$rule="\r\n$rule";
 		}
-		$fh=fopen("backend/autorules.txt");
+		$fh=fopen("backend/autorules.txt",'a');
 		if($fh)
 		{
 			fwrite($fh,$rule);
@@ -1645,7 +1645,7 @@
 			if(isset($rawrules[$id]))
 			{
 				unset($rawrules[$id]);
-				$fh=fopen("backend/autorules.txt");
+				$fh=fopen("backend/autorules.txt",'w');
 				if($fh)
 				{
 					fwrite($fh,implode("\r\n",$rawrules));
@@ -1659,12 +1659,13 @@
 	//Function for executing auto open/close rules
 	function auto_open_close()
 	{
+		//Force set timezone
+		set_timezone();
 		//Get rules
 		$rules=get_autoopen_rules();
 		foreach($rules as $rule)
 		{
-			//Set up a list of open/close options for the rule
-			foreach($rule[1] as $day)
+			foreach(explode(",",$rule[1]) as $day)
 			{
 				//Check if day matches current day
 				if(date("w") == $day)
@@ -1673,7 +1674,7 @@
 					$openstamp=strtotime("Today " . $rule[2]);
 					$closestamp=strtotime("Today " . $rule[3])+($rule[4]*24*60*60);
 					//Compare to current time
-					if(time() > $openstamp && get_system_setting("posting") == "no")
+					if(time() > $openstamp && time() <= $closestamp && get_system_setting("posting") == "no")
 					{
 						//Open system
 						save_system_setting("posting","yes");

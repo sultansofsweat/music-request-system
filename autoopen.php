@@ -88,10 +88,12 @@
 				case "add":
 				//Start adding rule
 				if(!empty($_GET['days']) &&
-				!empty($openhour=preg_replace("/[^0-9]/","",$_GET['openhour'])) && !empty($openminute=preg_replace("/[^0-9]/","",$_GET['openminute'])) &&
-				!empty($openmerid=preg_replace("/[^(AM|PM)]/","",$_GET['openmerid'])) && ($openmerid == "AM" || $openmerid == "PM") &&
-				!empty($closehour=preg_replace("/[^0-9]/","",$_GET['closehour'])) && !empty($closeminute=preg_replace("/[^0-9]/","",$_GET['closeminute'])) &&
-				!empty($closemerid=preg_replace("/[^(AM|PM)]/","",$_GET['closemerid'])) && ($closemerid == "AM" || $closemerid == "PM"))
+				isset($_GET['openhour']) && ($openhour=preg_replace("/[^0-9]/","",$_GET['openhour'])) != "" &&
+				isset($_GET['openminute']) && ($openminute=preg_replace("/[^0-9]/","",$_GET['openminute'])) != "" &&
+				isset($_GET['openmerid']) && ($openmerid=preg_replace("/[^A-Z]/","",$_GET['openmerid'])) != "" && ($openmerid == "AM" || $openmerid == "PM") &&
+				isset($_GET['closehour']) && ($closehour=preg_replace("/[^0-9]/","",$_GET['closehour'])) != "" &&
+				isset($_GET['closeminute']) && ($closeminute=preg_replace("/[^0-9]/","",$_GET['closeminute'])) != "" &&
+				isset($_GET['closemerid']) && ($closemerid=preg_replace("/[^A-Z]/","",$_GET['closemerid'])) != "" && ($closemerid == "AM" || $closemerid == "PM"))
 				{
 					//Assume rule does not span across a day
 					$nextday=0;
@@ -122,7 +124,7 @@
 				
 				case "delete":
 				//Start adding rule
-				if(!empty($id=preg_replace("/[^0-9]/","",$_GET['id'])))
+				if(isset($_GET['id']) && ($id=preg_replace("/[^0-9]/","",$_GET['id'])) != "")
 				{
 					$debug=remove_autoopen_rule($id);
 					if($debug === true)
@@ -150,59 +152,6 @@
 		{
 			die("You are not an administrator. <a href=\"login.php?ref=autoopen\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
 		}
-		/*if(isset($_POST['delinfo']) && securitycheck() === true)
-		{
-			//Delete copyright information
-			$debug=clear_copyright_information();
-			if($debug === true)
-			{
-				//Success
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Cleared copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
-			}
-			else
-			{
-				//Failure
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to clear copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
-			}
-		}
-		elseif(isset($_POST['copyinfo']) && $_POST['copyinfo'] != "" && securitycheck() === true)
-		{
-			//Write new copyright information
-			$copyinfo=strip_tags(filter_var($_POST['copyinfo'],FILTER_SANITIZE_STRING));
-			$debug=set_copyright_information($copyinfo);
-			if($debug === true)
-			{
-				//Success
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Wrote new copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
-			}
-			else
-			{
-				//Failure
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to write new copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
-			}
-		}
-		else
-		{
-			if(isset($_POST['copyinfo']))
-			{
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Improper attempt to clear info detected and stopped");
-				trigger_error("Failed to submit. Deleting the copyright information is done using the checkbox, not by blanking out the input.",E_USER_ERROR);
-			}
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited copyright info editing page");
-			if(securitycheck() === false)
-			{
-				die("You are not an administrator. <a href=\"login.php?ref=copyright\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
-			}
-			$copyinfo=get_raw_copyright_information();
-			if($copyinfo === false)
-			{
-				$copyinfo="";
-			}
-		}*/
 	}
 	else
 	{
@@ -214,10 +163,12 @@
 				case "add":
 				//Start adding rule
 				if(!empty($_GET['days']) &&
-				!empty($openhour=preg_replace("/[^0-9]/","",$_GET['openhour'])) && !empty($openminute=preg_replace("/[^0-9]/","",$_GET['openminute'])) &&
-				!empty($openmerid=preg_replace("/[^(AM|PM)]/","",$_GET['openmerid'])) && ($openmerid == "AM" || $openmerid == "PM") &&
-				!empty($closehour=preg_replace("/[^0-9]/","",$_GET['closehour'])) && !empty($closeminute=preg_replace("/[^0-9]/","",$_GET['closeminute'])) &&
-				!empty($closemerid=preg_replace("/[^(AM|PM)]/","",$_GET['closemerid'])) && ($closemerid == "AM" || $closemerid == "PM"))
+				isset($_GET['openhour']) && ($openhour=preg_replace("/[^0-9]/","",$_GET['openhour'])) != "" &&
+				isset($_GET['openminute']) && ($openminute=preg_replace("/[^0-9]/","",$_GET['openminute'])) != "" &&
+				isset($_GET['openmerid']) && ($openmerid=preg_replace("/[^A-Z]/","",$_GET['openmerid'])) != "" && ($openmerid == "AM" || $openmerid == "PM") &&
+				isset($_GET['closehour']) && ($closehour=preg_replace("/[^0-9]/","",$_GET['closehour'])) != "" &&
+				isset($_GET['closeminute']) && ($closeminute=preg_replace("/[^0-9]/","",$_GET['closeminute'])) != "" &&
+				isset($_GET['closemerid']) && ($closemerid=preg_replace("/[^A-Z]/","",$_GET['closemerid'])) != "" && ($closemerid == "AM" || $closemerid == "PM"))
 				{
 					//Assume rule does not span across a day
 					$nextday=0;
@@ -245,7 +196,7 @@
 				
 				case "delete":
 				//Start adding rule
-				if(!empty($id=preg_replace("/[^0-9]/","",$_GET['id'])))
+				if(isset($_GET['id']) && ($id=preg_replace("/[^0-9]/","",$_GET['id'])) != "")
 				{
 					$debug=remove_autoopen_rule($id);
 					if($debug === true)
@@ -269,55 +220,6 @@
 		{
 			die("You are not an administrator. <a href=\"login.php?ref=autoopen\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
 		}
-		/*if(isset($_POST['delinfo']) && securitycheck() === true)
-		{
-			//Delete copyright information
-			$debug=clear_copyright_information();
-			if($debug === true)
-			{
-				//Success
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Cleared copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
-			}
-			else
-			{
-				//Failure
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to clear copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
-			}
-		}
-		elseif(isset($_POST['copyinfo']) && $_POST['copyinfo'] != "" && securitycheck() === true)
-		{
-			//Write new copyright information
-			$copyinfo=strip_tags(filter_var($_POST['copyinfo'],FILTER_SANITIZE_STRING));
-			$debug=set_copyright_information($copyinfo);
-			if($debug === true)
-			{
-				//Success
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
-			}
-			else
-			{
-				//Failure
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
-			}
-		}
-		else
-		{
-			if(isset($_POST['copyinfo']))
-			{
-				trigger_error("Failed to submit. Deleting the copyright information is done using the checkbox, not by blanking out the input.",E_USER_ERROR);
-			}
-			if(securitycheck() === false)
-			{
-				die("You are not an administrator. <a href=\"login.php?ref=copyright\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
-			}
-			$copyinfo=get_raw_copyright_information();
-			if($copyinfo === false)
-			{
-				$copyinfo="";
-			}
-		}*/
 	}
 ?>
   <body>
@@ -329,7 +231,45 @@
 	foreach($rules as $rule)
 	{
 		//FORMAT: [id,days,open,close,nextday]
-		echo($rule[1] . ": open at " . $rule[2] . ", close at " . $rule[3] . " <a href=\"autoopen.php?mode=delete&id=" . $rule[0] . "\">Delete</a><br>\r\n");
+		$daystring="";
+		foreach(explode(",",$rule[1]) as $day)
+		{
+			switch($day)
+			{
+				case 0:
+				$daystring.="Sunday, ";
+				break;
+				
+				case 1:
+				$daystring.="Monday, ";
+				break;
+				
+				case 2:
+				$daystring.="Tuesday, ";
+				break;
+				
+				case 3:
+				$daystring.="Wednesday, ";
+				break;
+				
+				case 4:
+				$daystring.="Thursday, ";
+				break;
+				
+				case 5:
+				$daystring.="Friday, ";
+				break;
+				
+				case 6:
+				$daystring.="Saturday, ";
+				break;
+				
+				default:
+				$daystring.="Blasphemy, ";
+				break;
+			}
+		}
+		echo(substr($daystring,0,-2) . ": open at " . $rule[2] . ", close at " . $rule[3] . " <a href=\"autoopen.php?mode=delete&id=" . $rule[0] . "\">Delete</a><br>\r\n");
 	}
   ?>
   </p>

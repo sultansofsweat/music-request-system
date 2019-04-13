@@ -2297,7 +2297,7 @@
   Password: <input type="password" name="ereqpass"><br>
   Confirm password: <input type="password" name="creqpass"><br>
   <a href="ruledit.php">Edit system rules</a><br>
-  <a href="autoopen.php">Edit automatic opening/closing settings</a>
+  <a href="autoopen.php">Edit automatic opening/closing settings</a><br>
   <a href="archive.php">Archive requests</a><br>
   <a href="delall.php">Delete all requests</a><br>
   <hr>
