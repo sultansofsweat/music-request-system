@@ -1318,6 +1318,11 @@
 			$fh=fopen("ban/uname.txt",'w');
 			fclose($fh);
 		}
+		if(!file_exists("backend/autorules.txt") || file_get_contents("backend/autorules.txt") == " ")
+		{
+			$fh=fopen("backend/autorules.txt",'w');
+			fclose($fh);
+		}
 	}
 	
 	//Function for dealing with the allowed codes in the system
