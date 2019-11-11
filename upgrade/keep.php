@@ -88,7 +88,7 @@
 	//Get all necessary information
 	$logging = is_logging_enabled();
 	$stable = get_system_setting("stable");
-	$mirror = "http://firealarms.redbat.ca/mrs";
+	$mirror = get_system_setting("mirror") . "mrs2-upgrade";
 	//Change working directory back
 	chdir("upgrade");
 	//Set termination flag
@@ -99,7 +99,7 @@
 	}
 	if(securitycheck() === false)
 	{
-		//die("You are not an administrator. <a href=\"login.php?rel=admin\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
+		die("You are not an administrator. <a href=\"login.php?rel=admin\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
 	}
   ?>
   <?php

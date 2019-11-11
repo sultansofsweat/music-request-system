@@ -511,7 +511,8 @@
                     "banfail" => 0,
                     "passreq" => "no",
                     "baninvpass" => "yes",
-					"autoopen" => "no");
+					"autoopen" => "no",
+					"mirror" => "http://firealarms.mooo.com/mrs/");
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);

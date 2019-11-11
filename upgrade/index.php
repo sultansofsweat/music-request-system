@@ -154,11 +154,11 @@
 			//Set curl options
 			if(get_system_setting("stable") == "yes")
 			{
-				curl_setopt($curl, CURLOPT_URL, "http://firealarms.redbat.ca/mrs/latest-stable.txt");
+				curl_setopt($curl, CURLOPT_URL, get_system_setting("mirror") . "mrs2-upgrade/latest-stable.txt");
 			}
 			else
 			{
-				curl_setopt($curl, CURLOPT_URL, "http://firealarms.redbat.ca/mrs/latest.txt");
+				curl_setopt($curl, CURLOPT_URL, get_system_setting("mirror") . "mrs2-upgrade/latest.txt");
 			}
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($curl, CURLOPT_HEADER, false);
@@ -249,11 +249,11 @@
 			//Set curl options
 			if(get_system_setting("stable") == "yes")
 			{
-				curl_setopt($curl, CURLOPT_URL, "http://firealarms.redbat.ca/mrs/latest-stable.txt");
+				curl_setopt($curl, CURLOPT_URL, get_system_setting("mirror") . "mrs2-upgrade/latest-stable.txt");
 			}
 			else
 			{
-				curl_setopt($curl, CURLOPT_URL, "http://firealarms.redbat.ca/mrs/latest.txt");
+				curl_setopt($curl, CURLOPT_URL, get_system_setting("mirror") . "mrs2-upgrade/latest.txt");
 			}
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($curl, CURLOPT_HEADER, false);
@@ -336,7 +336,7 @@
   <h1 style="text-align:center; text-decoration:underline;"><?php echo $sysname; ?>Music Request System-Upgrade System</h1>
   <p><a href="#skip">Skip all the mumbo-jumbo and upgrade</a></p>
   <h2>Before Upgrading</h2>
-  <p>MRS releases can be downloaded <a href="http://firealarms.redbat.ca/mrs/#downloading">here</a> or via a <a href="http://firealarms.redbat.ca/mrs/#mirrors">trusted mirror</a>. You may be required to have both the package and the associated MD5 checksum.<br>
+  <p>MRS releases can be downloaded <a href="http://firealarms.mooo.com/mrs/#downloading">here</a> or via a <a href="http://firealarms.mooo.com/mrs/#mirrors">trusted mirror</a>. You may be required to have both the package and the associated MD5 checksum.<br>
   <b>Make sure you are downloading an <u>upgrade</u> pack!</b> Install packs are <b><u>not</u></b> supported by the updater!</p>
   <p>If you are running the latest release, you must download the files and place them in the appropriate location before an update can proceed. Otherwise, proceeding without downloading is fine; the system will download the appropriate files automatically.</p>
   <p><b>Take a backup.</b> No one wants data loss. While the upgrade scripts take backups of their own, they should not be trusted. And besides, a good backup is something you should have anyways in the event of other catastrophic failures.</p>
@@ -351,12 +351,12 @@
   <h2>During the Upgrade</h2>
   <p>...sit back and relax! There is nothing one needs to do, unless there are errors.</p>
   <h2>After the Upgrade</h2>
-  <p>Check for any errors. If there are errors, <u>don't panic</u>. <a href="http://firealarms.redbat.ca/mrs/#report">Report</a> errors to the software vendor.<br>
+  <p>Check for any errors. If there are errors, <u>don't panic</u>. <a href="http://firealarms.mooo.com/mrs/#report">Report</a> errors to the software vendor.<br>
   The system should have taken a backup during the upgrade process, unless the backup did not succeed. You also took your own backup before proceeding with an upgrade...right?<br>
   Inside the upgrade directory are now two folders: "configback" and "sysback". All the system files are in sysback, while the configuration and background/favicon are in configback.<br>
   Move all files in configback to the "backend" folder, overwriting whatever is in there. Move all the single part filenames (those without dashes, for example "index.php") to the root of the MRS, again overwriting everything.<br>
   Other files in sysback (for example "api-autosys.php") will need to be renamed and moved accordingly. The first part of the filename corresponds to the folder it belongs in.</p>
-  <p>If there are any questions about the recovery process, <a href="http://firealarms.redbat.ca/mrs/#contact">contact the software vendor</a></p>
+  <p>If there are any questions about the recovery process, <a href="http://firealarms.mooo.com/mrs/#contact">contact the software vendor</a></p>
   <p>Otherwise, there is nothing to do. You may delete the sysback and configback folders if you wish.</p>
   <hr>
   <h2>Manual Upgrades</h2>

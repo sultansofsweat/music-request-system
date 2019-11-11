@@ -252,6 +252,7 @@
     $reqpass=get_system_setting("passreq");
     $baninvpass=get_system_setting("baninvpass");
 	$autoopen=get_system_setting("autoopen");
+	$mirror=get_system_setting("mirror");
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
@@ -312,6 +313,7 @@
                 $reqpass=get_system_default("passreq");
                 $baninvpass=get_system_default("baninvpass");
 				$autoopen=get_system_default("autoopen");
+				$mirror=get_system_default("mirror");
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set settings to default");
 				trigger_error("Set all settings to their default values.");
 			}
@@ -1321,6 +1323,20 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"autoopen\" to \"$autoopen\"");
 					}
 				}
+				if(isset($_POST['mirror']))
+				{
+					$mirror=filter_var($_POST['mirror'],FILTER_SANITIZE_URL);
+					$debug=save_system_setting("mirror",$mirror);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"mirror\" to \"$mirror\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"mirror\" to \"$mirror\"");
+					}
+				}
 				if($error === true)
 				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change all system settings");
@@ -1404,6 +1420,7 @@
                 $reqpass=get_system_default("passreq");
                 $baninvpass=get_system_default("baninvpass");
 				$autoopen=get_system_default("autoopen");
+				$mirror=get_system_default("mirror");
 				trigger_error("Set all settings to their default values.");
 			}
 			elseif(isset($_POST['setdef']) && $_POST['setdef'] == "y")
@@ -2149,6 +2166,15 @@
 						$error=true;
 					}
 				}
+				if(isset($_POST['mirror']))
+				{
+					$mirror=filter_var($_POST['mirror'],FILTER_SANITIZE_URL);
+					$debug=save_system_setting("mirror",$mirror);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
 				if($error === true)
 				{
 					$return="no";
@@ -2350,9 +2376,10 @@
   <a name="upgrade"></a><h3>System Upgrades</h3>
   Check for these updates: <input type="radio" name="upgrade" value="yes"  <?php if ($upgrade == "yes") { echo ("checked=\"checked\""); } ?>>Stable only | <input type="radio" name="upgrade" value="no"  <?php if ($upgrade == "no") { echo ("checked=\"checked\""); } ?>>Stable and Beta<br>
   Mirror to check:&nbsp;
-  <select name="mirror" disabled="disabled">
+  <select name="mirror">
   <option value="">-Select one-</option>
-  <option value="main" selected="selected">firealarms.redbat.ca (Primary-Canada)</option>
+  <option value="http://firealarms.mooo.com/mrs/" <?php if($mirror == "http://firealarms.mooo.com/mrs/") { echo("selected=\"selected\""); } ?>>firealarms.mooo.com (Canada)</option>
+  <option value="http://firealarms.redbat.ca/mrs/" <?php if($mirror == "http://firealarms.redbat.ca/mrs/") { echo("selected=\"selected\""); } ?>>firealarms.redbat.ca (Canada)</option>
   </select><br>
   <a href="upgrade/index.php">Check for updates</a><br>
   <hr>
