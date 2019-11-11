@@ -2174,6 +2174,12 @@
 	}
   ?>
   <body>
+  <?php
+	if(verify_request_db() !== true)
+	{
+		trigger_error("Request database is in an inconsistent state! Please rebuild it using the microwave located under 'requests'.",E_USER_WARNING);
+	}
+  ?>
   <h1 style="text-align:center; text-decoration:underline;"><?php echo $sysname; ?>MRS-Administration Console</h1>
   <p><a href="#system">System</a><br>
   <a href="#homepage">Homepage</a><br>
@@ -2300,6 +2306,7 @@
   <a href="autoopen.php">Edit automatic opening/closing settings</a><br>
   <a href="archive.php">Archive requests</a><br>
   <a href="delall.php">Delete all requests</a><br>
+  <a href="microwave.php">Rebuild request database</a> <?php if(verify_request_db() !== true) { echo "<b>RECOMMENDED!</b>"; } ?><br>
   <hr>
   <a name="autoban"></a><h3>Automatic Banning/Username Filtering</h3>
   Allow the MRS to automatically ban IPs after:&nbsp;

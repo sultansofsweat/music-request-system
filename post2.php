@@ -153,7 +153,7 @@
 			//If override submitted and allowed, set request to override instead
 			if(isset($_POST['override']) && ($override=filter_var($_POST['override'],FILTER_SANITIZE_STRING)) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
 			{
-				$request=$override;
+				$request="custom**=$override";
 				$list="whocares";
 				$reqid=false;
 			}
@@ -748,7 +748,7 @@
   <input type="hidden" name="autoban" <?php if(isset($autoban)) { echo "value=\"$autoban\""; } else { echo "disabled=\"disabled\""; } ?>>
   Request:<br>
   <?php
-	if($request !== false)
+	if(!empty($request))
 	{
 		foreach($request as $key=>$value)
 		{
@@ -756,7 +756,7 @@
 		}
 	}
   ?>
-  Request this instead: <input type="text" size="50" name="override" <?php if($open != "yes" && $light != "yes") { echo(" value=\"Action not allowed\" disabled=\"disabled\""); } elseif($light == "yes" || $request === false) { echo ("required=\"required\""); } if(isset($override)) { echo ("value=\"$override\""); } ?>><br>
+  Request this instead: <input type="text" size="50" name="override" <?php if($open != "yes" && $light != "yes") { echo(" value=\"Action not allowed\" disabled=\"disabled\""); } elseif($light == "yes" || !empty($request)) { echo ("required=\"required\""); } if(isset($override)) { echo ("value=\"$override\""); } ?>><br>
   Comment (optional):<br>
   <textarea name="comment" <?php if($comments == "no") { echo "disabled=\"disabled\""; } ?> rows="10" cols="50"></textarea><br>
   <!--<input type="hidden" name="posting" value="<?php if($posting === true) { echo "yes"; } else { echo "no"; } ?>">-->

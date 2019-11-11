@@ -1519,7 +1519,7 @@
 			}
 		}
 		trigger_error("Failed to read request database. Expect problems.",E_USER_ERROR);
-		return array(array(),array(),array(),array());
+		return array();
 	}
 	
 	//Function for getting database of request dates
@@ -1695,6 +1695,54 @@
 			}
 		}
 		//No rule activated
+		return false;
+	}
+	
+	//Function for verifying the integrity of the request database
+	function verify_request_db()
+	{
+		if(file_exists("backend/req-db.txt"))
+		{
+			$reqdb=unserialize(file_get_contents("backend/req-db.txt"));
+			$ab=array_intersect($reqdb[0],$reqdb[1]);
+			$ac=array_intersect($reqdb[0],$reqdb[2]);
+			$ad=array_intersect($reqdb[0],$reqdb[3]);
+			$bc=array_intersect($reqdb[1],$reqdb[2]);
+			$bd=array_intersect($reqdb[1],$reqdb[3]);
+			$cd=array_intersect($reqdb[2],$reqdb[3]);
+			$au=array_unique($reqdb[0]);
+			$bu=array_unique($reqdb[1]);
+			$cu=array_unique($reqdb[2]);
+			$du=array_unique($reqdb[3]);
+			if(count($ab) <= 0 && count($ac) <= 0 && count($ad) <= 0 && count($bc) <= 0 && count($bd) <= 0 && count($cd) <= 0 && count($au) == count($reqdb[0]) && count($bu) == count($reqdb[1]) && count($cu) == count($reqdb[2]) && count($du) == count($reqdb[3]))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		trigger_error("Failed to read request database. Expect problems.",E_USER_ERROR);
+		return false;
+	}
+	//Function for rebuilding the request database
+	function rebuild_request_db()
+	{
+		$requests=get_requests();
+		$reqdb=array(array(),array(),array(),array());
+		foreach($requests as $request)
+		{
+			$reqdb[$request[5]][]=$request[0];
+		}
+		$fh=fopen("backend/req-db.txt",'w');
+		if($fh)
+		{
+			fwrite($fh,serialize($reqdb));
+			fclose($fh);
+			return true;
+		}
+		trigger_error("Failed to open request database in write mode. Microwave it and try again.",E_USER_WARNING);
 		return false;
 	}
 ?>
