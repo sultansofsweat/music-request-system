@@ -86,14 +86,7 @@
   </head>
   <body>
   <?php
-	//Function for determining if user is banned
-	function is_banned()
-	{
-		$iban=is_ip_banned($_SERVER['REMOTE_ADDR']);
-		return $iban[0];
-	}
-	
-  	if(is_logging_enabled() === true)
+	if(is_logging_enabled() === true)
 	{
 		//Change the timezone
 		set_timezone();
@@ -101,11 +94,6 @@
 		$fh=fopen("log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
 		if(isset($_POST['confirm']) && $_POST['confirm'] == "y")
 		{
-			//Make sure IP address is valid
-			/*if(!filter_var($_POST['uip'],FILTER_VALIDATE_IP))
-			{
-				echo ("<script type=\"text/javascript\">window.location = \"index.php?repstatus=3\"</script>");
-			}*/
 			//Sanitization work
 			$id=preg_replace("/[^0-9]/", "", $_POST['id']);
 			$username=preg_replace("/[^A-Za-z0-9 ]/", "", $_POST['name']);
@@ -124,36 +112,8 @@
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to file report for post $id");
 				die("<script type=\"text/javascript\">window.location = \"index.php?repstatus=1\"</script>");
 			}
-			/*//Form report contents
-			$contents=array($id,$username,$pdate,$request,$_POST['uip'],$rdate,$comment);
-			$contents=implode("\r\n",$contents);
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Formed report for post $id");
-			//Determine filename
-			$i=0;
-			while(file_exists("reports/" . $id . "-" . $i . ".txt"))
-			{
-				$i++;
-			}
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Determined filename for report for post $id after $i iterations");
-			//Open the file
-			$fh2=fopen("reports/" . $id . "-" . $i . ".txt",'w');
-			if($fh2)
-			{
-				//Success
-				fwrite($fh2,base64_encode($contents));
-				fclose($fh2);
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully filed report for post $id");
-			}
-			else
-			{
-				//Failure
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to file report for post $id");
-				die ("<script type=\"text/javascript\">window.location = \"index.php?repstatus=1\"</script>");
-			}
-			//Get out of here
-			echo ("<script type=\"text/javascript\">window.location = \"index.php?repstatus=0\"</script>");*/
 		}
-		elseif(is_banned() === false)
+		elseif(is_ip_banned() === false)
 		{
 			//Sanitize post number!
 			$post=preg_replace("/[^0-9]/", "", $_GET['p']);
@@ -207,7 +167,7 @@
 				die("<script type=\"text/javascript\">window.location = \"index.php?repstatus=1\"</script>");
 			}
 		}
-		elseif(is_banned() === false)
+		elseif(is_ip_banned() === false)
 		{
 			//Sanitize post number!
 			$post=preg_replace("/[^0-9]/", "", $_GET['p']);
@@ -237,8 +197,6 @@
   <input type="hidden" name="name" value="<?php echo $contents[1]; ?>">
   <input type="hidden" name="ip" value="<?php echo $contents[2]; ?>">
   <input type="hidden" name="date" value="<?php echo $contents[3]; ?>">
-  <!--<input type="hidden" name="uip" value="<?php echo $_SERVER['REMOTE_ADDR']; ?>">
-  <input type="hidden" name="rdate" value="<?php echo date("m/d/Y g:i A"); ?>">-->
   Request to report: <input type="text" name="request" value="<?php echo $contents[4]; ?>" readonly="readonly"><br>
   Comments:<br>
   <textarea name="comment" required="required" rows="10" cols="50"></textarea><br>
