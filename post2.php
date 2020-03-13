@@ -151,8 +151,9 @@
 				$reqid="";
 			}
 			//If override submitted and allowed, set request to override instead
-			if(isset($_POST['override']) && ($override=filter_var($_POST['override'],FILTER_SANITIZE_STRING)) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
+			if(isset($_POST['override']) && preg_replace("/[^A-Za-z0-9]/","",$_POST['override']) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
 			{
+				$override=filter_var($_POST['override'],FILTER_SANITIZE_STRING);
 				$request="custom**=$override";
 				$list="whocares";
 				$reqid=false;
@@ -196,15 +197,15 @@
                 write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User is banned");
                 die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
 			}
+			//If user has a pending request or is locked out, cancel submission
+			if(pendingrequest() === true || user_lockout() === true)
+			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User attempting to submit too many requests");
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=4\"</script>");
+			}
 			//Check ONLY if no override has been set!
 			if($reqid !== false)
 			{
-				//If user has a pending request or is locked out, cancel submission
-				if(pendingrequest() === true || user_lockout() === true)
-				{
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User attempting to submit too many requests");
-					die("<script type=\"text/javascript\">window.location = \"index.php?status=4\"</script>");
-				}
 				//If request is already on the system, cancel submission
 				if(current_request($list,$reqid) === true)
 				{
@@ -485,8 +486,9 @@
 				$reqid="";
 			}
 			//If override submitted and allowed, set request to override instead
-			if(isset($_POST['override']) && ($override=filter_var($_POST['override'],FILTER_SANITIZE_STRING)) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
+			if(isset($_POST['override']) && preg_replace($_POST['override'],FILTER_SANITIZE_STRING) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
 			{
+				$override=filter_var($_POST['override'],FILTER_SANITIZE_STRING);
 				$request="custom**=$override";
 				$list="whocares";
 				$reqid=false;
@@ -526,14 +528,14 @@
 			{
                 die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
 			}
+			//If user has a pending request or is locked out, cancel submission
+			if(pendingrequest() === true || user_lockout() === true)
+			{
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=4\"</script>");
+			}
 			//Check ONLY if no override has been set!
 			if($reqid !== false)
 			{
-				//If user has a pending request or is locked out, cancel submission
-				if(pendingrequest() === true || user_lockout() === true)
-				{
-					die("<script type=\"text/javascript\">window.location = \"index.php?status=4\"</script>");
-				}
 				//If request is already on the system, cancel submission
 				if(current_request($list,$reqid) === true)
 				{
@@ -756,7 +758,7 @@
 		}
 	}
   ?>
-  Request this instead: <input type="text" size="50" name="override" <?php if($open != "yes" && $light != "yes") { echo(" value=\"Action not allowed\" disabled=\"disabled\""); } elseif($light == "yes" || !empty($request)) { echo ("required=\"required\""); } if(isset($override)) { echo ("value=\"$override\""); } ?>><br>
+  Request this instead: <input type="text" size="50" name="override" <?php if($open != "yes" && $light != "yes") { echo(" value=\"Action not allowed\" disabled=\"disabled\""); } elseif($light == "yes" || empty($request)) { echo ("required=\"required\""); } if(isset($override)) { echo ("value=\"$override\""); } ?>><br>
   Comment (optional):<br>
   <textarea name="comment" <?php if($comments == "no") { echo "disabled=\"disabled\""; } ?> rows="10" cols="50"></textarea><br>
   <!--<input type="hidden" name="posting" value="<?php if($posting === true) { echo "yes"; } else { echo "no"; } ?>">-->
