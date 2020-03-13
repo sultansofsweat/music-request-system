@@ -90,7 +90,7 @@
 	function get_request($id)
 	{
 		//Set up post details array
-		$content=array(0,"Error","127.0.0.1","01/01/1970 12:00 AM","This request could not be displayed due to an internal error",3,"","Please microwave the system.","");
+		$content=array(-1,"Error","127.0.0.1","01/01/1970 12:00 AM","This request could not be displayed due to an internal error",3,"","Please microwave the system.","");
 		if(!file_exists("posts/$id.txt"))
 		{
 			//File doesn't exist

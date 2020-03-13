@@ -91,7 +91,6 @@
 		//Change the timezone
 		set_timezone();
 		//Logging enabled
-		$fh=fopen("log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
 		if(isset($_POST['confirm']) && $_POST['confirm'] == "y")
 		{
 			//Sanitization work
@@ -113,17 +112,24 @@
 				die("<script type=\"text/javascript\">window.location = \"index.php?repstatus=1\"</script>");
 			}
 		}
-		elseif(is_ip_banned() === false)
+		elseif(is_ip_banned($_SERVER['REMOTE_ADDR']) === false)
 		{
-			//Sanitize post number!
-			$post=preg_replace("/[^0-9]/", "", $_GET['p']);
+			if(!empty($_GET['p']))
+			{
+				//Sanitize post number!
+				$post=preg_replace("/[^0-9]/", "", $_GET['p']);
+			}
+			else
+			{
+				$post="";
+			}
 			//Get file info
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited report page for post $post");
-			if(file_exists("posts/" . $post . ".txt"))
+			$contents=get_request($post);
+			if($contents[0] > -1)
 			{
 				//Post exists
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Obtained details for post $post");
-				$contents=explode("\r\n",base64_decode(file_get_contents("posts/" . $post . ".txt")));
 			}
 			else
 			{
@@ -131,12 +137,20 @@
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Encountered error obtaining details for post $post");
 				die ("<script type=\"text/javascript\">window.location = \"index.php?repstatus=5\"</script>");
 			}
-			fclose($fh);
+			$contents[4]=format_request($contents[4]);
 		}
 		else
 		{
 			//User is banned
-			$post=preg_replace("/[^0-9]/", "", $_GET['p']);
+			if(!empty($_GET['p']))
+			{
+				//Sanitize post number!
+				$post=preg_replace("/[^0-9]/", "", $_GET['p']);
+			}
+			else
+			{
+				$post="";
+			}
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited report page for post $post");
 			echo ("<script type=\"text/javascript\">window.location = \"index.php?repstatus=4\"</script>");
 		}
@@ -167,21 +181,24 @@
 				die("<script type=\"text/javascript\">window.location = \"index.php?repstatus=1\"</script>");
 			}
 		}
-		elseif(is_ip_banned() === false)
+		elseif(is_ip_banned($_SERVER['REMOTE_ADDR']) === false)
 		{
-			//Sanitize post number!
-			$post=preg_replace("/[^0-9]/", "", $_GET['p']);
-			//Get file info
-			if(file_exists("posts/" . $post . ".txt"))
+			if(!empty($_GET['p']))
 			{
-				//Post exists
-				$contents=explode("\r\n",base64_decode(file_get_contents("posts/" . $post . ".txt")));
+				//Sanitize post number!
+				$post=preg_replace("/[^0-9]/", "", $_GET['p']);
 			}
 			else
 			{
-				//Post does not exist
+				$post="";
+			}
+			//Get file info
+			$contents=get_request($post);
+			if($contents[0] == -1)
+			{
 				die ("<script type=\"text/javascript\">window.location = \"index.php?repstatus=5\"</script>");
 			}
+			$contents[4]=format_request($contents[4]);
 		}
 		else
 		{
