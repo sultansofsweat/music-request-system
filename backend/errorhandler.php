@@ -113,7 +113,7 @@
 	function sh()
 	{
 		$last_error = error_get_last();
-		if($last_error['type'] != "")
+		if(!empty($last_error) && isset($last_error['type']) && $last_error['type'] != "")
 		{
 			eh($last_error['type'], $last_error['message'], $last_error['file'], $last_error['line']);
 		}

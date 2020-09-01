@@ -386,7 +386,7 @@
 			$daycount=0;
 		}
 		
-		if(($uncount > $limits[0] && $limits[0] > 0) || ($ipcount > $limits[1] && $limits[1] > 0) || ($daycount > $limits[2] && $limits[2] > 0))
+		if(($uncount >= $limits[0] && $limits[0] > 0) || ($ipcount >= $limits[1] && $limits[1] > 0) || ($daycount >= $limits[2] && $limits[2] > 0))
 		{
 			//User exceeded limit
 			return true;
