@@ -1216,7 +1216,7 @@
 			echo("Overwriting system background...");
 			if(file_exists("files/background.gif"))
 			{
-				$debug=rename("files/background.gif","backend/background.gif");
+				$debug=rename("files/background.gif","../backend/background.gif");
 				if($debug === true)
 				{
 					echo("DONE.<br>\r\n");
@@ -1236,7 +1236,7 @@
 			echo("Overwriting favicon...");
 			if(file_exists("files/favicon.ico"))
 			{
-				$debug=rename("files/favicon.ico","backend/favicon.ico");
+				$debug=rename("files/favicon.ico","../backend/favicon.ico");
 				if($debug === true)
 				{
 					echo("DONE.");
@@ -1292,7 +1292,7 @@
 			echo("Overwriting system background...");
 			if(file_exists("files/background.gif"))
 			{
-				$debug=rename("files/background.gif","backend/background.gif");
+				$debug=rename("files/background.gif","../backend/background.gif");
 				if($debug === true)
 				{
 					echo("DONE.<br>\r\n");
@@ -1309,7 +1309,7 @@
 			echo("Overwriting favicon...");
 			if(file_exists("files/favicon.ico"))
 			{
-				$debug=rename("files/favicon.ico","backend/favicon.ico");
+				$debug=rename("files/favicon.ico","../backend/favicon.ico");
 				if($debug === true)
 				{
 					echo("DONE.");
