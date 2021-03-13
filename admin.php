@@ -40,6 +40,17 @@
 		}
 		return true;
 	}
+	//Function for determining if the MRS is running on a "compliant" (i.e. 5.5.0 or newer) PHP version
+	function determine_compliance()
+	{
+		if(function_exists("version_compare"))
+		{
+			//Return the result of a version compare with the running PHP version and 5.5.0.
+			return version_compare(phpversion(),"5.5.0","<");
+		}
+		//Automatically assume non-compliance since it can't be checked
+		return false;
+	}
 	
 	//Function for reformatting all dates
 	function reformat_dates($newformat)
@@ -84,6 +95,11 @@
 	if(first_use() === true)
 	{
 		trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
+	}
+	//Check for PHP version compliance and issue a notice if non-compliance is found
+	if(determine_compliance() === false)
+	{
+		trigger_error("Use of non-compliant PHP versions may not be allowed in future releases. Please upgrade to at least PHP 5.5.0 before installing further MRS upgrades.",E_USER_DEPRECATED);
 	}
 ?>
 <?php
