@@ -1,5 +1,5 @@
 <?php
-	//Change working directory to enable use of centralized functions
+	//Change directory to allow use of rest of MRS
 	chdir("..");
 ?>
 <?php
@@ -46,18 +46,6 @@
 	session_start();
 ?>
 <?php
-	//Version identifier class (to make things easy)
-	class Version
-	{
-		public $major=0;
-		public $minor=0;
-		public $revision=0;
-		public $beta=false;
-		public $identifier="";
-		public $built="January 1, 1970 at 12:00 AM Eastern Time";
-	}
-?>
-<?php
 	//Administrative check function (on a separate page)
 	if(file_exists("backend/securitycheck.php"))
 	{
@@ -76,7 +64,7 @@
     <meta name="created" content="Wed, 17 Jun 2015 12:33:52 GMT">
     <meta name="description" content="Listening to a live stream? Got a song you have to hear? This is the place to request it!">
 	<link rel="shortcut icon" href="../backend/favicon.ico">
-    <title> Music Request System-Check For Updates</title>
+    <title><?php echo $sysname; ?>Music Request System-Check For Updates</title>
     
     <style type="text/css">
     <!--
@@ -94,27 +82,82 @@
     </style>
   </head>
   <?php
-	$current=new Version;
+	//Log page visit, if logging enabled
+	date_default_timezone_set(get_system_setting("timezone"));
+	write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Viewed upgrade page");
+	//Run security check
+	if(securitycheck() === false)
+	{
+		//No admin privileges, no page viewing privileges
+		die("You are not an administrator. <a href=\"../login.php?ref=admin\">Sign in</a> or <a href=\"../index.php\">Cancel</a>.");
+	}
+	//Get current build code
+	$buildcode=0;
+	if(file_exists("backend/version.txt"))
+	{
+		$verinfo=explode("\r\n",file_get_contents("backend/version.txt"));
+		if(!empty($verinfo[1]))
+		{
+			$buildcode=$verinfo[1];
+		}
+	}
+	//Get upgrade list
+	$upgrades=array();
+	if(file_exists("upgrade/packages.txt"))
+	{
+		$upgrades=array_filter(explode("\r\n",file_get_contents("upgrade/packages.txt")));
+	}
+	//Get rest of information
+	$lastcheck=0;
+	$lastinst=0;
+	if(file_exists("upgrade/lastcheck.txt"))
+	{
+		$lastcheck=preg_replace("/[^0-9]/","",file_get_contents("upgrade/lastcheck.txt"));
+	}
+	if(file_exists("upgrade/lastinst.txt"))
+	{
+		$lastinst=preg_replace("/[^0-9]/","",file_get_contents("upgrade/lastinst.txt"));
+	}
+	//Change back to upgrader directory to avoid breaking everything else
+	chdir("upgrade");
+  ?>
+  <?php
+	$firstuse=false;
+	if(file_exists("firstuse.txt"))
+	{
+		$firstuse=true;
+	}
+	if(isset($_POST['check']) && $_POST['check'] == "y")
+	{
+		trigger_error("Finished checking for updates.");
+	}
+	elseif(isset($_POST['check']) && $_POST['check'] == "n")
+	{
+		trigger_error("Failed to check for updates. Check your error log and convert the culprit to custard.",E_USER_WARNING);
+	}
+	if(isset($_POST['download']) && $_POST['download'] == "y")
+	{
+		trigger_error("Finished downloading updates.");
+	}
+	elseif(isset($_POST['download']) && $_POST['download'] == "n")
+	{
+		trigger_error("Failed to download updates. Check your error log and convert the culprit to custard.",E_USER_WARNING);
+	}
+	if(isset($_POST['prepare']) && $_POST['prepare'] == "y")
+	{
+		trigger_error("Finished preparing all downloaded updates for installation.");
+	}
+	elseif(isset($_POST['prepare']) && $_POST['prepare'] == "n")
+	{
+		trigger_error("Failed to preparing updates. Check your error log and convert the culprit to custard.",E_USER_WARNING);
+	}
+  ?>
+  <?php
+	/*$current=new Version;
 	$new=new Version;
 	if(is_logging_enabled() === true)
 	{
-		//Change the timezone
-		if(file_exists("backend/timezone.txt"))
-		{
-			date_default_timezone_set(file_get_contents("backend/timezone.txt"));
-		}
-		else
-		{
-			date_default_timezone_set("America/Toronto");
-		}
-		//Logging enabled
-		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Viewed upgrade page");
-		//Check for administrative permissions
-		if(securitycheck() === false)
-		{
-			//No admin privileges, no page viewing privileges
-			die("You are not an administrator. <a href=\"../login.php\">Sign in</a> or <a href=\"../index.php\">Cancel</a>.");
-		}
+		
 		//Check for a version file
 		if(file_exists("backend/version.txt"))
 		{
@@ -287,11 +330,11 @@
 			//Close session
 			curl_close($curl);
 		}
-	}
+	}*/
   ?>
   <?php
 	//Version comparison
-	if($current->major > $new->major || ($current->major == $new->major && $current->minor > $new->minor) || ($current->major == $new->major && $current->minor == $new->minor && $current->revision > $new->revision))
+	/*if($current->major > $new->major || ($current->major == $new->major && $current->minor > $new->minor) || ($current->major == $new->major && $current->minor == $new->minor && $current->revision > $new->revision))
 	{
 		$check=4;
 	}
@@ -332,110 +375,62 @@
 		{
 			$check=3;
 		}
-	}
+	}*/
   ?>
   <body>
   <h1 style="text-align:center; text-decoration:underline;"><?php echo $sysname; ?>Music Request System-Upgrade System</h1>
-  <p><a href="#skip">Skip all the mumbo-jumbo and upgrade</a></p>
-  <h2>Before Upgrading</h2>
-  <p>MRS releases can be downloaded <a href="http://firealarms.mooo.com/mrs/#downloading">here</a> or via a <a href="http://firealarms.mooo.com/mrs/#mirrors">trusted mirror</a>. You may be required to have both the package and the associated MD5 checksum.<br>
-  <b>Make sure you are downloading an <u>upgrade</u> pack!</b> Install packs are <b><u>not</u></b> supported by the updater!</p>
-  <p>If you are running the latest release, you must download the files and place them in the appropriate location before an update can proceed. Otherwise, proceeding without downloading is fine; the system will download the appropriate files automatically.</p>
-  <p><b>Take a backup.</b> No one wants data loss. While the upgrade scripts take backups of their own, they should not be trusted. And besides, a good backup is something you should have anyways in the event of other catastrophic failures.</p>
-  <hr>
-  <h2>Preparing for Upgrade</h2>
-  <p>If you downloaded an upgrade package and/or MD5 hash file, place these in the "upgrade" subdirectory before proceeding. No extraction or folder creation is necessary.</p>
-  <p>If you are at all unsure whether or not an upgrade will work, it is possible to do a "dry" run, where the system runs an upgrade procedure without touching any files.<br>
-  There are two options: partial and full. A partial upgrade will retain all settings, while a full upgrade will remove them. A full upgrade also replaces the system background and favicon with the ones bundled with the release.<br>
-  Note that neither upgrade option will erase requests from the system, or erase the song list if one is present. Neither option will reset the system password either.<br>
-  Also note that while the partial upgrade doesn't erase settings that still apply to the system, it will remove obsolete settings. This is another reason why a backup is desirable.</p>
-  <hr>
-  <h2>During the Upgrade</h2>
-  <p>...sit back and relax! There is nothing one needs to do, unless there are errors.</p>
-  <h2>After the Upgrade</h2>
-  <p>Check for any errors. If there are errors, <u>don't panic</u>. <a href="http://firealarms.mooo.com/mrs/#report">Report</a> errors to the software vendor.<br>
-  The system should have taken a backup during the upgrade process, unless the backup did not succeed. You also took your own backup before proceeding with an upgrade...right?<br>
-  Inside the upgrade directory are now two folders: "configback" and "sysback". All the system files are in sysback, while the configuration and background/favicon are in configback.<br>
-  Move all files in configback to the "backend" folder, overwriting whatever is in there. Move all the single part filenames (those without dashes, for example "index.php") to the root of the MRS, again overwriting everything.<br>
-  Other files in sysback (for example "api-autosys.php") will need to be renamed and moved accordingly. The first part of the filename corresponds to the folder it belongs in.</p>
-  <p>If there are any questions about the recovery process, <a href="http://firealarms.mooo.com/mrs/#contact">contact the software vendor</a></p>
-  <p>Otherwise, there is nothing to do. You may delete the sysback and configback folders if you wish.</p>
-  <hr>
-  <h2>Manual Upgrades</h2>
-  <p>Manual upgrades are more difficult since there is potentially some automated processing that needs to take place before the system will work as intended.<br>
-  These instructions assume you know what you are doing. If you don't, or are unsure, <b>don't bother</b> and <a href="#skip">skip them</a>.</p>
-  <p>The first step is to extract the package you downloaded.<br>
-  If you wish, take the background and favicon and place them in "backend", otherwise delete them.<br>
-  Take the "version.txt" file and overwrite the existing one in backend.<br>
-  <b>If there is a "preprocess.php"</b>, you MUST run the "preprocessor_run" function within (or read it and manually perform the actions it specifies) before doing anything else! Not doing so will probably break something.<br>
-  If there is no pre-processing, or you have completed it, open the "core.txt" file. All the entries correspond to "core" system files. Each of them should be moved into the root of the MRS, overwriting what is already there, if necessary.<br>
-  Remaining files should all be two-part files (for example, "api-autosys.php"). The first part corresponds to the containing folder. The second part is the name of the file. Remove the first part of the name, and move the file into the appropriate directory, overwriting if need be. If the directory doesn't exist, create it.<br>
-  Open "config.txt". Inside is a list of configuration files, and their default settings. Most of these should already be present in the backend folder. For those that are not, create new text files, using the first part as the name and the second part as the contents. If you want to reset any settings, do so.<br>
-  <b><u>DO NOT</u> touch ANYTHING ELSE</b> in the backend folder that is not listed! These are other files that may be needed for the system to function. Deleting them or otherwise changing them is at your own risk.<br>
-  <b>If there is a "postprocess.php"</b>, you MUST run the "postprocessor_run" function within (or read it and manually perform the actions it specifies) before proceeding! Not doing so will probably break something.<br>
-  At this point, the upgrade process should be completed.</p>
-  <hr>
-  <a name="skip"></a><h2>Alright, Let's Actually Get Upgrading!</h2>
-  <p>The version of the MRS presently running is <?php echo $current->major . "." . $current->minor . ", revision " . $current->revision; ?>. <?php if ($current->beta === true) { echo "This is a beta release."; } ?><br>
-  The latest version of the MRS is <?php echo $new->major . "." . $new->minor . ", revision " . $new->revision; ?>. <?php if ($new->beta === true) { echo "This is a beta release."; } ?></p>
-  <p>
+  <p>Although it is possible to manually add and change components of the MRS software, it is recommended to use the system upgrader to minimize the chance of human error rendering the MRS unusable, and to automatically get notifications when new updates are ready to be installed.</p>
   <?php
-	switch($check)
+	if($firstuse === true)
 	{
-		case 0:
-		echo("There is a new MRS release available.");
-		break;
-		case 1:
-		echo("There is a new revision to the presently running MRS release available.");
-		break;
-		case 2:
-		echo("There is a new beta MRS release available, and you are set to be notified of beta releases.");
-		break;
-		case 3:
-		echo("You are running the latest MRS software.");
-		break;
-		case 4:
-		echo("You are running a newer release of the software than the mirror supplies.");
-		break;
-		case 5:
-		echo("A new stable release of the MRS is available.");
-		break;
-		default:
-		echo("It could not be determined whether you are running the latest release or not.");
-		break;
+		echo("<p><b>You must read the MRS upgrader usage information to continue. <a href=\"usage.php\">Click here</a> to do so.</b></p>\r\n");
+	}
+	else
+	{
+		echo("<p><a href=\"usage.php\">Click here</a> to check the usage information for these upgrade scripts.</p>\r\n");
 	}
   ?>
-  </p>
-  <p>
+  <div <?php if($firstuse === true) { echo "style=\"display:none\""; } ?>>
+  <hr>
+  <p>Last check for updates took place <b><?php echo date("F j Y \a\\t g:i A",$lastcheck); ?>.</b><br>
+  Updates were last installed <b><?php echo date("F j Y \a\\t g:i A",$lastinst); ?></b><br>
+  There are presently <b><?php echo count($upgrades); ?></b> updates available.<br>
+  For reference, you are running MRS build code <b><?php echo $buildcode; ?></b>.</p>
   <?php
-	chdir("upgrade");
-	switch($check)
+	if(count($upgrades) > 0)
 	{
-		case 0:
-		case 1:
-		case 2:
-		case 5:
-		echo("Options: <a href=\"keep.php\">Partial upgrade</a> (settings are not changed) or <a href=\"destroy.php\">Full upgrade</a> (settings reset to factory defaults)");
-		break;
-		case 3:
-		case 4:
-		if(file_exists("latest.zip") && file_exists("latest-md5.txt"))
+		echo("<p>The following updates are available:<br>\r\n");
+		foreach($upgrades as $upgrade)
 		{
-			echo("An upgrade package and its associated checksum are present. An upgrade may be forced.<br>\r\n
-			Options: <a href=\"keep.php\">Partial upgrade</a> (settings are not changed) or <a href=\"destroy.php\">Full upgrade</a> (settings reset to factory defaults)");
+			$upgrade=explode("|",$upgrade);
+			if(count($upgrade) == 3)
+			{
+				echo("<b>Build code " . $upgrade[0] . "</b><br>\r\n");
+				switch($upgrade[2])
+				{
+					case 0:
+					echo("Status: not downloaded<br>\r\n<a href=\"download.php?pack=" . $upgrade[0] . "\">Download</a><br>\r\n");
+					break;
+					
+					case 1:
+					echo("Status: downloaded<br>\r\n<a href=\"" . $upgrade[0] . "/changelog.txt\" target=\"_blank\">Changelog</a><a href=\"download.php?pack=" . $upgrade[0] . "\">Redownload</a><br>\r\n");
+					break;
+					
+					case 2:
+					echo("Status: prepared<br>\r\n<a href=\"" . $upgrade[0] . "/changelog.txt\" target=\"_blank\">Changelog</a><a href=\"download.php?pack=" . $upgrade[0] . "\">Redownload</a><br>\r\n");
+					break;
+					
+					default:
+					echo("Status: indeterminate<br>\r\n<a href=\"download.php?pack=" . $upgrade[0] . "\">Download</a><br>\r\n");
+					break;
+				}
+			}
+			echo("<br>\r\n");
 		}
-		else
-		{
-			echo("An upgrade package and its associated checksum must be present before an upgrade may be forced. One or both is missing.");
-		}
-		break;
-		default:
-		echo("As the system is in an indeterminate state, you must upgrade it manually.");
-		break;
+		echo("</p>\r\n");
 	}
   ?>
-  </p>
-  <p>You may also do a <a href="dry.php">"dry" upgrade run</a> as a test (without actually upgrading anything). Even though it shouldn't delete anything, you should be sure to take a backup before doing this!</p>
-  <p><a href="../admin.php">Go back</a></p>
+  </div>
+  <p><a href="check.php">Check for updates</a> | <a href="sideload.php">Sideload upgrade pack</a> | <a href="prepare.php">Prepare final upgrade</a> | <a href="install.php">Install prepared upgrades</a> | <a href="../admin.php">Go back</a></p>
   </body>
 </html>
