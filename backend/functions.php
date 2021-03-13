@@ -336,6 +336,39 @@
 		//Return the counter
 		return $count;
 	}
+	//Similar function to countrequest, but counts for both the IP and the username.
+	function countrequestboth($username,$ip,$modifier)
+	{
+		if(!isset($username) || $username == "")
+		{
+			//There is no username by which to count requests against
+			return countrequest(false,$ip,$modifier);
+		}
+		elseif(!isset($ip) || $ip == "")
+		{
+			//There is no IP address by which to count requests against
+			return countrequest(true,$username,$modifier);
+		}
+		//Get list of requests that are "fresh"
+		$files=array_keys(get_recent_date_db($modifier));
+		//Set up the counter
+		$count=0;
+		foreach($files as $file)
+		{
+			//Get request information
+			$contents=get_request($file);
+			//Get username and IP address
+			$uname=$contents[1];
+			$ipa=$contents[2];
+			if($un == $username || $ipa == $ip)
+			{
+				//User has made a request before the expiry time
+				$count++;
+			}
+		}
+		//Return the counter
+		return $count;
+	}
 	
 	//Function for determining whether or not a user has exceeded their specified limit
 	function user_lockout()
@@ -378,12 +411,54 @@
 		if($ip != "")
 		{
 			$ipcount=countrequest(false,$ip,$modifier);
-			$daycount=countrequest(false,$ip,24*60*60);
+			//$daycount=countrequest(false,$ip,24*60*60);
 		}
 		else
 		{
 			$ipcount=0;
-			$daycount=0;
+			//$daycount=0;
+		}
+		switch(get_system_setting("ipundlimit"))
+		{
+			case 0:
+			if($username != "")
+			{
+				$daycount=countrequest(true,$username,24*60*60);
+			}
+			else
+			{
+				$daycount=0;
+			}
+			break;
+			case 2:
+			if($username != "" && $ip != "")
+			{
+				$daycount=countrequestboth($username,$ip,24*60*60);
+			}
+			elseif($ip == "" && $username != "")
+			{
+				$daycount=countrequest(true,$username,24*60*60);
+			}
+			elseif($username == "" && $ip != "")
+			{
+				$daycount=countrequest(false,$ip,24*60*60);
+			}
+			else
+			{
+				$daycount=0;
+			}
+			break;
+			case 1:
+			default:
+			if($ip != "")
+			{
+				$daycount=countrequest(false,$ip,24*60*60);
+			}
+			else
+			{
+				$daycount=0;
+			}
+			break;
 		}
 		
 		if(($uncount >= $limits[0] && $limits[0] > 0) || ($ipcount >= $limits[1] && $limits[1] > 0) || ($daycount >= $limits[2] && $limits[2] > 0))
@@ -512,7 +587,8 @@
                     "passreq" => "no",
                     "baninvpass" => "yes",
 					"autoopen" => "no",
-					"mirror" => "http://firealarms.mooo.com/mrs/");
+					"mirror" => "http://firealarms.mooo.com/mrs/",
+					"ipundlimit" => 1);
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);
@@ -929,6 +1005,17 @@
 		}
 	}
 	
+	//Function for getting all song lists
+	function get_song_lists()
+	{
+		$lists=array();
+		$files=glob("songs/*.txt");
+		foreach($files as $file)
+		{
+			$lists[]=str_replace("songs/","",str_replace(".txt","",$file));
+		}
+		return $lists;
+	}
 	//Function for getting a song list, unsplit
 	function get_raw_songs($listname)
 	{
@@ -948,7 +1035,7 @@
 		$songs=array();
 		if(file_exists("songs/$listname.txt"))
 		{
-			$raw=explode("\r\n",get_raw_songs($listname));
+			$raw=array_filter(explode("\r\n",get_raw_songs($listname)));
 			$format=array();
 			$rawformat=explode("|",get_system_setting("songformat"));
 			if(is_array($raw) && count($raw) > 0)
@@ -957,9 +1044,9 @@
                 {
                     $song=array("artist" => "SystemHad","title" => "OneJob","added_to_system" => 0);
                     $rawsong=explode("|",$raw[$i]);
-					$mtime=array_shift($rawsong);
-                    $reqcount=array_shift($rawsong);
-                    $lastreq=array_shift($rawsong);
+					$mtime=preg_replace("/[^0-9]/","",array_shift($rawsong));
+                    $reqcount=preg_replace("/[^0-9]/","",array_shift($rawsong));
+                    $lastreq=preg_replace("/[^0-9]/","",array_shift($rawsong));
 					for($j=0;$j<count($rawsong);$j++)
 					{
                         if(isset($rawformat[$j]))
@@ -1096,19 +1183,27 @@
 		}
 	}
 	
+	//Function for counting the number of songs over the entire MRS (i.e. all songs on all song lists)
 	function get_song_count()
 	{
 		$count=0;
-		$lists=glob("songs/*.txt");
+		/*$lists=glob("songs/*.txt");
 		foreach($lists as $list)
 		{
 			$count+=count(explode("\r\n",file_get_contents($list)));
+		}*/
+		$lists=get_song_lists();
+		foreach($lists as $list)
+		{
+			$count+=count(get_songs($list));
 		}
 		return $count;
 	}
+	//Function for counting the number of song lists
 	function count_song_lists()
 	{
-		return count(glob("songs/*.txt"));
+		//return count(glob("songs/*.txt"));
+		return count(get_song_lists());
 	}
 	
 	function get_system_format()

@@ -253,6 +253,7 @@
     $baninvpass=get_system_setting("baninvpass");
 	$autoopen=get_system_setting("autoopen");
 	$mirror=get_system_setting("mirror");
+	$ipundlimit=get_system_setting("ipundlimit");
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
@@ -314,6 +315,7 @@
                 $baninvpass=get_system_default("baninvpass");
 				$autoopen=get_system_default("autoopen");
 				$mirror=get_system_default("mirror");
+				$ipundlimit=get_system_default("ipundlimit");
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set settings to default");
 				trigger_error("Set all settings to their default values.");
 			}
@@ -1337,6 +1339,20 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"mirror\" to \"$mirror\"");
 					}
 				}
+				if(isset($_POST['ipundlimit']))
+				{
+					$ipundlimit=max(0,min(2,preg_replace("/[^0-2]/","",$_POST['ipundlimit'])));
+					$debug=save_system_setting("ipundlimit",$ipundlimit);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"ipundlimit\" to \"$ipundlimit\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"ipundlimit\" to \"$ipundlimit\"");
+					}
+				}
 				if($error === true)
 				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change all system settings");
@@ -1421,6 +1437,7 @@
                 $baninvpass=get_system_default("baninvpass");
 				$autoopen=get_system_default("autoopen");
 				$mirror=get_system_default("mirror");
+				$ipundlimit=get_system_default("ipundlimit");
 				trigger_error("Set all settings to their default values.");
 			}
 			elseif(isset($_POST['setdef']) && $_POST['setdef'] == "y")
@@ -2175,6 +2192,15 @@
 						$error=true;
 					}
 				}
+				if(isset($_POST['ipundlimit']))
+				{
+					$ipundlimit=max(0,min(2,preg_replace("/[^0-2]/","",$_POST['ipundlimit'])));
+					$debug=save_system_setting("ipundlimit",$ipundlimit);
+					if($debug !== true)
+					{
+						$error=true;
+					}
+				}
 				if($error === true)
 				{
 					$return="no";
@@ -2309,7 +2335,8 @@
   <option value="5" <?php if ($daylock == "5") { echo ("selected=\"selected\""); } ?>>5</option>
   <option value="10" <?php if ($daylock == "10") { echo ("selected=\"selected\""); } ?>>10</option>
   <option value="0" <?php if ($daylock == "0") { echo ("selected=\"selected\""); } ?>>Unlimited</option>
-  </select> requests daily per IP address<br>
+  </select> requests daily<br>
+  Apply daily limit to: <input type="radio" name="ipundlimit" value="0" <?php if(isset($ipundlimit) && $ipundlimit == "0") { echo "checked=\"checked\""; } ?>>Usernames | <input type="radio" name="ipundlimit" value="1" <?php if(isset($ipundlimit) && $ipundlimit == "1") { echo "checked=\"checked\""; } ?>>IP addresses | <input type="radio" name="ipundlimit" value="2" <?php if(isset($ipundlimit) && $ipundlimit == "2") { echo "checked=\"checked\""; } ?>>Both<br>
   Put system in overload mode after:&nbsp;
   <select name="overflow">
   <option value="">-Select one-</option>
