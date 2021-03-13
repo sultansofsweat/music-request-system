@@ -1540,7 +1540,7 @@
 		{
 			$rawdb=unserialize(file_get_contents("backend/date-db.txt"));
 			$db=array();
-			foreach($db as $key=>$value)
+			foreach($rawdb as $key=>$value)
 			{
 				$time=$value + $modifier;
 				if(time() < $time)

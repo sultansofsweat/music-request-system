@@ -486,7 +486,7 @@
 				$reqid="";
 			}
 			//If override submitted and allowed, set request to override instead
-			if(isset($_POST['override']) && preg_replace($_POST['override'],FILTER_SANITIZE_STRING) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
+			if(isset($_POST['override']) && filter_var($_POST['override'],FILTER_SANITIZE_STRING) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
 			{
 				$override=filter_var($_POST['override'],FILTER_SANITIZE_STRING);
 				$request="custom**=$override";
