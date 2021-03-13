@@ -7,16 +7,19 @@
 	//Function for writing log message to system log
 	function write_log($ip,$time,$message)
 	{
-		if(file_exists("log"))
+		if(is_logging_enabled() === true)
 		{
-			$fh=fopen("log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
+			if(file_exists("log"))
+			{
+				$fh=fopen("log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
+			}
+			else
+			{
+				$fh=fopen("../log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
+			}
+			fwrite($fh,$ip . " at " . $time . ": " . stripcslashes($message) . "\r\n");
+			fclose($fh);
 		}
-		else
-		{
-			$fh=fopen("../log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
-		}
-		fwrite($fh,$ip . " at " . $time . ": " . stripcslashes($message) . "\r\n");
-		fclose($fh);
 	}
 	//Function for getting alternative session store information
 	function alt_ses_store()
