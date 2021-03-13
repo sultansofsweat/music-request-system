@@ -174,6 +174,7 @@
 					curl_setopt($curl, CURLOPT_BINARYTRANSFER, true);
 					curl_setopt($curl, CURLOPT_FILE,$dfh);
 					curl_setopt($curl, CURLOPT_HEADER, false);
+					curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
 					//Execute curl
 					curl_exec($curl);
 					
@@ -237,6 +238,7 @@
 					curl_setopt($curl, CURLOPT_BINARYTRANSFER, false);
 					curl_setopt($curl, CURLOPT_FILE,$dfh);
 					curl_setopt($curl, CURLOPT_HEADER, false);
+					curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
 					//Execute curl
 					curl_exec($curl);
 					
@@ -338,6 +340,7 @@
 					curl_setopt($curl, CURLOPT_BINARYTRANSFER, true);
 					curl_setopt($curl, CURLOPT_FILE,$dfh);
 					curl_setopt($curl, CURLOPT_HEADER, false);
+					curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
 					//Execute curl
 					curl_exec($curl);
 					
@@ -396,6 +399,7 @@
 					curl_setopt($curl, CURLOPT_BINARYTRANSFER, false);
 					curl_setopt($curl, CURLOPT_FILE,$dfh);
 					curl_setopt($curl, CURLOPT_HEADER, false);
+					curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
 					//Execute curl
 					curl_exec($curl);
 					

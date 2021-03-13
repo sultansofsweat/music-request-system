@@ -162,6 +162,7 @@
 			}
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($curl, CURLOPT_HEADER, false);
+			curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set curl options");
 			//Execute curl
 			$data = curl_exec($curl);
@@ -257,6 +258,7 @@
 			}
 			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($curl, CURLOPT_HEADER, false);
+			curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
 			//Execute curl
 			$data = curl_exec($curl);
 			
