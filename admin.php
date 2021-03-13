@@ -46,7 +46,7 @@
 		if(function_exists("version_compare"))
 		{
 			//Return the result of a version compare with the running PHP version and 5.5.0.
-			return version_compare(phpversion(),"5.5.0","<");
+			return version_compare(phpversion(),"5.5.0",">=");
 		}
 		//Automatically assume non-compliance since it can't be checked
 		return false;
