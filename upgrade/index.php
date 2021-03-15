@@ -152,6 +152,14 @@
 	{
 		trigger_error("Failed to download updates. Check your error log and convert the culprit to custard.",E_USER_WARNING);
 	}
+	if(isset($_GET['sideload']) && $_GET['sideload'] == "y")
+	{
+		trigger_error("Successfully sideloaded update package.");
+	}
+	elseif(isset($_GET['sideload']) && $_GET['sideload'] == "n")
+	{
+		trigger_error("Failed to sideload update package. Check your error log and convert the culprit to custard.",E_USER_WARNING);
+	}
 	if(isset($_GET['prepare']) && $_GET['prepare'] == "y")
 	{
 		trigger_error("Finished preparing all downloaded updates for installation.");

@@ -2417,7 +2417,7 @@
   <input type="checkbox" name="apipages[]" value="6" <?php if(in_array(6,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Remote API configuration<br>
   <hr>
   <a name="upgrade"></a><h3>System Upgrades</h3>
-  Check for these updates: <input type="radio" name="upgrade" value="yes"  <?php if ($upgrade == "yes") { echo ("checked=\"checked\""); } ?>>Stable only | <input type="radio" name="upgrade" value="no"  <?php if ($upgrade == "no") { echo ("checked=\"checked\""); } ?>>Stable and Beta<br>
+  Check for these updates [DEPRECATED]: <input type="radio" name="upgrade" disabled="disabled" value="yes"  <?php if ($upgrade == "yes") { echo ("checked=\"checked\""); } ?>>Stable only | <input type="radio" name="upgrade" disabled="disabled" value="no"  <?php if ($upgrade == "no") { echo ("checked=\"checked\""); } ?>>Stable and Beta<br>
   Mirror to check:&nbsp;
   <select name="mirror">
   <option value="">-Select one-</option>
