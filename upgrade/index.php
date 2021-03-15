@@ -91,6 +91,15 @@
 		//No admin privileges, no page viewing privileges
 		die("You are not an administrator. <a href=\"../login.php?ref=admin\">Sign in</a> or <a href=\"../index.php\">Cancel</a>.");
 	}
+	//Create directories, if necessary
+	if(!is_dir("upgrade/prepare"))
+	{
+		mkdir("upgrade/prepare",0755);
+	}
+	if(!is_dir("upgrade/backup"))
+	{
+		mkdir("upgrade/backup",0755);
+	}
 	//Get current build code
 	$buildcode=0;
 	if(file_exists("backend/version.txt"))
@@ -127,255 +136,30 @@
 	{
 		$firstuse=true;
 	}
-	if(isset($_POST['check']) && $_POST['check'] == "y")
+	if(isset($_GET['check']) && $_GET['check'] == "y")
 	{
 		trigger_error("Finished checking for updates.");
 	}
-	elseif(isset($_POST['check']) && $_POST['check'] == "n")
+	elseif(isset($_GET['check']) && $_GET['check'] == "n")
 	{
 		trigger_error("Failed to check for updates. Check your error log and convert the culprit to custard.",E_USER_WARNING);
 	}
-	if(isset($_POST['download']) && $_POST['download'] == "y")
+	if(isset($_GET['download']) && $_GET['download'] == "y")
 	{
 		trigger_error("Finished downloading updates.");
 	}
-	elseif(isset($_POST['download']) && $_POST['download'] == "n")
+	elseif(isset($_GET['download']) && $_GET['download'] == "n")
 	{
 		trigger_error("Failed to download updates. Check your error log and convert the culprit to custard.",E_USER_WARNING);
 	}
-	if(isset($_POST['prepare']) && $_POST['prepare'] == "y")
+	if(isset($_GET['prepare']) && $_GET['prepare'] == "y")
 	{
 		trigger_error("Finished preparing all downloaded updates for installation.");
 	}
-	elseif(isset($_POST['prepare']) && $_POST['prepare'] == "n")
+	elseif(isset($_GET['prepare']) && $_GET['prepare'] == "n")
 	{
 		trigger_error("Failed to preparing updates. Check your error log and convert the culprit to custard.",E_USER_WARNING);
 	}
-  ?>
-  <?php
-	/*$current=new Version;
-	$new=new Version;
-	if(is_logging_enabled() === true)
-	{
-		
-		//Check for a version file
-		if(file_exists("backend/version.txt"))
-		{
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Obtained version information");
-			//Read file
-			$data=explode("\r\n",file_get_contents("backend/version.txt"));
-			//Assign known parameters to the version object
-			$current->identifier=$data[1];
-			$current->built=$data[2];
-			//Obtain and set further version information
-			$data[0]=explode("|",$data[0]);
-			$current->major=$data[0][0];
-			$current->minor=$data[0][1];
-			$current->revision=$data[0][2];
-			switch($data[0][3])
-			{
-				case "1":
-				$current->beta=true;
-				break;
-				default:
-				$current->beta=false;
-				break;
-			}
-		}
-		else
-		{
-			//Cannot read file
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Could not obtain version information");
-			echo ("Failed to open file \"backend/version.txt\" in read mode. It should now be microwaved.<br>\r\n");
-		}
-		//Initialize curl
-		$curl=curl_init();
-		$check=-1;
-		if($curl !== false)
-		{
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Initialized CURL to get latest version information");
-			//Set curl options
-			if(get_system_setting("stable") == "yes")
-			{
-				curl_setopt($curl, CURLOPT_URL, get_system_setting("mirror") . "mrs2-upgrade/latest-stable.txt");
-			}
-			else
-			{
-				curl_setopt($curl, CURLOPT_URL, get_system_setting("mirror") . "mrs2-upgrade/latest.txt");
-			}
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($curl, CURLOPT_HEADER, false);
-			curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set curl options");
-			//Execute curl
-			$data = curl_exec($curl);
-			
-			//Check and form the data
-			if($data != "" && !curl_errno($curl) && curl_getinfo($curl,CURLINFO_HTTP_CODE) == 200)
-			{
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully executed curl");
-				$data=explode("|",$data);
-				$new->major=$data[0];
-				$new->minor=$data[1];
-				$new->revision=$data[2];
-				switch($data[3])
-				{
-					case "1":
-					$new->beta=true;
-					break;
-					default:
-					$new->beta=false;
-					break;
-				}
-			}
-			else
-			{
-				//Curl failed
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to execute curl, error: " . curl_errno($curl));
-				echo ("Failed to open remote file \"latest.txt\" in read mode. The remote server should be submerged in pool water.<br>\r\n");
-			}
-			//Close session
-			curl_close($curl);
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Closed curl session");
-		}
-	}
-	else
-	{
-		//Change the timezone
-		if(file_exists("backend/timezone.txt"))
-		{
-			date_default_timezone_set(file_get_contents("backend/timezone.txt"));
-		}
-		else
-		{
-			date_default_timezone_set("America/Toronto");
-		}
-		//Logging disabled
-		//Check for administrative permissions
-		if(securitycheck() === false)
-		{
-			//No admin privileges, no page viewing privileges
-			die("You are not an administrator. <a href=\"../login.php\">Sign in</a> or <a href=\"../index.php\">Cancel</a>.");
-		}
-		//Check for a version file
-		if(file_exists("backend/version.txt"))
-		{
-			//Read file
-			$data=explode("\r\n",file_get_contents("backend/version.txt"));
-			//Assign known parameters to the version object
-			$current->identifier=$data[1];
-			$current->built=$data[2];
-			//Obtain and set further version information
-			$data[0]=explode("|",$data[0]);
-			$current->major=$data[0][0];
-			$current->minor=$data[0][1];
-			$current->revision=$data[0][2];
-			switch($data[0][3])
-			{
-				case "1":
-				$current->beta=true;
-				break;
-				default:
-				$current->beta=false;
-				break;
-			}
-		}
-		else
-		{
-			//Cannot read file
-			echo ("Failed to open file \"backend/version.txt\" in read mode. It should now be microwaved.<br>\r\n");
-		}
-		//Initialize curl
-		$curl=curl_init();
-		$check=-1;
-		if($curl !== false)
-		{
-			//Set curl options
-			if(get_system_setting("stable") == "yes")
-			{
-				curl_setopt($curl, CURLOPT_URL, get_system_setting("mirror") . "mrs2-upgrade/latest-stable.txt");
-			}
-			else
-			{
-				curl_setopt($curl, CURLOPT_URL, get_system_setting("mirror") . "mrs2-upgrade/latest.txt");
-			}
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($curl, CURLOPT_HEADER, false);
-			curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 10);
-			//Execute curl
-			$data = curl_exec($curl);
-			
-			//Check and form the data
-			if($data != "" && !curl_errno($curl) && curl_getinfo($curl,CURLINFO_HTTP_CODE) == 200)
-			{
-				$data=explode("|",$data);
-				$new->major=$data[0];
-				$new->minor=$data[1];
-				$new->revision=$data[2];
-				switch($data[3])
-				{
-					case "1":
-					$new->beta=true;
-					break;
-					default:
-					$new->beta=false;
-					break;
-				}
-			}
-			else
-			{
-				//Curl failed
-				echo ("Failed to open remote file \"latest.txt\" in read mode. The remote server should be submerged in pool water.<br>\r\n");
-			}
-			//Close session
-			curl_close($curl);
-		}
-	}*/
-  ?>
-  <?php
-	//Version comparison
-	/*if($current->major > $new->major || ($current->major == $new->major && $current->minor > $new->minor) || ($current->major == $new->major && $current->minor == $new->minor && $current->revision > $new->revision))
-	{
-		$check=4;
-	}
-	elseif($current->beta === true)
-	{
-		if($new->major > $current->major || ($current->major == $new->major && $current->minor < $new->minor))
-		{
-			$check=2;
-		}
-		elseif($current->major == $new->major && $current->minor == $new->minor && $current->revision < $new->revision)
-		{
-			$check=2;
-		}
-		elseif($new->beta === false)
-		{
-			$check=5;
-		}
-		else
-		{
-			$check=3;
-		}
-	}
-	else
-	{
-		if($new->beta === true)
-		{
-			$check=2;
-		}
-		elseif($new->major > $current->major || ($current->major == $new->major && $current->minor < $new->minor))
-		{
-			$check=0;
-		}
-		elseif($current->major == $new->major && $current->minor == $new->minor && $current->revision < $new->revision)
-		{
-			$check=1;
-		}
-		else
-		{
-			$check=3;
-		}
-	}*/
   ?>
   <body>
   <h1 style="text-align:center; text-decoration:underline;"><?php echo $sysname; ?>Music Request System-Upgrade System</h1>
@@ -413,11 +197,15 @@
 					break;
 					
 					case 1:
-					echo("Status: downloaded<br>\r\n<a href=\"" . $upgrade[0] . "/changelog.txt\" target=\"_blank\">Changelog</a><a href=\"download.php?pack=" . $upgrade[0] . "\">Redownload</a><br>\r\n");
+					echo("Status: downloaded<br>\r\n<a href=\"" . $upgrade[0] . "/changelog.txt\" target=\"_blank\">Changelog</a> | <a href=\"download.php?pack=" . $upgrade[0] . "\">Redownload</a><br>\r\n");
 					break;
 					
 					case 2:
-					echo("Status: prepared<br>\r\n<a href=\"" . $upgrade[0] . "/changelog.txt\" target=\"_blank\">Changelog</a><a href=\"download.php?pack=" . $upgrade[0] . "\">Redownload</a><br>\r\n");
+					echo("Status: prepared<br>\r\n<a href=\"" . $upgrade[0] . "/changelog.txt\" target=\"_blank\">Changelog</a> | <a href=\"download.php?pack=" . $upgrade[0] . "\">Redownload</a><br>\r\n");
+					break;
+					
+					case 3:
+					echo("Status: installed<br>\r\n");
 					break;
 					
 					default:

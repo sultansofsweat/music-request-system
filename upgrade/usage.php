@@ -78,6 +78,15 @@
     </style>
   </head>
   <?php
+	//Log page visit, if logging enabled
+	date_default_timezone_set(get_system_setting("timezone"));
+	write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Viewed upgrader usage page");
+	//Run security check
+	if(securitycheck() === false)
+	{
+		//No admin privileges, no page viewing privileges
+		die("You are not an administrator. <a href=\"../login.php?ref=admin\">Sign in</a> or <a href=\"../index.php\">Cancel</a>.");
+	}
 	if(isset($_GET['s']) && $_GET['s'] == "y")
 	{
 		unlink("firstuse.txt");
