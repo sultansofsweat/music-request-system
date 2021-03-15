@@ -120,6 +120,17 @@
 		}
 	}
 	write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Got current upgrade pack list");
+	//Remove everything marked as installed
+	$op=$oldpackages;
+	foreach($op as $code=>$info)
+	{
+		$info=explode("|",$info);
+		if(isset($info[1]) && $info[1] >= 3)
+		{
+			unset($oldpackages[$code]);
+		}
+	}
+	unset($op);
 	//Initialize curl
 	$curl=curl_init();
 	$check=-1;
