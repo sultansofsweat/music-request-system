@@ -179,7 +179,14 @@
 				{
 					if($post_exists === true)
 					{
-						$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
+						if(isset($_POST['comment']))
+						{
+							$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
+						}
+						else
+						{
+							$comment="";
+						}
 						$post=get_request($post);
 						while(count($post) < 9)
 						{
