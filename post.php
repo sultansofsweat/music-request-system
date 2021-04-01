@@ -296,7 +296,7 @@
 		$iban=array(false);
 	}
 	
-	if($uban[0] === true || $iban[0] === true)
+	if($uban === true || $iban === true)
 	{
 		//User is banned, redirect them back to the main page
 		die("<script type=\"text/javascript\">window.location = \"index.php\"</script>");
