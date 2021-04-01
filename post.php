@@ -8,10 +8,14 @@
 	{
 		trigger_error("Failed to invoke system error handler. Expect information leakage.",E_USER_WARNING);
 	}
-	//Include useful functions page, if it exists
+	//Include functions page
 	if(file_exists("backend/functions.php"))
 	{
 		include("backend/functions.php");
+	}
+	else
+	{
+		die("Failed to open file \"backend/functions.php\" in read mode. It should now be microwaved.");
 	}
 	//Set error levels
 	switch(get_system_setting("errlvl"))
@@ -33,13 +37,6 @@
 	$sysname=system_name();
 ?>
 <?php
-	//If "light" mode is enabled, bypass this page entirely
-	if(get_system_setting("light") == "yes")
-	{
-		echo ("<script type=\"text/javascript\">window.location = \"post2.php\"</script>");
-	}
-?>
-<?php
 	//Open session
 	$altsesstore=alt_ses_store();
 	if($altsesstore !== false)
@@ -47,8 +44,6 @@
 		session_save_path($altsesstore);
 	}
 	session_start();
-?>
-<?php
 	//If username is not stored, set it
 	if(!isset($_SESSION['uname']))
 	{
@@ -66,242 +61,6 @@
 		die("Failed to open file \"backend/securitycheck.php\" in read mode. It should now be microwaved.");
 	}
 ?>
-<?php
-	//Function for determining if Christmas music requesting is allowed
-	function is_christmas_allowed()
-	{
-		if(file_exists("songs/christmas.txt"))
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	//Function for searching the song list
-	function search($list,$terms)
-	{
-		//Split terms into array
-		$terms=explode(",",$terms);
-		//Get song list
-        $list=get_songs($list);
-		//Get list of possible search fields
-		$rawfields=explode("|",get_system_setting("songformat"));
-		//Filter out search fields that are not for display
-		$fields=array();
-		foreach($rawfields as $field)
-		{
-			if(strpos($field,"*") === false)
-			{
-				$fields[]=$field;
-			}
-		}
-		//Add "any" to valid field list
-		$fields[]="any";
-		//Process search terms. FORMAT: [field,query,strict?]
-		$queries=array();
-		foreach($terms as $term)
-		{
-			//If no modifiers found, treat it as "any"
-			if(strpos($term,"=") === false)
-			{
-				$term=strtolower(preg_replace("/[^A-Za-z0-9]/","",$term));
-				foreach($fields as $field)
-				{
-					$queries[]=array("any",$term,false);
-				}
-			}
-			else
-			{
-				//Check for strict modifier ("==")
-				if(strpos($term,"==") !== false)
-				{
-					$term=str_replace("==","=",$term);
-					$strict=true;
-				}
-				else
-				{
-					$strict=false;
-				}
-				//Split term into components
-				$term=explode("=",$term);
-				//Format query
-				$term[1]=strtolower(preg_replace("/[^A-Za-z0-9]/","",$term[1]));
-				//If query is "any" and strict is set, throw an error and unset strict
-				if($term[0] == "any" && $strict === true)
-				{
-					trigger_error("Strict flag with the any field is illegal. Strict flag has been removed.",E_USER_WARNING);
-					$strict=false;
-				}
-				//Make sure term field is valid
-				if(in_array($term[0],$fields))
-				{
-					//Add term to query list
-					$queries[]=array($term[0],$term[1],$strict);
-				}
-				else
-				{
-					trigger_error("Invalid search field: " . $term[0] . ". It is being thrown out with the bathwater. Expect problems.");
-				}
-			}
-		}
-		//Go through each query
-		foreach($queries as $query)
-		{
-			$songs=array();
-			//Go through songs and check against the query
-			foreach($list as $song)
-			{
-				//Formulate search term
-				if($query[0] == "any")
-				{
-					$searchterm=strtolower(preg_replace("/[^A-Za-z0-9]/","",implode("",$song)));
-				}
-				else
-				{
-					$searchterm=strtolower(preg_replace("/[^A-Za-z0-9]/","",$song[$query[0]]));
-				}
-				if($query[2] === true && $searchterm == $query[1])
-				{
-					$songs[]=$song;
-				}
-				elseif($query[2] === false && strpos($searchterm,$query[1]) !== false)
-				{
-					$songs[]=$song;
-				}
-			}
-			//Make base list the list of found songs for next query
-			$list=$songs;
-		}
-		return $list;
-	}
-	//Function for getting songs based on an input query
-	function query($list,$term)
-	{
-		//Get song list
-        $list=get_songs($list);
-		$songs=array();
-		//If query is for everything, just give everything
-		if($term == "all")
-		{
-			return $list;
-		}
-		//If query is for new songs, get only songs added in the last 7 days
-		elseif($term == "new")
-		{
-			foreach($list as $song)
-			{
-				if(isset($song["added_to_system"]) && ($song["added_to_system"] + 7*24*60*60) > time())
-				{
-					$songs[]=$song;
-				}
-			}
-		}
-		//If query is for new songs, get the songs requested the most frequent (system configurable)
-		elseif($term == "freq")
-		{
-            usort($list,"sort_by_popularity");
-            $current=0;
-            $index=0;
-            for($i=0;$i<get_system_setting("popular");$i++)
-            {
-                if($list[$index]["request_count"] == 0)
-                {
-                    break;
-                }
-                $current=$list[$index]["request_count"];
-                while($index < count($list) && $list[$index]["request_count"] == $current)
-                {
-                    $songs[]=$list[$index];
-                    $index++;
-                }
-                if($index >= count($list))
-                {
-                    break;
-                }
-            }
-		}
-		else
-		{
-			foreach($list as $song)
-			{
-				//Get character to search
-				$character=substr($song["artist"],0,1);
-				//If searching "other", check if first letter of artist is a non-alpha character
-				if($term == "other" && preg_replace("/[^A-Za-z]/","",$character) == "")
-				{
-					$songs[]=$song;
-				}
-				elseif(strtolower($character) == $term)
-				{
-					$songs[]=$song;
-				}
-			}
-		}
-		return $songs;
-	}
-	
-	//Function for checking if open requests are allowed
-	function is_open_enabled()
-	{
-		/* Check methodology
-		-System is open or not
-		-Open requests are enabled
-		-No overload in system
-		-No pending request for user
-		-User has not exceeded request limit
-		*/
-		if(get_system_setting("posting") != "yes")
-		{
-			//echo ("DEBUG: posting disabled.<br>\r\n");
-			//System disabled
-			return false;
-		}
-		if(get_system_setting("open") != "yes")
-		{
-			//echo ("DEBUG: open disabled.<br>\r\n");
-			//Open requests disabled
-			return false;
-		}
-		
-		//Everything passed
-		return true;
-	}
-?>
-<?php
-	if(is_logging_enabled() === true)
-	{
-		//Change the timezone
-		set_timezone();
-		//Logging enabled on system
-		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited posting page");
-	}
-	//Check if the user is banned
-	if(isset($_SESSION['uname']) && $_SESSION['uname'] != "")
-	{
-		$uban=is_user_banned($_SESSION['uname']);
-	}
-	else
-	{
-		$uban=array(false);
-	}
-	if(isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] != "")
-	{
-		$iban=is_ip_banned($_SERVER['REMOTE_ADDR']);
-	}
-	else
-	{
-		$iban=array(false);
-	}
-	
-	if($uban === true || $iban === true)
-	{
-		//User is banned, redirect them back to the main page
-		die("<script type=\"text/javascript\">window.location = \"index.php\"</script>");
-	}
-?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
@@ -311,14 +70,6 @@
     <meta name="description" content="Listening to a live stream? Got a song you have to hear? This is the place to request it!">
 	<link rel="shortcut icon" href="backend/favicon.ico">
     <title><?php echo $sysname; ?>Music Request System-Make A Request</title>
-	<script type="text/javascript" src="backend/jquery.js"></script>
-	<script type="text/javascript" src="backend/tablesorter.js"></script>
-	<link rel="stylesheet" href="backend/tsstyle/style.css" type="text/css" media="print, projection, screen" />
-	<script type="text/javascript">
-	$(function() {
-		$("#reqtable").tablesorter();
-	});
-	</script>
     
     <style type="text/css">
     <!--
@@ -338,306 +89,680 @@
   <body>
   <h1 style="text-align:center; text-decoration:underline;"><?php echo $sysname; ?>MRS-Make A Request</h1>
   <?php
-	//Make sure that searching is allowed
-	if(get_system_setting("searching") == "yes")
-	{
-		$search=true;
-	}
-	else
-	{
-		$search=false;
-	}
-  ?>
-  <form action="post.php" method="get">
-  <input type="hidden" name="s" value="y">
-  Search for a song: <input type="text" name="query" <?php if($search !== true) { echo ("value=\"Searching disabled\" disabled=\"disabled\""); } elseif(isset($_GET['query'])) { echo("value=\"" . $_GET['query'] . "\"");} ?>>
-  <input type="submit">
-  </form>
-  <p><a href="howtosearch.php">How to search</a><br>
-  Or, display songs: <a href="post.php?list=main&query=all">ALL</a> | <a href="post.php?list=main&query=new">NEW</a> | <a href="post.php?list=main&query=freq">POPULAR</a> | <a href="post.php?list=main&query=a">A</a> | <a href="post.php?list=main&query=b">B</a> | <a href="post.php?list=main&query=c">C</a> | <a href="post.php?list=main&query=d">D</a> | <a href="post.php?list=main&query=e">E</a> | <a href="post.php?list=main&query=f">F</a> | <a href="post.php?list=main&query=g">G</a> | <a href="post.php?list=main&query=h">H</a> | <a href="post.php?list=main&query=i">I</a> | <a href="post.php?list=main&query=j">J</a> | <a href="post.php?list=main&query=k">K</a> | <a href="post.php?list=main&query=l">L</a> | <a href="post.php?list=main&query=m">M</a> | <a href="post.php?list=main&query=n">N</a> | <a href="post.php?list=main&query=o">O</a> | <a href="post.php?list=main&query=p">P</a> | <a href="post.php?list=main&query=q">Q</a> | <a href="post.php?list=main&query=r">R</a> | <a href="post.php?list=main&query=s">S</a> | <a href="post.php?list=main&query=t">T</a> | <a href="post.php?list=main&query=u">U</a> | <a href="post.php?list=main&query=v">V</a> | <a href="post.php?list=main&query=w">W</a> | <a href="post.php?list=main&query=x">X</a> | <a href="post.php?list=main&query=y">Y</a> | <a href="post.php?list=main&query=z">Z</a> | <a href="post.php?list=main&query=other">Other</a>
-  <?php
-    if(get_system_setting("christmas") == "yes")
-    {
-        echo(" | <a href=\"post.php?list=christmas&query=all\">Christmas Music</a>");
-    }
-    foreach(explode(",",get_system_setting("extlists")) as $extlist)
-    {
-        $extlist=explode("=",$extlist);
-        if(count($extlist) == 2)
-        {
-            echo(" | <a href=\"post.php?list=" . $extlist[1] . "&query=all\">" . $extlist[0] . "</a>");
-        }
-    }
-  ?>
-  <br>
-  Or, <?php
-		//Make sure that open requests are enabled
-		if(is_open_enabled() === true)
-		{
-			echo ("<a href=\"post2.php\">make a request not on this list</a>");
-		}
-		else
-		{
-			echo ("<strike>make a request not on this list</strike>");
-		}
-  ?></p>
-  <hr>
-  <?php
-	/* Path to follow:
-	-Get posting status
-	-Get number of requests made by user+if they have active request
-	-Perform query
-	-Display results */
-		
 	if(is_logging_enabled() === true)
 	{
-		//Change timezone
 		set_timezone();
-		//Logging enabled
-		$posting="no";
-	
-		if(isset($_GET['blank']))
+		if(isset($_POST['s']) && $_POST['s'] == "y")
 		{
-			//User submitted blank query, or a query that eventually became blank
-			trigger_error("The query you submitted was blank, or contained no usable search terms. Please try again.");
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User submitted blank search query");
-		}
-		//Get system state
-		$posting=get_system_setting("posting");
-		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Obtained system setting: posting enabled/disabled");
-		//Check whether system is in overload mode or not
-        if(system_in_overload() === true)
-        {
-			trigger_error("The system is presently experiencing an overflow in requests. Please try again later.",E_USER_WARNING);
-			$posting="no";
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"System in overflow mode");
-        }
-		//Check if user has a pending request
-		if(pendingrequest() === true && get_system_setting("pdreq") == "yes")
-		{
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User has a pending request, and further requests are not permitted");
-			trigger_error("You have a presently unplayed/undeclined request. Please wait until this request is played or declined.",E_USER_NOTICE);
-			$posting="no";
-		}
-		//Check if user has hit a lockout point
-		if(user_lockout() === true)
-		{
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User has exceeded their post limit");
-			trigger_error("You have exceeded your request quota. Try again later.",E_USER_WARNING);
-			$posting=false;
-		}
-		//Convert posting switch to true and false
-		if($posting == "yes")
-		{
-			$posting=true;
-		}
-		else
-		{
-			$posting=false;
-		}
-	}
-	else
-	{
-		//Logging disabled
-		$posting="no";
-	
-		if(isset($_GET['blank']))
-		{
-			//User submitted blank query, or a query that eventually became blank
-			trigger_error("The query you submitted was blank, or contained no usable search terms. Please try again.");
-		}
-		//Get system state
-		$posting=get_system_setting("posting");
-		//Check whether system is in overload mode or not
-        if(system_in_overload() === true)
-        {
-			trigger_error("The system is presently experiencing an overflow in requests. Please try again later.",E_USER_WARNING);
-			$posting="no";
-        }
-		//Check if user has a pending request
-		if(pendingrequest() === true && get_system_setting("pdreq") == "yes")
-		{
-			trigger_error("You have a presently unplayed/undeclined request. Please wait until this request is played or declined.",E_USER_NOTICE);
-			$posting="no";
-		}
-		//Check if user has hit a lockout point
-		if(user_lockout() === true)
-		{
-			trigger_error("You have exceeded your request quota. Try again later.",E_USER_WARNING);
-			$posting=false;
-		}
-	}
-?>
-  <table id="reqtable" class="tablesorter">
-  <thead>
-  <tr>
-  <th style="width:90px;"></th>
-  <?php
-	//Get user-readable song format
-	$humanreadable=explode("|",get_system_setting("songformathr"));
-	foreach($humanreadable as $hr)
-	{
-		//DO NOT OUTPUT IF FILE NAME!
-		if(strtolower(preg_replace("/[^A-Za-z]/","",$hr)) != "filename")
-		{
-			echo ("<th>$hr</th>\r\n");
-		}
-	}
-  ?>
-  <th>#</th>
-  </tr>
-  </thead>
-  <tbody>
-<?php
-	if(isset($_GET['query']) && $_GET['query'] != "")
-	{
-		$query=filter_var($_GET['query'],FILTER_SANITIZE_STRING);
-		if($query == "")
-		{
-			//Query is blank, this is disallowed
-			echo("<script type=\"text/javascript\">window.location = \"post.php?blank=yes\"</script>");
-		}
-		if(isset($_GET['list']) && ($list=preg_replace("/[^A-Za-z0-9]/","",$_GET['list'])) != "")
-		{
-			if(!file_exists("songs/$list.txt") && $list != "christmas")
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Began submitting request");
+			/* SUBMISSION STEPS
+			-Sanitize everything
+			-Get necessary settings
+			-Check against system settings
+			-Write request */
+			
+			//Initialize variables
+			$name="";
+			$ip="";
+			$request="";
+			$comment="";
+			$filename="";
+			
+			//Get and sanitize name
+			if(isset($_POST['name']) && $_POST['name'] != "")
 			{
-				$list="main";
+				$name=trim(preg_replace("/[^A-Za-z0-9 ]/", "", $_POST['name']));
+				$_SESSION['uname']=$name;
 			}
-		}
-		else
-		{
-			$list="main";
-		}
-		
-		if($list == "christmas" && is_christmas_allowed() === false)
-		{
-			$songs=array(array("artist" => "CF","title" => "Christmas music gets played in December, DAMMIT!"));
-			$continue=false;
-		}
-		else
-		{
-			$continue=true;
-		}
-		
-		if($continue === true)
-		{
-			$query=explode(",",$query);
-			for($i=0;$i<count($query);$i++)
+			else
 			{
-				$query[$i]=trim($query[$i]);
-				if(strpos($query[$i],"list=") !== false)
+				$name=$_SESSION['uname'];
+			}
+			//If anonymous flag submitted and allowed, set name to anonymous
+			if(isset($_POST['anon']) && $_POST['anon'] == "y" && get_system_setting("anon") == "yes")
+			{
+				$name="Anonymous";
+			}
+			
+			//Set IP address
+			$ip=$_SERVER['REMOTE_ADDR'];
+			
+			//Set song list
+			if(!isset($_POST['list']) || ($list=preg_replace("/[^A-Za-z0-9]/","",$_POST['list'])) == "" || !file_exists("songs/$list.txt"))
+			{
+				$list="";
+			}
+			
+			//Get request
+			if($list != "" && isset($_POST['reqid']) && ($reqid=preg_replace("/[^0-9]/","",$_POST['reqid'])) != "")
+			{
+				$song=get_song($list,$reqid);
+				foreach($song as $key=>$value)
 				{
-					$q=explode("=",$query[$i]);
-					$list=$q[1];
-					$query[$i]="";
+					if($key != "added_to_system" && $key != "request_count" && $key != "last_requested")
+					{
+						$request.="$key=$value|";
+					}
+				}
+				$request=substr($request,0,-1);
+			}
+			else
+			{
+				$reqid="";
+			}
+			//If override submitted and allowed, set request to override instead
+			if(isset($_POST['override']) && preg_replace("/[^A-Za-z0-9]/","",$_POST['override']) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
+			{
+				$override=filter_var($_POST['override'],FILTER_SANITIZE_STRING);
+				$request="custom**=$override";
+				$list="whocares";
+				$reqid=false;
+			}
+			else
+			{
+				$override="";
+			}
+			
+			//Get comment
+			if(isset($_POST['comment']) && get_system_setting("comments") == "yes")
+			{
+				$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
+			}
+			else
+			{
+				$comment="";
+			}
+			
+			//Make sure input is valid
+			if($name == "" || $ip == "" || $list == "" || $request == "")
+			{
+                write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Invalid and/or incomplete data set passed to make request");
+                die("<script type=\"text/javascript\">window.location = \"index.php?status=3\"</script>");
+			}
+			//If system is closed, cancel request submission
+			if(get_system_setting("posting") != "yes")
+			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"System is closed");
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=1\"</script>");
+			}
+			//If system is in overload mode, cancel request submission
+            if(system_in_overload() === true)
+            {
+                write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"System is in overflow mode");
+                die("<script type=\"text/javascript\">window.location = \"index.php?status=6\"</script>");
+            }
+			//If user is banned, cancel submission
+			if(is_user_banned($_SESSION['uname']) === true || is_ip_banned($_SERVER['REMOTE_ADDR']) === true)
+			{
+                write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User is banned");
+                die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
+			}
+			//If user has a pending request or is locked out, cancel submission
+			if(pendingrequest() === true || user_lockout() === true)
+			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User attempting to submit too many requests");
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=4\"</script>");
+			}
+			//Check ONLY if no override has been set!
+			if($reqid !== false)
+			{
+				//If request is already on the system, cancel submission
+				if(current_request($list,$reqid) === true)
+				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User attempting to submit request that is already on the list");
+					die("<script type=\"text/javascript\">window.location = \"index.php?status=5\"</script>");
 				}
 			}
-			$query=array_filter($query);
-			$query=implode(",",$query);
+			//If an override was submitted (whether it was processed or not), cancel submission
+			if($override != "" && get_system_setting("open") == "no" && get_system_setting("light") == "no")
+			{
+                write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User attempting to submit custom request when not allowed");
+                die("<script type=\"text/javascript\">window.location = \"index.php?status=8\"</script>");
+			}
+            
+            //Check submitted password if required
+            if(get_system_setting("passreq") == "yes")
+            {
+                if(!isset($_POST['password']) || validate_request_password($_POST['password']) !== true)
+                {
+                    //Wrong password submitted
+                    write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Request password missing or incorrect");
+                    if(get_system_setting("baninvpass") == "yes")
+                    {
+                        if(isset($_POST['autoban']))
+                        {
+                            $autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
+                        }
+                        else
+                        {
+                            $autoban=0;
+                        }
+                        //Log this abrogation of system laws
+                        write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Auto ban caught user $ip submitting invalid password, blocked $autoban times previously");
+                        //Increment count
+                        $autoban++;
+                        if($autoban >= get_system_setting("beforeban"))
+                        {
+                            //Ban the user by IP address
+                            write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Auto ban banned user $ip");
+                            ban_ip($ip,"Automatically banned by the MRS for repeated submissions with invalid password.");
+                            die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
+                        }
+                        else
+                        {
+                            die("<script type=\"text/javascript\">window.location = \"post.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&autoban=$autoban&reason=2\"</script>");
+                        }
+                    }
+                    else
+                    {
+                        die("<script type=\"text/javascript\">window.location = \"post.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&pass=wrong\"</script>");
+                    }
+                }
+            }
 			
-			if(isset($_GET['s']) && $_GET['s'] == "y")
+			//Check auto banning status
+			if(autoban($name) !== true)
 			{
-				$songs=search($list,$query);
-                if(get_system_setting("hidenr") >= 1)
-                {
-                    $hidenr=true;
-                }
-                else
-                {
-                    $hidenr=false;
-                }
-			}
-			else
-			{
-				$songs=query($list,$query);
-                if(get_system_setting("hidenr") >= 2)
-                {
-                    $hidenr=true;
-                }
-                else
-                {
-                    $hidenr=false;
-                }
-			}
-		}
-		
-		$rawformats=explode("|",get_system_setting("songformat"));
-		$formats=array();
-		foreach($rawformats as $format)
-		{
-			if(strpos($format,"*") === false)
-			{
-				$formats[]=$format;
-			}
-		}
-		
-		foreach($songs as $song)
-		{
-			if($song["artist"] == "CF")
-			{
-				$count=count($formats);
-				echo ("<tr>\r\n<td></td>\r\n<td colspan=" . ($count+1) . ">" . $song["title"] . "</td>\r\n</tr>\r\n");
-			}
-			else
-			{
-				if(isset($song[5]) && $song[5] != "")
+				//Get current number of blocked attempts
+				if(isset($_POST['autoban']))
 				{
-					$filename=$song[5];
+					$autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
 				}
 				else
 				{
-					$filename="";
+					$autoban=0;
 				}
-				if(($posting === true || $posting == "yes") && current_request($song) === false)
+				//Log this abrogation of system laws
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Auto ban caught user $ip attempting to use username $name, blocked $autoban times previously");
+				//Increment count
+				$autoban++;
+				if($autoban >= get_system_setting("beforeban"))
 				{
-					echo ("<tr>\r\n<td>");
-					if(($song["added_to_system"] + 7*24*60*60) > time())
-					{
-						echo ("<img src=\"backend/new.gif\" alt=\"New\">");
-					}
-					echo ("<a href=\"post2.php?list=$list&req=" . $song["ID"] . "\">Request this</a></td>\r\n");
-					foreach($formats as $format)
-					{
-						if(isset($song[$format]))
-						{
-							echo("<td>" . $song[$format] . "</td>\r\n");
-						}
-						else
-						{
-							echo("<td></td>\r\n");
-						}
-					}
-                    echo("<td>" . $song["request_count"] . "</td>\r\n");
-					echo("</tr>\r\n");
+					//Ban the user by IP address
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Auto ban banned user $ip");
+					ban_ip($ip,"Automatically banned by the MRS for repeated attempts at using prohibited words in username.");
+					die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
 				}
-				elseif($hidenr === false)
+				else
 				{
-					echo ("<tr>\r\n<td>");
-					if(($song["added_to_system"] + 7*24*60*60) > time())
-					{
-						echo ("<img src=\"backend/new.gif\" alt=\"New\">");
-					}
-					echo ("<strike>Request this</strike></td>\r\n");
-					foreach($formats as $format)
-					{
-						if(isset($song[$format]))
-						{
-							echo("<td>" . $song[$format] . "</td>\r\n");
-						}
-						else
-						{
-							echo("<td></td>\r\n");
-						}
-					}
-                    echo("<td>" . $song["request_count"] . "</td>\r\n");
-					echo("</tr>\r\n");
+					die("<script type=\"text/javascript\">window.location = \"post.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&autoban=$autoban&reason=0\"</script>");
 				}
+			}
+			
+			//Get new post ID
+			$postid=increment_post_count();
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Set new post ID");
+			
+			//Write request
+			$debug=write_request($postid,$name,$ip,date(get_system_setting("datetime")),stripcslashes($request),0,"None",stripcslashes($comment),$filename);
+			if($debug === false)
+			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to write post $postid");
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=7\"</script>");
+			}
+			else
+			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully wrote post $postid");
+				//Mark post last requested date
+				if($override == "" && isset($list) && isset($reqid))
+				{
+					request_song($list,$reqid);
+				}
+                if(get_system_setting("rss") == "yes")
+                {
+                    $debug=write_rss_entry($postid,$name,date(get_system_setting("datetime")),stripcslashes($request));
+                    if($debug === false)
+                    {
+                        trigger_error("Failed to write to RSS feed. Microwave the feed and try again.",E_USER_WARNING);
+                        write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to add post $postid to RSS feed");
+                    }
+                    else
+                    {
+                        write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Added post $postid to RSS feed");
+                    }
+                }
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=0\"</script>");
+			}
+		}
+		else
+		{
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited posting page");
+			$anon=get_system_setting("anon");
+			$open=get_system_setting("open");
+			$comments=get_system_setting("comments");
+			$light=get_system_setting("light");
+			
+			$list="";
+			$reqid="";
+			if(isset($_GET['list']) && isset($_GET['req']))
+			{
+				$list=preg_replace("/[^A-Za-z0-9]/","",$_GET['list']);
+				$reqid=preg_replace("/[^0-9]/","",$_GET['req']);
+			}
+			if(file_exists("songs/$list.txt") && $reqid != "")
+			{
+				$song=get_song($list,$reqid);
+				$request=array("Artist" => "SystemHad","Title" => "OneJob");
+				$rawfields=explode("|",get_system_setting("songformat"));
+				$fields=array();
+				foreach($rawfields as $field)
+				{
+					if(strpos($field,"*") === false)
+					{
+						$fields[]=$field;
+					}
+				}
+				$fdisplay=explode("|",get_system_setting("songformathr"));
+				if(count($fields) > 0)
+				{
+					for($i=0;$i<count($fields);$i++)
+					{
+						if(isset($song[$fields[$i]]) && $song[$fields[$i]] != "")
+						{
+							$request[$fdisplay[$i]]=$song[$fields[$i]];
+						}
+					}
+				}
+			}
+			else
+			{
+				$reqid=false;
+			}
+			
+			if(isset($_GET['autoban']))
+			{
+				$autoban=preg_replace("/[^0-9]/","",$_GET['autoban']);
+				$reason="microwaving someone's microphone";
+				if(isset($_GET['reason']))
+				{
+					switch(preg_replace("/[^0-9]/","",$_GET['reason']))
+					{
+						case 0:
+						$reason="request contains one or more blocked words";
+						break;
+						
+						case 1:
+						$reason="user is attempting to stuff the ballot box";
+						break;
+						
+						case 2:
+						$reason="invalid password submitted";
+						break;
+					}
+				}
+				trigger_error("The MRS blocked your attempted request for the following reason: $reason. This has happened $autoban time(s). Double-check your submission or risk being microwaved.",E_USER_WARNING);
+			}
+            if(isset($_GET['pass']))
+            {
+                trigger_error("The MRS blocked your attempted request for the following reason: invalid password submitted. Double-check your submission.",E_USER_WARNING);
+            }
+			
+			$posting=true;
+			if(is_user_banned($_SESSION['uname']) === true || is_ip_banned($_SERVER['REMOTE_ADDR']) === true)
+			{
+				trigger_error("You are banned from this system and cannot submit a request. Be gone.",E_USER_ERROR);
+				$posting=false;
+			}
+			elseif(get_system_setting("posting") == "no")
+			{
+				trigger_error("We're like, uh, closed or something, so you cannot submit a request. Go away.",E_USER_ERROR);
+				$posting=false;
+			}
+			elseif(system_in_overload() === true)
+			{
+				trigger_error("This system is overloaded with requests and has shut down as a precaution. Throw your peers under the bus and try again later.",E_USER_ERROR);
+				$posting=false;
+			}
+			elseif(pendingrequest() === true || user_lockout() === true)
+			{
+				trigger_error("Slow your role, breh! You can make more requests later!",E_USER_ERROR);
+				$posting=false;
+			}
+			elseif($reqid === false && $open == "no" && $light == "no")
+			{
+				trigger_error("Attempt to stuff the ballet box detected and denied. Follow the rules!",E_USER_ERROR);
+				$posting=false;
 			}
 		}
 	}
-?>
-</tbody>
-</table>
-  <br><a href="index.php">Cancel</a>
+	else
+	{
+		set_timezone();
+		if(isset($_POST['s']) && $_POST['s'] == "y")
+		{
+			/* SUBMISSION STEPS
+			-Sanitize everything
+			-Get necessary settings
+			-Check against system settings
+			-Write request */
+			
+			//Initialize variables
+			$name="";
+			$ip="";
+			$request="";
+			$comment="";
+			$filename="";
+			
+			//Get and sanitize name
+			if(isset($_POST['name']) && $_POST['name'] != "")
+			{
+				$name=trim(preg_replace("/[^A-Za-z0-9 ]/", "", $_POST['name']));
+				$_SESSION['uname']=$name;
+			}
+			else
+			{
+				$name=$_SESSION['uname'];
+			}
+			//If anonymous flag submitted and allowed, set name to anonymous
+			if(isset($_POST['anon']) && $_POST['anon'] == "y" && get_system_setting("anon") == "yes")
+			{
+				$name="Anonymous";
+			}
+			
+			//Set IP address
+			$ip=$_SERVER['REMOTE_ADDR'];
+			
+			//Set song list
+			if(!isset($_POST['list']) || ($list=preg_replace("/[^A-Za-z0-9]/","",$_POST['list'])) == "" || !file_exists("songs/$list.txt"))
+			{
+				$list="";
+			}
+			
+			//Get request
+			if($list != "" && isset($_POST['reqid']) && ($reqid=preg_replace("/[^0-9]/","",$_POST['reqid'])) != "")
+			{
+				$song=get_song($list,$reqid);
+				foreach($song as $key=>$value)
+				{
+					if($key != "added_to_system" && $key != "request_count" && $key != "last_requested")
+					{
+						$request.="$key=$value|";
+					}
+				}
+				$request=substr($request,0,-1);
+			}
+			else
+			{
+				$reqid="";
+			}
+			//If override submitted and allowed, set request to override instead
+			if(isset($_POST['override']) && filter_var($_POST['override'],FILTER_SANITIZE_STRING) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
+			{
+				$override=filter_var($_POST['override'],FILTER_SANITIZE_STRING);
+				$request="custom**=$override";
+				$list="whocares";
+				$reqid=false;
+			}
+			else
+			{
+				$override="";
+			}
+			
+			//Get comment
+			if(isset($_POST['comment']) && get_system_setting("comments") == "yes")
+			{
+				$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
+			}
+			else
+			{
+				$comment="";
+			}
+			
+			//Make sure input is valid
+			if($name == "" || $ip == "" || $list == "" || $request == "")
+			{
+                die("<script type=\"text/javascript\">window.location = \"index.php?status=3\"</script>");
+			}
+			//If system is closed, cancel request submission
+			if(get_system_setting("posting") != "yes")
+			{
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=1\"</script>");
+			}
+			//If system is in overload mode, cancel request submission
+            if(system_in_overload() === true)
+            {
+                die("<script type=\"text/javascript\">window.location = \"index.php?status=6\"</script>");
+            }
+			//If user is banned, cancel submission
+			if(is_user_banned($_SESSION['uname']) === true || is_ip_banned($_SERVER['REMOTE_ADDR']) === true)
+			{
+                die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
+			}
+			//If user has a pending request or is locked out, cancel submission
+			if(pendingrequest() === true || user_lockout() === true)
+			{
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=4\"</script>");
+			}
+			//Check ONLY if no override has been set!
+			if($reqid !== false)
+			{
+				//If request is already on the system, cancel submission
+				if(current_request($list,$reqid) === true)
+				{
+					die("<script type=\"text/javascript\">window.location = \"index.php?status=5\"</script>");
+				}
+			}
+			//If an override was submitted (whether it was processed or not), cancel submission
+			if($override != "" && get_system_setting("open") == "no" && get_system_setting("light") == "no")
+			{
+                die("<script type=\"text/javascript\">window.location = \"index.php?status=8\"</script>");
+			}
+            
+            //Check submitted password if required
+            if(get_system_setting("passreq") == "yes")
+            {
+                if(!isset($_POST['password']) || validate_request_password($_POST['password']) !== true)
+                {
+                    //Wrong password submitted
+                    if(get_system_setting("baninvpass") == "yes")
+                    {
+                        if(isset($_POST['autoban']))
+                        {
+                            $autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
+                        }
+                        else
+                        {
+                            $autoban=0;
+                        }
+                        //Increment count
+                        $autoban++;
+                        if($autoban >= get_system_setting("beforeban"))
+                        {
+                            //Ban the user by IP address
+                            ban_ip($ip,"Automatically banned by the MRS for repeated submissions with invalid password.");
+                            die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
+                        }
+                        else
+                        {
+                            die("<script type=\"text/javascript\">window.location = \"post.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&autoban=$autoban&reason=2\"</script>");
+                        }
+                    }
+                    else
+                    {
+                        die("<script type=\"text/javascript\">window.location = \"post.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&pass=wrong\"</script>");
+                    }
+                }
+            }
+			
+			//Check auto banning status
+			if(autoban($name) !== true)
+			{
+				//Get current number of blocked attempts
+				if(isset($_POST['autoban']))
+				{
+					$autoban=preg_replace("/[^0-9]/","",$_POST['autoban']);
+				}
+				else
+				{
+					$autoban=0;
+				}
+				//Increment count
+				$autoban++;
+				if($autoban >= get_system_setting("beforeban"))
+				{
+					//Ban the user by IP address
+					ban_ip($ip,"Automatically banned by the MRS for repeated attempts at using prohibited words in username.");
+					die("<script type=\"text/javascript\">window.location = \"index.php?status=2\"</script>");
+					
+				}
+				else
+				{
+					die("<script type=\"text/javascript\">window.location = \"post.php?list=" . $_POST['list'] . "&req=" . $_POST['reqid'] . "&autoban=$autoban&reason=0\"</script>");
+				}
+			}
+			
+			//Get new post ID
+			$postid=increment_post_count();
+			
+			//Write request
+			$debug=write_request($postid,$name,$ip,date(get_system_setting("datetime")),stripcslashes($request),0,"None",stripcslashes($comment),$filename);
+			if($debug === false)
+			{
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=7\"</script>");
+			}
+			else
+			{
+				//Mark post last requested date
+				if($override == "" && isset($list) && isset($reqid))
+				{
+					request_song($list,$reqid);
+				}
+                if(get_system_setting("rss") == "yes")
+                {
+                    $debug=write_rss_entry($postid,$name,date(get_system_setting("datetime")),stripcslashes($request));
+                    if($debug === false)
+                    {
+                        trigger_error("Failed to write to RSS feed. Microwave the feed and try again.",E_USER_WARNING);
+                    }
+                }
+				die("<script type=\"text/javascript\">window.location = \"index.php?status=0\"</script>");
+			}
+		}
+		else
+		{
+			$anon=get_system_setting("anon");
+			$open=get_system_setting("open");
+			$comments=get_system_setting("comments");
+			$light=get_system_setting("light");
+			
+			$list="";
+			$reqid="";
+			$request=false;
+			
+			if(isset($_GET['list']) && isset($_GET['req']))
+			{
+				$list=preg_replace("/[^A-Za-z0-9]/","",$_GET['list']);
+				$reqid=preg_replace("/[^0-9]/","",$_GET['req']);
+			}
+			if(file_exists("songs/$list.txt") && $reqid != "")
+			{
+				$song=get_song($list,$reqid);
+				$request=array("Artist" => "SystemHad","Title" => "OneJob");
+				$rawfields=explode("|",get_system_setting("songformat"));
+				$fields=array();
+				foreach($rawfields as $field)
+				{
+					if(strpos($field,"*") === false)
+					{
+						$fields[]=$field;
+					}
+				}
+				$fdisplay=explode("|",get_system_setting("songformathr"));
+				if(count($fields) > 0)
+				{
+					for($i=0;$i<count($fields);$i++)
+					{
+						if(isset($song[$fields[$i]]) && $song[$fields[$i]] != "")
+						{
+							$request[$fdisplay[$i]]=$song[$fields[$i]];
+						}
+					}
+				}
+			}
+			else
+			{
+				$reqid=false;
+			}
+			
+			if(isset($_GET['autoban']))
+			{
+				$autoban=preg_replace("/[^0-9]/","",$_GET['autoban']);
+				$reason="microwaving someone's microphone";
+				if(isset($_GET['reason']))
+				{
+					switch(preg_replace("/[^0-9]/","",$_GET['reason']))
+					{
+						case 0:
+						$reason="request contains one or more blocked words";
+						break;
+						
+						case 1:
+						$reason="user is attempting to stuff the ballot box";
+						break;
+						
+						case 2:
+						$reason="invalid password submitted";
+						break;
+					}
+				}
+				trigger_error("The MRS blocked your attempted request for the following reason: $reason. This has happened $autoban time(s). Double-check your submission or risk being microwaved.");
+			}
+            if(isset($_GET['pass']))
+            {
+                trigger_error("The MRS blocked your attempted request for the following reason: invalid password submitted. Double-check your submission.",E_USER_WARNING);
+            }
+			
+			$posting=true;
+			if(is_user_banned($_SESSION['uname']) === true || is_ip_banned($_SERVER['REMOTE_ADDR']) === true)
+			{
+				trigger_error("You are banned from this system and cannot submit a request. Be gone.",E_USER_ERROR);
+				$posting=false;
+			}
+			elseif(get_system_setting("posting") == "no")
+			{
+				trigger_error("We're like, uh, closed or something, so you cannot submit a request. Go away.",E_USER_ERROR);
+				$posting=false;
+			}
+			elseif(system_in_overload() === true)
+			{
+				trigger_error("This system is overloaded with requests and has shut down as a precaution. Throw your peers under the bus and try again later.",E_USER_ERROR);
+				$posting=false;
+			}
+			elseif(pendingrequest() === true || user_lockout() === true)
+			{
+				trigger_error("Slow your role, breh! You can make more requests later!",E_USER_ERROR);
+				$posting=false;
+			}
+			elseif($reqid === false && $open == "no" && $light == "no")
+			{
+				trigger_error("Attempt to stuff the ballet box detected and denied. Follow the rules!",E_USER_ERROR);
+				$posting=false;
+			}
+		}
+	}
+  ?>
+  <form action="post.php" method="post">
+  <input type="hidden" name="s" value="y">
+  Name: <input type="text" name="name" value="<?php echo $_SESSION['uname']; ?>"<?php if($anon == "no") { echo(" required=\"required\""); } ?>> OR <input type="checkbox" name="anon" value="y" <?php if($anon == "no") { echo("disabled=\"disabled\""); } ?>>Anonymous<br>
+  IP Address: <?php echo $_SERVER['REMOTE_ADDR']; ?> (this WILL be submitted with your request!)<br>
+  <input type="hidden" name="reqid" value="<?php echo $reqid; ?>">
+  <input type="hidden" name="list" value="<?php echo $list; ?>">
+  <input type="hidden" name="autoban" <?php if(isset($autoban)) { echo "value=\"$autoban\""; } else { echo "disabled=\"disabled\""; } ?>>
+  Request:<br>
+  <?php
+	if(!empty($request))
+	{
+		foreach($request as $key=>$value)
+		{
+			echo("$key: $value<br>\r\n");
+		}
+	}
+  ?>
+  Request this instead: <input type="text" size="50" name="override" <?php if($open != "yes" && $light != "yes") { echo(" value=\"Action not allowed\" disabled=\"disabled\""); } elseif($light == "yes" || empty($request)) { echo ("required=\"required\""); } if(isset($override)) { echo ("value=\"$override\""); } ?>><br>
+  Comment (optional):<br>
+  <textarea name="comment" <?php if($comments == "no") { echo "disabled=\"disabled\""; } ?> rows="10" cols="50"></textarea><br>
+  Submission password: <input type="password" name="password" <?php if(get_system_setting("passreq") == "no") { echo ("disabled=\"disabled\""); } else  { echo ("required=\"required\""); } ?>><br>
+  <input type="submit" value="Make request" <?php if($posting === false) { echo "disabled=\"disabled\""; } ?>><input type="button" value="Back to search" onclick="window.location.href='select.php'"><input type="button" value="Cancel" onclick="window.location.href='index.php'">
+  </form>
   </body>
 </html>
