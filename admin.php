@@ -34,11 +34,11 @@
 	//Function for determining if the system password has not been changed
 	function first_use()
 	{
-		if(!file_exists("backend/firstuse.txt"))
+		if(password_verify("admin",get_system_password()) === true)
 		{
-			return false;
+			return true;
 		}
-		return true;
+		return false;
 	}
 	//Function for determining if the MRS is running on a "compliant" (i.e. 5.5.0 or newer) PHP version
 	function determine_compliance()
@@ -252,7 +252,7 @@
 	$daylock=get_system_setting("dayrestrict");
 	$overflow=get_system_setting("limit");
 	$api=get_system_setting("interface");
-	$apiuid=get_system_setting("sysid");
+	$sysuid=get_system_setting("sysid");
 	$apipages=explode(",",get_system_setting("apipages"));
 	$upgrade=get_system_setting("stable");
 	$datetime=get_system_setting("datetime");
@@ -314,7 +314,7 @@
 				$daylock=get_system_default("dayrestrict");
 				$overflow=get_system_default("limit");
 				$api=get_system_default("interface");
-				$apiuid=get_system_default("sysid");
+				$sysuid=get_system_default("sysid");
 				$apipages=explode(",",get_system_default("apipages"));
 				$upgrade=get_system_default("stable");
 				$datetime=get_system_default("datetime");
@@ -994,18 +994,18 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"interface\" to \"$api\"");
 					}
 				}
-				if(isset($_POST['apiuid']))
+				if(isset($_POST['genuid']) && $_POST['genuid'] == "y")
 				{
-					$apiuid=preg_replace("/[^A-Za-z0-9]/","",$_POST['apiuid']);
-					$debug=save_system_setting("sysid",$apiuid);
+					$sysuid=uniqid("",true);
+					$debug=save_system_setting("sysid",$sysuid);
 					if($debug !== true)
 					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"sysid\" to \"$apiuid\"");
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"sysid\" to \"$sysuid\"");
 						$error=true;
 					}
 					else
 					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"sysid\" to \"$apiuid\"");
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"sysid\" to \"$sysuid\"");
 					}
 				}
 				if(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
@@ -1437,7 +1437,7 @@
 				$daylock=get_system_default("dayrestrict");
 				$overflow=get_system_default("limit");
 				$api=get_system_default("interface");
-				$apiuid=get_system_default("sysid");
+				$sysuid=get_system_default("sysid");
 				$apipages=explode(",",get_system_default("apipages"));
 				$upgrade=get_system_default("stable");
 				$datetime=get_system_default("datetime");
@@ -1947,10 +1947,10 @@
 						$error=true;
 					}
 				}
-				if(isset($_POST['apiuid']))
+				if(isset($_POST['genuid']) && $_POST['genuid'] == "y")
 				{
-					$apiuid=preg_replace("/[^A-Za-z0-9]/","",$_POST['apiuid']);
-					$debug=save_system_setting("sysid",$apiuid);
+					$sysuid=uniqid("",true);
+					$debug=save_system_setting("sysid",$sysuid);
 					if($debug !== true)
 					{
 						$error=true;
@@ -2262,6 +2262,7 @@
   <form method="post" action="admin.php">
   <input type="hidden" name="s" value="y">
   <a name="system"></a><h3>System</h3>
+  System ID: <?php echo $sysuid; ?> | <input type="checkbox" name="genuid" value="y">Generate new system ID<br>
   System name: <input type="text" name="name" size="50" value="<?php echo $name; ?>"><br>
   System message:<br>
   <textarea name="sysmessage" rows="5" cols="50"><?php echo $sysmessage; ?></textarea><br>
@@ -2404,11 +2405,10 @@
   <hr>
   <a name="api"></a><h3>API</h3>
   System API: <input type="radio" name="api" value="yes" <?php if($api == "yes") {echo("checked=\"checked\""); } ?>>Enabled | <input type="radio" name="api" value="no" <?php if($api == "no") {echo("checked=\"checked\""); } ?>>Disabled<br>
-  API ID: <input type="text" name="apiuid" value="<?php echo $apiuid; ?>"><br>
   New API Password: <input type="password" name="napipass"><br>
   Confirm new API Password: <input type="password" name="capipass"><br>
   Pages:<br>
-  <input type="checkbox" name="apipages[]" value="0" <?php if(in_array(0,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Version information<br>
+  <input type="checkbox" name="apipages[]" value="0" <?php if(in_array(0,$apipages)) { echo("checked=\"checked\""); } ?>>Version information<br>
   <input type="checkbox" name="apipages[]" value="1" <?php if(in_array(1,$apipages)) { echo("checked=\"checked\""); } ?>>Request view<br>
   <input type="checkbox" name="apipages[]" value="2" <?php if(in_array(2,$apipages)) { echo("checked=\"checked\""); } ?>>Request actions (queue, decline, mark as played)<br>
   <input type="checkbox" name="apipages[]" value="3" <?php if(in_array(3,$apipages)) { echo("checked=\"checked\""); } ?>>Open/close system<br>
@@ -2417,7 +2417,6 @@
   <input type="checkbox" name="apipages[]" value="6" <?php if(in_array(6,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Remote API configuration<br>
   <hr>
   <a name="upgrade"></a><h3>System Upgrades</h3>
-  Check for these updates [DEPRECATED]: <input type="radio" name="upgrade" disabled="disabled" value="yes"  <?php if ($upgrade == "yes") { echo ("checked=\"checked\""); } ?>>Stable only | <input type="radio" name="upgrade" disabled="disabled" value="no"  <?php if ($upgrade == "no") { echo ("checked=\"checked\""); } ?>>Stable and Beta<br>
   Mirror to check:&nbsp;
   <select name="mirror">
   <option value="">-Select one-</option>
