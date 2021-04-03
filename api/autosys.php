@@ -90,8 +90,8 @@
   </body>\r\n
 </html>";
 
-	if(is_logging_enabled() === true)
-	{
+	/*if(is_logging_enabled() === true)
+	{*/
 		set_timezone();
 		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to open/close system via API");
 		if($allowed == "yes")
@@ -124,22 +124,25 @@
 				}
 				else
 				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to open/close system: invalid password submitted");
 					http_response_code(403);
 					echo $default;
 				}
 			}
 			else
 			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to open/close system: action not allowed");
 				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to open/close system: API not enabled");
 			http_response_code(410);
 			echo $default;
 		}
-	}
+	/*}
 	else
 	{
 		if($allowed == "yes")
@@ -185,5 +188,5 @@
 			http_response_code(410);
 			echo $default;
 		}
-	}
+	}*/
 ?>

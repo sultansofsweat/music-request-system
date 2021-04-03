@@ -29,24 +29,6 @@
 	}
 ?>
 <?php
-	//Useful functions
-	
-	//Function for getting version information
-	function get_version_information()
-	{
-		if(file_exists("backend/version.txt"))
-		{
-			$verinfo=explode("\r\n",file_get_contents("backend/version.txt"));
-			$verinfo[0]=explode("|",$verinfo[0]);
-			return $verinfo;
-		}
-		else
-		{
-			return false;
-		}
-	}
-?>
-<?php
 	//Get system name
 	$sysname=system_name();
 ?>
@@ -78,16 +60,7 @@
 		//Logging enabled on system
 		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited about page");
 		$verinfo=get_version_information();
-		if($verinfo !== false)
-		{
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Obtained version information");
-		}
-		else
-		{
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to obtain version information");
-			trigger_error("No version information found.",E_USER_WARNING);
-			$verinfo=array(array("0","0","0",false),"","January 1, 1970 at 12:00 AM Eastern Time");
-		}
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Obtained version information");
 		//Get copyright information
 		$copyinfo=get_copyright_information();
 		if($copyinfo === false)
@@ -106,11 +79,6 @@
 	{
 		//Logging disabled
 		$verinfo=get_version_information();
-		if($verinfo === false)
-		{
-			trigger_error("No version information found.",E_USER_WARNING);
-			$verinfo=array(array("0","0","0",false),"","January 1, 1970 at 12:00 AM Eastern Time");
-		}
 		//Get copyright information
 		$copyinfo=get_copyright_information();
 		if($copyinfo === false)
@@ -153,12 +121,9 @@
   <h1 style="text-align:center; text-decoration:underline;">About the <?php echo $sysname; ?>Music Request System</h1>
   <h3 style="text-decoration:underline;">Version Information</h3>
   <?php
-	echo ("<p>Version: " . $verinfo[0][0] . "." . $verinfo[0][1]);
-	if(trim($verinfo[1]) != "")
-	{
-		echo $verinfo[1];
-	}
-	echo ("<br>\r\nRevision: " . $verinfo[0][2] . "<br>\r\nReleased: " . $verinfo[2] . "</p>\r\n");
+	echo ("<p>This MRS is running release <b>" . $verinfo["major"] . "." . $verinfo["minor"] . "</b>, revision <b>" . $verinfo["revision"] . "</b><br>\r\n
+	Build code for this release is <b>" . $verinfo["buildcode"] . "</b><br>\r\n
+	This revision was released <b>" . $verinfo["released"] . "</b></p>\r\n");
   ?>
   <h3 style="text-decoration:underline;">MRS Software Copyright Information</h3>
   <p>The Music Request System (MRS) is copyright &copy; 2015-2021 Brad Hunter/<a href="http://www.youtube.com/user/carnelprod666">CarnelProd666</a>. The MRS is licensed under the <a href="license.php" target="_blank">DBAD Public License</a>, version 1.1, except for the components listed below. Learn more about the MRS <a href="http://firealarms.mooo.com/mrs">here</a>. Comments should be directed to the system administrator and/or <a href="http://github.com/sultansofsweat">the software writer</a>.</p>

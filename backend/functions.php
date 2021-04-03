@@ -90,6 +90,7 @@
 	function get_request($id)
 	{
 		//Set up post details array
+		//FORMAT: ID|Poster|IP|Date|Request|Status|Comment|Response|Filename (deprecated and never set but included for compatibility reasons)
 		$content=array(-1,"Error","127.0.0.1","01/01/1970 12:00 AM","This request could not be displayed due to an internal error",3,"","Please microwave the system.","");
 		if(!file_exists("posts/$id.txt"))
 		{
@@ -193,14 +194,14 @@
 		return false;
 	}
 	//Function for writing a request
-	function write_request($id,$poster,$ip,$date,$request,$status,$response,$comment,$filename)
+	function write_request($id,$poster,$ip,$date,$request,$status,$response,$comment)
 	{
-		if(func_num_args() < 9)
+		/*if(func_num_args() < 9)
 		{
 			trigger_error("Invalid call to function write_request(id,poster,ip,date,request,status,response,comment,filename): too few arguments passed.",E_USER_ERROR);
 			return false;
-		}
-		$content="$id\r\n$poster\r\n$ip\r\n$date\r\n" . stripcslashes($request) . "\r\n$status|" . stripcslashes($response) . "\r\n" . stripcslashes($comment) . "\r\n$filename\r\n";
+		}*/
+		$content="$id\r\n$poster\r\n$ip\r\n$date\r\n" . stripcslashes($request) . "\r\n$status|" . stripcslashes($response) . "\r\n" . stripcslashes($comment) . "\r\n";
 		$fh=fopen("posts/$id.txt",'w');
 		if(!$fh)
 		{
@@ -587,7 +588,9 @@
                     "baninvpass" => "yes",
 					"autoopen" => "no",
 					"mirror" => "http://firealarms.mooo.com/mrs/",
-					"ipundlimit" => 1);
+					"ipundlimit" => 1,
+					"theme" => 0,
+					"autokey" => "");
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);
@@ -1839,6 +1842,40 @@
 		}
 		trigger_error("Failed to open request database in write mode. Microwave it and try again.",E_USER_WARNING);
 		return false;
+	}
+	//Function for getting version information
+	function get_version_information()
+	{
+		$version=array("major"=>0,"minor"=>0,"revision"=>0,"buildcode"=>0,"released"=>"January 1 1970 at 12:00 AM GMT");
+		if(file_exists("backend/version.txt"))
+		{
+			$verinfo=explode("\r\n",file_get_contents("backend/version.txt"));
+			if(count($verinfo) == 3)
+			{
+				$version["buildcode"]=$verinfo[1];
+				$version["released"]=$verinfo[2];
+				$verinfo=explode("|",$verinfo[0]);
+				if(count($verinfo) == 3)
+				{
+					$version["major"]=$verinfo[0];
+					$version["minor"]=$verinfo[1];
+					$version["revision"]=$verinfo[2];
+				}
+				else
+				{
+					trigger_error("Failed to obtain version information. The version information isn't complete and must therefore have been defenestrated by aliens.",E_USER_ERROR);
+				}
+			}
+			else
+			{
+				trigger_error("Failed to obtain version information. The file is missing information and must therefore have been defenestrated by aliens.",E_USER_ERROR);
+			}
+		}
+		else
+		{
+			trigger_error("Failed to obtain version information. The file is missing and must therefore have been defenestrated by aliens.",E_USER_ERROR);
+		}
+		return $version;
 	}
 ?>
 <?php

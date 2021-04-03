@@ -121,8 +121,8 @@
   </body>\r\n
 </html>";
 
-	if(is_logging_enabled() === true)
-	{
+	/*if(is_logging_enabled() === true)
+	{*/
 		set_timezone();
 		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to get all requests via API");
 		if($allowed === true)
@@ -136,7 +136,8 @@
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Obtained all posts");
 					if(count($rawposts) > 0)
 					{
-						//OUTPUT FORMAT: ID|User|Date|Request|Filename|Status|Comment|Response
+						//INPUT FORMAT: ID|User|IP|Date|Request|Status|Comment|Response|Filename
+						//OUTPUT FORMAT: ID|User|Date|Request|Status|Comment|Response|IP
 						foreach($rawposts as $post)
 						{
 							$details=array();
@@ -163,6 +164,7 @@
 							{
 								$details[]="None";
 							}
+							$details[]=$post[2];
 							$posts[]=$details;
 						}
 						for($i=0;$i<count($posts);$i++)
@@ -183,22 +185,25 @@
 				}
 				else
 				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get requests: invalid password submitted");
 					http_response_code(403);
 					echo $default;
 				}
 			}
 			else
 			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get requests: action not allowed");
 				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get requests: API not enabled");
 			http_response_code(410);
 			echo $default;
 		}
-	}
+	/*}
 	else
 	{
 		if($allowed === true)
@@ -271,5 +276,5 @@
 			http_response_code(410);
 			echo $default;
 		}
-	}
+	}*/
 ?>

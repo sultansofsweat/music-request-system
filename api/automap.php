@@ -113,8 +113,8 @@
   </body>\r\n
 </html>";
 
-	if(is_logging_enabled() === true)
-	{
+	/*if(is_logging_enabled() === true)
+	{*/
 		set_timezone();
 		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to mark post $post as played via API");
 		if($allowed == "yes")
@@ -130,7 +130,7 @@
 						{
 							$post[]="";
 						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$post[6],$post[7],$post[8]);
+						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$post[6],$post[7]);
 						if($debug === false)
 						{
 							http_response_code(500);
@@ -153,22 +153,25 @@
 				}
 				else
 				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to mark post $post as played: invalid password submitted");
 					http_response_code(403);
 					echo $default;
 				}
 			}
 			else
 			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to mark post $post as played: action not allowed");
 				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to mark post $post as played: API not enabled");
 			http_response_code(410);
 			echo $default;
 		}
-	}
+	/*}
 	else
 	{
 		if($allowed == "yes")
@@ -179,20 +182,13 @@
 				{
 					if($post_exists === true)
 					{
-						if(isset($_POST['comment']))
-						{
-							$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
-						}
-						else
-						{
-							$comment="";
-						}
+						$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
 						$post=get_request($post);
 						while(count($post) < 9)
 						{
 							$post[]="";
 						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$comment,$post[7],$post[8]);
+						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],1,$comment,$post[7],$post[8]);
 						if($debug === false)
 						{
 							http_response_code(500);
@@ -227,5 +223,5 @@
 			http_response_code(410);
 			echo $default;
 		}
-	}
+	}*/
 ?>

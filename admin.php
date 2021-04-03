@@ -1035,6 +1035,7 @@
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
 					$apipages=implode(",",array_filter(array_unique($apipages)));
+					trigger_error($apipages);
 					$debug=save_system_setting("apipages",$apipages);
 					if($debug !== true)
 					{
@@ -1976,7 +1977,8 @@
 					{
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
-					$apipages=implode(",",array_filter(array_unique($apipages)));
+					$apipages=implode(",",array_filter(array_unique($apipages),"is_numeric"));
+					trigger_error($apipages);
 					$debug=save_system_setting("apipages",$apipages);
 					if($debug !== true)
 					{

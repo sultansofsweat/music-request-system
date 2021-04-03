@@ -113,8 +113,8 @@
   </body>\r\n
 </html>";
 
-	if(is_logging_enabled() === true)
-	{
+	/*if(is_logging_enabled() === true)
+	{*/
 		set_timezone();
 		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to queue post $post via API");
 		if($allowed == "yes")
@@ -125,13 +125,20 @@
 				{
 					if($post_exists === true)
 					{
-						$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
+						if(isset($_POST['comment']))
+						{
+							$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
+						}
+						else
+						{
+							$comment="";
+						}
 						$post=get_request($post);
 						while(count($post) < 9)
 						{
 							$post[]="";
 						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],2,$comment,$post[7],$post[8]);
+						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],2,$comment,$post[7]);
 						if($debug === false)
 						{
 							http_response_code(500);
@@ -141,7 +148,7 @@
 						else
 						{
 							http_response_code(200);
-							write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully queued post $post");
+							write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully queue post $post");
 							echo $default;
 						}
 					}
@@ -154,22 +161,25 @@
 				}
 				else
 				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to queue post $post: invalid password submitted");
 					http_response_code(403);
 					echo $default;
 				}
 			}
 			else
 			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to queue post $post: action not allowed");
 				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to queue post $post: API not enabled");
 			http_response_code(410);
 			echo $default;
 		}
-	}
+	/*}
 	else
 	{
 		if($allowed == "yes")
@@ -186,7 +196,7 @@
 						{
 							$post[]="";
 						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],2,$comment,$post[7],$post[8]);
+						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],1,$comment,$post[7],$post[8]);
 						if($debug === false)
 						{
 							http_response_code(500);
@@ -221,5 +231,5 @@
 			http_response_code(410);
 			echo $default;
 		}
-	}
+	}*/
 ?>

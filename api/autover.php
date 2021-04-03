@@ -53,14 +53,6 @@
 	}
 	
 	//Get all necessary settings
-	if(isset($_POST['post']))
-	{
-		$post=preg_replace("/[^0-9]/","",$_POST['post']);
-	}
-	else
-	{
-		$post="";
-	}
 	$allowed=get_system_setting("interface");
 	if($allowed == "yes")
 	{
@@ -71,13 +63,11 @@
 		$allowed=false;
 	}
 	$key=get_system_setting("autokey");
-	if($post != "")
+	$verinfo=get_version_information();
+	$verinfo["num_updates"]=0;
+	if(file_exists("../upgrade/packages.txt"))
 	{
-		$post_exists=does_post_exist($_POST['post']);
-	}
-	else
-	{
-		$post_exists=false;
+		$verinfo["num_updates"]=count(array_filter(explode("\r\n",file_get_contents("../upgrade/packages.txt"))));
 	}
 	$pagenable=explode(",",get_system_setting("apipages"));
 	$default="<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n
@@ -113,123 +103,45 @@
   </body>\r\n
 </html>";
 
-	/*if(is_logging_enabled() === true)
-	{*/
-		set_timezone();
-		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to decline post $post via API");
-		if($allowed == "yes")
+	set_timezone();
+	write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to get system status via API");
+	if($allowed == "yes")
+	{
+		if(in_array(0,$pagenable))
 		{
-			if(in_array(2,$pagenable))
+			if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 			{
-				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
+				if($verinfo["major"] == 0)
 				{
-					if($post_exists === true)
-					{
-						if(isset($_POST['comment']))
-						{
-							$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
-						}
-						else
-						{
-							$comment="";
-						}
-						$post=get_request($post);
-						while(count($post) < 9)
-						{
-							$post[]="";
-						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],1,$comment,$post[7]);
-						if($debug === false)
-						{
-							http_response_code(500);
-							write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to decline post $post: the file has been microwaved");
-							echo $default;
-						}
-						else
-						{
-							http_response_code(200);
-							write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully declined post $post");
-							echo $default;
-						}
-					}
-					else
-					{
-						http_response_code(500);
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to decline post $post: the file has been abducted by Russians");
-						echo $default;
-					}
+					http_response_code(500);
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get version information: something has been microwaved");
+					echo $default;
 				}
 				else
 				{
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to decline post $post: invalid password submitted");
-					http_response_code(403);
-					echo $default;
+					http_response_code(200);
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully got system version information");
+					echo "major=" . $verinfo["major"] . "\nminor=" . $verinfo["minor"] . "\nrevision=" . $verinfo["revision"] . "\nbuildcode=" . $verinfo["buildcode"] . "\nrelease=" . $verinfo["released"] . "\nupdates=" . $verinfo["num_updates"];
 				}
 			}
 			else
 			{
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to decline post $post: action not allowed");
-				http_response_code(404);
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get version information: invalid password submitted");
+				http_response_code(403);
 				echo $default;
 			}
 		}
 		else
 		{
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to decline post $post: API not enabled");
-			http_response_code(410);
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get version information: action not allowed");
+			http_response_code(404);
 			echo $default;
 		}
-	/*}
+	}
 	else
 	{
-		if($allowed == "yes")
-		{
-			if(in_array(2,$pagenable))
-			{
-				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
-				{
-					if($post_exists === true)
-					{
-						$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
-						$post=get_request($post);
-						while(count($post) < 9)
-						{
-							$post[]="";
-						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],1,$comment,$post[7],$post[8]);
-						if($debug === false)
-						{
-							http_response_code(500);
-							echo $default;
-						}
-						else
-						{
-							http_response_code(200);
-							echo $default;
-						}
-					}
-					else
-					{
-						http_response_code(500);
-						echo $default;
-					}
-				}
-				else
-				{
-					http_response_code(403);
-					echo $default;
-				}
-			}
-			else
-			{
-				http_response_code(404);
-				echo $default;
-			}
-		}
-		else
-		{
-			http_response_code(410);
-			echo $default;
-		}
-	}*/
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get version information: API not enabled");
+		http_response_code(410);
+		echo $default;
+	}
 ?>

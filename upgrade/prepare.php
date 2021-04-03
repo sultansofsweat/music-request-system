@@ -100,8 +100,8 @@
 		foreach($upgrades as $upgrade)
 		{
 			$upgrade=explode("|",$upgrade);
-			//If upgrade is downloaded or already prepared, begin [re]preparing it
-			if(isset($upgrade[0]) && isset($upgrade[2]) && $upgrade[2] >= 1)
+			//If upgrade is downloaded or already prepared (and not installed), begin [re]preparing it
+			if(isset($upgrade[0]) && isset($upgrade[2]) && $upgrade[2] >= 1 && $upgrade[2] < 3)
 			{
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Started preparing upgrade pack " . $upgrade[0]);
 				//Open necessary files
