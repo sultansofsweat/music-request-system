@@ -71,14 +71,9 @@
 		$allowed=false;
 	}
 	$key=get_system_setting("autokey");
-	if($post != "")
-	{
-		$post_exists=does_post_exist($_POST['post']);
-	}
-	else
-	{
-		$post_exists=false;
-	}
+	$rawverinfo=get_version_information();
+	$verinfo=array("major"=>$rawverinfo[0][0],"minor"=>$rawverinfo[0][1],"revision"=>$rawverinfo[0][2],"beta"=>$rawverinfo[0][3],"tag"=>$rawverinfo[1],"released"=>$rawverinfo[2]);
+	unset($rawverinfo);
 	$pagenable=explode(",",get_system_setting("apipages"));
 	$default="<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\r\n
 <html>\r\n
@@ -116,55 +111,54 @@
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
-		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to mark post $post as played via API");
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to get system status via API");
 		if($allowed == "yes")
 		{
-			if(in_array(2,$pagenable))
+			if(in_array(0,$pagenable))
 			{
 				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					if($post_exists === true)
+					if($verinfo["major"] == 0)
 					{
-						$post=get_request($post);
-						while(count($post) < 9)
-						{
-							$post[]="";
-						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$post[6],$post[7],$post[8]);
-						if($debug === false)
-						{
-							http_response_code(500);
-							write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to mark post $post as played: the file has been microwaved");
-							echo $default;
-						}
-						else
-						{
-							http_response_code(200);
-							write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully marked post $post as played");
-							echo $default;
-						}
+						http_response_code(500);
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get version information: something has been microwaved");
+						echo $default;
 					}
 					else
 					{
-						http_response_code(500);
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to mark post $post as played: the file has been abducted by Russians");
-						echo $default;
+						http_response_code(200);
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully got system version information");
+						echo "major=" . $verinfo["major"] . "\nminor=" . $verinfo["minor"] . "\nrevision=" . $verinfo["revision"] . "\ntag=" . $verinfo["tag"] . "\nrelease=" . $verinfo["released"] . "\n";
+						switch($verinfo["beta"])
+						{
+							case 1:
+							echo "beta=yes";
+							break;
+							
+							case 0:
+							default:
+							echo "beta=no";
+							break;
+						}
 					}
 				}
 				else
 				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get version information: invalid password submitted");
 					http_response_code(403);
 					echo $default;
 				}
 			}
 			else
 			{
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get version information: action not allowed");
 				http_response_code(404);
 				echo $default;
 			}
 		}
 		else
 		{
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to get version information: API not enabled");
 			http_response_code(410);
 			echo $default;
 		}
@@ -179,12 +173,20 @@
 				{
 					if($post_exists === true)
 					{
+						if(isset($_POST['comment']))
+						{
+							$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
+						}
+						else
+						{
+							$comment="";
+						}
 						$post=get_request($post);
 						while(count($post) < 9)
 						{
 							$post[]="";
 						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$post[6],$post[7],$post[8]);
+						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$comment,$post[7],$post[8]);
 						if($debug === false)
 						{
 							http_response_code(500);

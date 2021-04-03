@@ -1841,6 +1841,20 @@
 		trigger_error("Failed to open request database in write mode. Microwave it and try again.",E_USER_WARNING);
 		return false;
 	}
+	//Function for getting version information
+	function get_version_information()
+	{
+		if(file_exists("backend/version.txt"))
+		{
+			$verinfo=explode("\r\n",file_get_contents("backend/version.txt"));
+			$verinfo[0]=explode("|",$verinfo[0]);
+			return $verinfo;
+		}
+		else
+		{
+			return false;
+		}
+	}
 ?>
 <?php
     //Set new script time limit

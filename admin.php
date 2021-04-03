@@ -1018,7 +1018,7 @@
 					{
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
-					$apipages=implode(",",array_filter(array_unique($apipages)));
+					$apipages=implode(",",array_filter(array_unique($apipages),"is_numeric"));
 					$debug=save_system_setting("apipages",$apipages);
 					if($debug !== true)
 					{
@@ -1960,7 +1960,7 @@
 					{
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
-					$apipages=implode(",",array_filter(array_unique($apipages)));
+					$apipages=implode(",",array_filter(array_unique($apipages),"is_numeric"));
 					$debug=save_system_setting("apipages",$apipages);
 					if($debug !== true)
 					{
@@ -2392,7 +2392,7 @@
   New API Password: <input type="password" name="napipass"><br>
   Confirm new API Password: <input type="password" name="capipass"><br>
   Pages:<br>
-  <input type="checkbox" name="apipages[]" value="0" <?php if(in_array(0,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Version information<br>
+  <input type="checkbox" name="apipages[]" value="0" <?php if(in_array(0,$apipages)) { echo("checked=\"checked\""); } ?>>Version information<br>
   <input type="checkbox" name="apipages[]" value="1" <?php if(in_array(1,$apipages)) { echo("checked=\"checked\""); } ?>>Request view<br>
   <input type="checkbox" name="apipages[]" value="2" <?php if(in_array(2,$apipages)) { echo("checked=\"checked\""); } ?>>Request actions (queue, decline, mark as played)<br>
   <input type="checkbox" name="apipages[]" value="3" <?php if(in_array(3,$apipages)) { echo("checked=\"checked\""); } ?>>Open/close system<br>

@@ -29,24 +29,6 @@
 	}
 ?>
 <?php
-	//Useful functions
-	
-	//Function for getting version information
-	function get_version_information()
-	{
-		if(file_exists("backend/version.txt"))
-		{
-			$verinfo=explode("\r\n",file_get_contents("backend/version.txt"));
-			$verinfo[0]=explode("|",$verinfo[0]);
-			return $verinfo;
-		}
-		else
-		{
-			return false;
-		}
-	}
-?>
-<?php
 	//Get system name
 	$sysname=system_name();
 ?>
