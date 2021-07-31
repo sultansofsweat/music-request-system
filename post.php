@@ -420,7 +420,7 @@
 			}
 			elseif($reqid === false && $open == "no" && $light == "no")
 			{
-				trigger_error("Attempt to stuff the ballet box detected and denied. Follow the rules!",E_USER_ERROR);
+				trigger_error("Attempt to stuff the ballet (sic) box detected and denied. Follow the rules!",E_USER_ERROR);
 				$posting=false;
 			}
 		}
@@ -735,7 +735,7 @@
 			}
 			elseif($reqid === false && $open == "no" && $light == "no")
 			{
-				trigger_error("Attempt to stuff the ballet box detected and denied. Follow the rules!",E_USER_ERROR);
+				trigger_error("Attempt to stuff the ballet (sic) box detected and denied. Follow the rules!",E_USER_ERROR);
 				$posting=false;
 			}
 		}

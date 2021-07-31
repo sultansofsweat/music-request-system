@@ -166,7 +166,7 @@
 		echo("!<br>\r\n");
 		if($admin === true)
 		{
-			echo ("<a href=\"logout.php\">Exit Admin Mode</a> | <a href=\"post.php\">Request</a> | <a href=\"admin.php\">Administration</a> | <a href=\"about.php\">About the MRS</a><br>\r\n");
+			echo ("<a href=\"logout.php\">Exit Admin Mode</a> | <a href=\"select.php\">Request</a> | <a href=\"admin.php\">Administration</a> | <a href=\"about.php\">About the MRS</a><br>\r\n");
 			echo ("<a href=\"bun.php\">Ban username</a> | <a href=\"vun.php\">View username banlist</a> | <a href=\"bip.php\">Ban IP address</a> | <a href=\"vip.php\">View IP banlist</a> | <a href=\"viewreports.php\">View Post Reports</a><br>\r\n");
 			echo ("Quick view: ");
 			if($posting === true)
@@ -199,7 +199,7 @@
 				echo ("Requesting disabled.");
 				if($vlist === true && in_light_mode() === false)
 				{
-					echo (" <a href=\"post.php\">View Songs</a><br>\r\n");
+					echo (" <a href=\"select.php\">View Songs</a><br>\r\n");
 				}
 				else
 				{
@@ -212,7 +212,7 @@
 				break;
 				case 2:
 				echo ("<a href=\"login.php\">Enter Admin Mode</a> | ");
-				echo ("<a href=\"post.php\">Request</a><br>\r\n");
+				echo ("<a href=\"select.php\">Request</a><br>\r\n");
 				break;
 				default:
 				die(trigger_error("Invalid header level",E_USER_ERROR));
