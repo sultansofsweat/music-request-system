@@ -82,50 +82,23 @@
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
-		if(isset($_GET['clear']) && $_GET['clear'] == "yes" && isset($_SESSION['listedit2-order']) && isset($_SESSION['listedit2-list']))
+		if(isset($_GET['clear']) && $_GET['clear'] == "yes" && isset($_SESSION['listedit-order']))
 		{
-			unset($_SESSION['listedit2-order'],$_SESSION['listedit2-list']);
+			unset($_SESSION['listedit-order']);
 			trigger_error("Successfully cleared current queue.");
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Cleared current edit list");
 		}
-		if(isset($_SESSION['listedit2-order']))
+		if(isset($_SESSION['listedit-order']))
 		{
-			$order=$_SESSION['listedit2-order'];
+			$order=$_SESSION['listedit-order'];
 		}
 		else
 		{
 			$order="";
 		}
-        if(isset($_SESSION['listedit2-list']))
-		{
-			$list=$_SESSION['listedit2-list'];
-		}
-		else
-		{
-			$list="";
-		}
 		$songs=array();
 		$delete="no";
 		$editsongs=array();
-        $lists=glob("songs/*.txt");
-        for($i=0;$i<count($lists);$i++)
-        {
-            $lists[$i]=substr($lists[$i],6,-4);
-            if($lists[$i] == "main")
-            {
-                $lists[$i]="";
-            }
-        }
-        $lists=array_filter($lists);
-        if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "y")
-        {
-            $list=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
-            if(file_exists("songs/$list.txt"))
-            {
-                $_SESSION['listedit2-list']=$list;
-                write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Selected list $list");
-            }
-        }
 		if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "1")
 		{
 			if(isset($_POST['add']) && ($add=preg_replace("/[^0-9]/","",$_POST['add'])) != "")
@@ -140,12 +113,7 @@
 					$order=array($order,$add);
 				}
 				$order=implode(",",$order);
-				$_SESSION['listedit2-order']=$order;
-			}
-			foreach(explode(",",$order) as $song)
-			{
-				$rawsong=explode("|",get_raw_song($list,$song),4);
-				$editsongs[]=$rawsong[3];
+				$_SESSION['listedit-order']=$order;
 			}
 		}
 		elseif(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "2")
@@ -153,20 +121,18 @@
 			$order=explode(",",(preg_replace("/[^0-9\,]/","",$_POST['order'])));
 			if(isset($_POST['delete']) && $_POST['delete'] == "yes")
 			{
-				$debug=remove_from_song_list($list,$order);
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Deleted " . $debug[0] . " songs in song list \"$list\" with " . $debug[1] . " errors");
+				$debug=remove_from_song_list("main",$order);
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Deleted " . $debug[0] . " songs in song list \"main\" with " . $debug[1] . " errors");
 				trigger_error("Finished editing song list. Removed " . $debug[0] . " songs with " . $debug[1] . " errors.");
-				unset($_SESSION['listedit2-order'],$_SESSION['listedit2-list']);
-                $order="";
-                $list="";
+				unset($_SESSION['listedit-order']);
 			}
 			else
 			{
 				$edited=explode("\r\n",filter_var($_POST['list'],FILTER_SANITIZE_STRING));
 				if(count($order) != count($edited))
 				{
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to edit song list \"$list\": discrepancy in lists submitted");
-					trigger_error("Failed to edit song list \"$list\": list of songs to edit and list of replacements are different lengths.",E_USER_ERROR);
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to edit song list \"main\": discrepancy in lists submitted");
+					trigger_error("Failed to edit song list \"main\": list of songs to edit and list of replacements are different lengths.",E_USER_ERROR);
 				}
 				else
 				{
@@ -174,7 +140,7 @@
 					$errors=0;
 					for($i=0;$i<count($order);$i++)
 					{
-						$debug=modify_song_list($list,$order[$i],$edited[$i]);
+						$debug=modify_song_list("main",$order[$i],$edited[$i]);
 						if($debug === false)
 						{
 							$errors++;
@@ -184,77 +150,46 @@
 							$count++;
 						}
 					}
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Edited $count songs in song list \"$list\" with $errors errors");
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Edited $count songs in song list \"main\" with $errors errors");
 					trigger_error("Finished editing song list. Edited $count songs with $errors errors.");
-                    unset($_SESSION['listedit2-order'],$_SESSION['listedit2-list']);
-                    $order="";
-                    $list="";
+					unset($_SESSION['listedit-order']);
 				}
 			}
 		}
 		else
 		{
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited external list editing page");
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited main list editing page");
 			if(securitycheck() === false)
 			{
 				die("You are not an administrator. <a href=\"login.php?ref=listedit2\">Log in</a> or <a href=\"index.php\">cancel</a>.");
 			}
 		}
-        if($list != "")
-        {
-            $rawsongs=explode("\r\n",stripcslashes(get_raw_songs($list)));
-            foreach($rawsongs as $song)
-            {
-                $song=explode("|",$song,4);
-                $songs[]=$song[3];
-            }
-        }
+		$rawsongs=explode("\r\n",stripcslashes(get_raw_songs("main")));
+		foreach($rawsongs as $song)
+		{
+			$song=explode("|",$song,4);
+			$songs[]=$song[3];
+		}
 		$editsongs=implode("\r\n",$editsongs);
 	}
 	else
 	{
-		if(isset($_GET['clear']) && $_GET['clear'] == "yes" && isset($_SESSION['listedit2-order']) && isset($_SESSION['listedit2-list']))
+		if(isset($_GET['clear']) && $_GET['clear'] == "yes" && isset($_SESSION['listedit-order']))
 		{
-			unset($_SESSION['listedit2-order'],$_SESSION['listedit2-list']);
+			unset($_SESSION['listedit-order']);
 			trigger_error("Successfully cleared current queue.");
 		}
-		if(isset($_SESSION['listedit2-order']))
+		if(isset($_SESSION['listedit-order']))
 		{
-			$order=$_SESSION['listedit2-order'];
+			$order=$_SESSION['listedit-order'];
 		}
 		else
 		{
 			$order="";
 		}
-        if(isset($_SESSION['listedit2-list']))
-		{
-			$list=$_SESSION['listedit2-list'];
-		}
-		else
-		{
-			$list="";
-		}
 		$songs=array();
 		$delete="no";
 		$editsongs=array();
-        $lists=glob("songs/*.txt");
-        for($i=0;$i<count($lists);$i++)
-        {
-            $lists[$i]=substr($lists[$i],6,-4);
-            if($lists[$i] == "main")
-            {
-                $lists[$i]="";
-            }
-        }
-        $lists=array_filter($lists);
-        if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "y")
-        {
-            $list=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
-            if(file_exists("songs/$list.txt"))
-            {
-                $_SESSION['listedit2-list']=$list;
-            }
-        }
 		if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "1")
 		{
 			if(isset($_POST['add']) && ($add=preg_replace("/[^0-9]/","",$_POST['add'])) != "")
@@ -268,12 +203,7 @@
 					$order=array($order,$add);
 				}
 				$order=implode(",",$order);
-				$_SESSION['listedit2-order']=$order;
-			}
-			foreach(explode(",",$order) as $song)
-			{
-				$rawsong=explode("|",get_raw_song($list,$song),4);
-				$editsongs[]=$rawsong[3];
+				$_SESSION['listedit-order']=$order;
 			}
 		}
 		elseif(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "2")
@@ -281,18 +211,16 @@
 			$order=explode(",",(preg_replace("/[^0-9\,]/","",$_POST['order'])));
 			if(isset($_POST['delete']) && $_POST['delete'] == "yes")
 			{
-				$debug=remove_from_song_list($list,$order);
+				$debug=remove_from_song_list("main",$order);
 				trigger_error("Finished editing song list. Removed " . $debug[0] . " songs with " . $debug[1] . " errors.");
-				unset($_SESSION['listedit2-order'],$_SESSION['listedit2-list']);
-                $order="";
-                $list="";
+				unset($_SESSION['listedit-order']);
 			}
 			else
 			{
 				$edited=explode("\r\n",filter_var($_POST['list'],FILTER_SANITIZE_STRING));
 				if(count($order) != count($edited))
 				{
-					trigger_error("Failed to edit song list \"$list\": list of songs to edit and list of replacements are different lengths.",E_USER_ERROR);
+					trigger_error("Failed to edit song list \"main\": list of songs to edit and list of replacements are different lengths.",E_USER_ERROR);
 				}
 				else
 				{
@@ -300,7 +228,7 @@
 					$errors=0;
 					for($i=0;$i<count($order);$i++)
 					{
-						$debug=modify_song_list($list,$order[$i],$edited[$i]);
+						$debug=modify_song_list("main",$order[$i],$edited[$i]);
 						if($debug === false)
 						{
 							$errors++;
@@ -311,9 +239,7 @@
 						}
 					}
 					trigger_error("Finished editing song list. Edited $count songs with $errors errors.");
-                    unset($_SESSION['listedit2-order'],$_SESSION['listedit2-list']);
-                    $order="";
-                    $list="";
+					unset($_SESSION['listedit-order']);
 				}
 			}
 		}
@@ -324,43 +250,25 @@
 				die("You are not an administrator. <a href=\"login.php?ref=listedit2\">Log in</a> or <a href=\"index.php\">cancel</a>.");
 			}
 		}
-        if($list != "")
-        {
-            $rawsongs=explode("\r\n",stripcslashes(get_raw_songs($list)));
-            foreach($rawsongs as $song)
-            {
-                $song=explode("|",$song,4);
-                $songs[]=$song[3];
-            }
-        }
+		$rawsongs=explode("\r\n",stripcslashes(get_raw_songs("main")));
+		foreach($rawsongs as $song)
+		{
+			$song=explode("|",$song,4);
+			$songs[]=$song[3];
+		}
+		foreach(explode(",",$_SESSION['listedit-order']) as $song)
+		{
+			$rawsong=explode("|",get_raw_song("main",$song),4);
+			$editsongs[]=$rawsong[3];
+		}
 		$editsongs=implode("\r\n",$editsongs);
 	}
 ?>
   <h1 style="text-align:center; text-decoration:underline;"><?php echo $sysname; ?>MRS-Edit Song List</h1>
-  <p><a href="listadd2.php">Import new list</a> or <a href="listdel.php">delete list</a> instead.</p>
-  <p>First, choose a list:</p>
-  <form method="post" action="listedit2.php">
-  <input type="hidden" name="s" value="y">
-  <select name="list">
-  <option value="">-----Select one-----</option>
-  <?php
-	foreach($lists as $lst)
-	{
-		echo("<option value=\"$lst\"");
-        if($lst == $list)
-        {
-            echo(" selected=\"selected\"");
-        }
-        echo(">" . $lst . "</option>\r\n");
-	}
-  ?>
-  </select><br>
-  <input type="submit" value="Select list">
-  </form>
-  <p>Then choose songs to edit (or delete):</p>
+  <p><a href="listadd.php">Add new songs</a> or <a href="listimport.php">add songs from file</a> instead.</p>
+  <p>Quick selection of songs to edit (or delete):</p>
   <form method="post" action="listedit2.php">
   <input type="hidden" name="s" value="1">
-  <input type="hidden" name="list" value="<?php echo $list; ?>">
   <input type="hidden" name="order" value="<?php echo $order; ?>">
   <select name="add">
   <option value="">-----Select one-----</option>
@@ -373,16 +281,15 @@
   </select><br>
   <input type="submit" value="Add to queue"><input type="button" value="Clear queue" onclick="window.location.href='listedit2.php?clear=yes'">
   </form>
-  <p>Finally, edit the songs below.<br>
+  <p>Then edit the songs below.<br>
   <b><u>WARNING:</u></b> Do not change the order of the songs in the box! It probably doesn't matter, but you may summon the program director by doing so.<br>
   The format of this list is "<?php echo get_system_setting("songformat"); ?>". Likewise, there are characters (such as &amp; and +) that are not compatible with the request handling mechanisms and should not be used. Not following either of these conventions <b>WILL</b> break the system!</p>
   <form method="post" action="listedit2.php">
   <input type="hidden" name="s" value="2">
-  <input type="hidden" name="list" value="<?php echo $list; ?>">
   <input type="hidden" name="order" value="<?php echo $order; ?>">
   <input type="checkbox" name="delete" value="yes" <?php if($delete == "yes") { echo "checked=\"checked\""; } ?>>Delete these songs instead of editing (<b>this is PERMANENT</b>).<br>
   <textarea name="list" rows="30" cols="100"><?php echo stripcslashes($editsongs); ?></textarea><br>
-  <input type="submit"><input type="button" value="Cancel" onclick="window.location.href='admin.php'">
+  <input type="submit"><input type="button" value="Select [more] songs" onclick="window.location.href='listedit.php'"><input type="button" value="Cancel" onclick="window.location.href='admin.php'">
   </form>
   </body>
 </html>
