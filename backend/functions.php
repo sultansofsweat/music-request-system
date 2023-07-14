@@ -1035,7 +1035,12 @@
 		$songs=array();
 		if(file_exists("songs/$listname.txt"))
 		{
-			$raw=array_filter(explode("\r\n",get_raw_songs($listname)));
+			$raw=explode("\r\n",get_raw_songs($listname));
+			for($i=0;$i<count($raw);$i++)
+			{
+				$raw[$i]=trim($raw[$i]);
+			}
+			$raw=array_filter($raw);
 			$format=array();
 			$rawformat=explode("|",get_system_setting("songformat"));
 			if(is_array($raw) && count($raw) > 0)
@@ -1044,6 +1049,10 @@
                 {
                     $song=array("artist" => "SystemHad","title" => "OneJob","added_to_system" => 0);
                     $rawsong=explode("|",$raw[$i]);
+					if(count($rawsong) < 4)
+					{
+						continue;
+					}
 					$mtime=preg_replace("/[^0-9]/","",array_shift($rawsong));
                     $reqcount=preg_replace("/[^0-9]/","",array_shift($rawsong));
                     $lastreq=preg_replace("/[^0-9]/","",array_shift($rawsong));
