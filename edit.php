@@ -89,7 +89,7 @@
 			//Sanitize the appropriate elements
 			$post=preg_replace("/[^0-9]/","",$_POST['p']);
 			$username=preg_replace("/[^A-Za-z0-9 ]/", "", $_POST['username']);
-			$request=filter_var($_POST['request'],FILTER_SANITIZE_STRING);
+			$request=htmlspecialchars($_POST['request']);
 			//Update file
 			if(does_post_exist($post) === true)
 			{
@@ -151,7 +151,7 @@
 			//Sanitize the appropriate elements
 			$post=preg_replace("/[^0-9]/","",$_POST['p']);
 			$username=preg_replace("/[^A-Za-z0-9 ]/", "", $_POST['username']);
-			$request=filter_var($_POST['request'],FILTER_SANITIZE_STRING);
+			$request=htmlspecialchars($_POST['request']);
 			//Update file
 			if(does_post_exist($post) === true)
 			{

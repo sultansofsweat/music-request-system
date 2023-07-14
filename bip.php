@@ -85,32 +85,32 @@
 		{
 			if(isset($_POST['s']) && $_POST['s'] == "y" && isset($_POST['ip']) && $_POST['ip'] != "")
 			{
-				if(filter_var(filter_var($_POST['ip'],FILTER_SANITIZE_STRING), FILTER_VALIDATE_IP))
+				if(filter_var(htmlspecialchars($_POST['ip']), FILTER_VALIDATE_IP))
 				{
 					//Valid
 					if(isset($_POST['reason']))
 					{
-						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING),filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
+						$debug=ban_ip(htmlspecialchars($_POST['ip']),htmlspecialchars($_POST['reason']));
 					}
 					else
 					{
-						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING));
+						$debug=ban_ip(htmlspecialchars($_POST['ip']));
 					}
 					if($debug === true)
 					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Added IP address \"" . filter_var($_POST['ip'],FILTER_SANITIZE_STRING) . "\" to banlist");
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Added IP address \"" . htmlspecialchars($_POST['ip']) . "\" to banlist");
 						echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=0\"</script>");
 					}
 					else
 					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add IP address \"" . filter_var($_POST['ip'],FILTER_SANITIZE_STRING) . "\" to banlist");
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add IP address \"" . htmlspecialchars($_POST['ip']) . "\" to banlist");
 						echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=2\"</script>");
 					}
 				}
 				else
 				{
 					//Invalid
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add IP address \"" . filter_var($_POST['ip'],FILTER_SANITIZE_STRING) . "\" to banlist");
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add IP address \"" . htmlspecialchars($_POST['ip']) . "\" to banlist");
 					echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=1\"</script>");
 				}
 			}
@@ -119,7 +119,7 @@
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited IP ban page");
 				if(isset($_GET['p']) && $_GET['p'] != "")
 				{
-					$uip=filter_var($_GET['p'],FILTER_SANITIZE_STRING);
+					$uip=htmlspecialchars($_GET['p']);
 				}
 				else
 				{
@@ -139,16 +139,16 @@
 		{
 			if(isset($_POST['s']) && $_POST['s'] == "y" && isset($_POST['ip']) && $_POST['ip'] != "")
 			{
-				if(filter_var(filter_var($_POST['ip'],FILTER_SANITIZE_STRING), FILTER_VALIDATE_IP))
+				if(filter_var(htmlspecialchars($_POST['ip']), FILTER_VALIDATE_IP))
 				{
 					//Valid
 					if(isset($_POST['reason']))
 					{
-						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING),filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
+						$debug=ban_ip(htmlspecialchars($_POST['ip']),htmlspecialchars($_POST['reason']));
 					}
 					else
 					{
-						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING));
+						$debug=ban_ip(htmlspecialchars($_POST['ip']));
 					}
 					if($debug === true)
 					{
@@ -169,7 +169,7 @@
 			{
 				if(isset($_GET['p']) && $_GET['p'] != "")
 				{
-					$uip=filter_var($_GET['p'],FILTER_SANITIZE_STRING);
+					$uip=htmlspecialchars($_GET['p']);
 				}
 				else
 				{

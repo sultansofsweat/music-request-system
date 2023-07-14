@@ -100,7 +100,7 @@
 		elseif(isset($_POST['copyinfo']) && $_POST['copyinfo'] != "" && securitycheck() === true)
 		{
 			//Write new copyright information
-			$copyinfo=strip_tags(filter_var($_POST['copyinfo'],FILTER_SANITIZE_STRING));
+			$copyinfo=strip_tags(htmlspecialchars($_POST['copyinfo']));
 			$debug=set_copyright_information($copyinfo);
 			if($debug === true)
 			{
@@ -156,7 +156,7 @@
 		elseif(isset($_POST['copyinfo']) && $_POST['copyinfo'] != "" && securitycheck() === true)
 		{
 			//Write new copyright information
-			$copyinfo=strip_tags(filter_var($_POST['copyinfo'],FILTER_SANITIZE_STRING));
+			$copyinfo=strip_tags(htmlspecialchars($_POST['copyinfo']));
 			$debug=set_copyright_information($copyinfo);
 			if($debug === true)
 			{

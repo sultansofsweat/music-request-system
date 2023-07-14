@@ -33,13 +33,6 @@
 	$sysname=system_name();
 ?>
 <?php
-	//If "light" mode is enabled, bypass this page entirely
-	if(get_system_setting("light") == "yes")
-	{
-		echo ("<script type=\"text/javascript\">window.location = \"post2.php\"</script>");
-	}
-?>
-<?php
 	//Open session
 	$altsesstore=alt_ses_store();
 	if($altsesstore !== false)
@@ -47,13 +40,6 @@
 		session_save_path($altsesstore);
 	}
 	session_start();
-?>
-<?php
-	//If username is not stored, set it
-	if(!isset($_SESSION['uname']))
-	{
-		$_SESSION['uname']="";
-	}
 ?>
 <?php
 	//Administrative check function (on a separate page)
@@ -66,230 +52,6 @@
 		die("Failed to open file \"backend/securitycheck.php\" in read mode. It should now be microwaved.");
 	}
 ?>
-<?php
-	//Function for determining if Christmas music requesting is allowed
-	function is_christmas_allowed()
-	{
-		if(file_exists("songs/christmas.txt"))
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	//Function for searching the song list
-	function search($list,$terms)
-	{
-		//Split terms into array
-		$terms=explode(",",$terms);
-		//Get song list
-        $list=get_songs($list);
-		//Get list of possible search fields
-		$rawfields=explode("|",get_system_setting("songformat"));
-		//Filter out search fields that are not for display
-		$fields=array();
-		foreach($rawfields as $field)
-		{
-			if(strpos($field,"*") === false)
-			{
-				$fields[]=$field;
-			}
-		}
-		//Add "any" to valid field list
-		$fields[]="any";
-		//Process search terms. FORMAT: [field,query,strict?]
-		$queries=array();
-		foreach($terms as $term)
-		{
-			//If no modifiers found, treat it as "any"
-			if(strpos($term,"=") === false)
-			{
-				$term=strtolower(preg_replace("/[^A-Za-z0-9]/","",$term));
-				foreach($fields as $field)
-				{
-					$queries[]=array("any",$term,false);
-				}
-			}
-			else
-			{
-				//Check for strict modifier ("==")
-				if(strpos($term,"==") !== false)
-				{
-					$term=str_replace("==","=",$term);
-					$strict=true;
-				}
-				else
-				{
-					$strict=false;
-				}
-				//Split term into components
-				$term=explode("=",$term);
-				//Format query
-				$term[1]=strtolower(preg_replace("/[^A-Za-z0-9]/","",$term[1]));
-				//If query is "any" and strict is set, throw an error and unset strict
-				if($term[0] == "any" && $strict === true)
-				{
-					trigger_error("Strict flag with the any field is illegal. Strict flag has been removed.",E_USER_WARNING);
-					$strict=false;
-				}
-				//Make sure term field is valid
-				if(in_array($term[0],$fields))
-				{
-					//Add term to query list
-					$queries[]=array($term[0],$term[1],$strict);
-				}
-				else
-				{
-					trigger_error("Invalid search field: " . $term[0] . ". It is being thrown out with the bathwater. Expect problems.");
-				}
-			}
-		}
-		//Go through each query
-		foreach($queries as $query)
-		{
-			$songs=array();
-			//Go through songs and check against the query
-			foreach($list as $song)
-			{
-				//Formulate search term
-				if($query[0] == "any")
-				{
-					$searchterm=strtolower(preg_replace("/[^A-Za-z0-9]/","",implode("",$song)));
-				}
-				else
-				{
-					$searchterm=strtolower(preg_replace("/[^A-Za-z0-9]/","",$song[$query[0]]));
-				}
-				if($query[2] === true && $searchterm == $query[1])
-				{
-					$songs[]=$song;
-				}
-				elseif($query[2] === false && strpos($searchterm,$query[1]) !== false)
-				{
-					$songs[]=$song;
-				}
-			}
-			//Make base list the list of found songs for next query
-			$list=$songs;
-		}
-		return $list;
-	}
-	//Function for getting songs based on an input query
-	function query($list,$term)
-	{
-		//Get song list
-        $list=get_songs($list);
-		$songs=array();
-		//If query is for everything, just give everything
-		if($term == "all")
-		{
-			return $list;
-		}
-		//If query is for new songs, get only songs added in the last 7 days
-		elseif($term == "new")
-		{
-			foreach($list as $song)
-			{
-				if(isset($song["added_to_system"]) && ($song["added_to_system"] + 7*24*60*60) > time())
-				{
-					$songs[]=$song;
-				}
-			}
-		}
-		//If query is for new songs, get the songs requested the most frequent (system configurable)
-		elseif($term == "freq")
-		{
-            usort($list,"sort_by_popularity");
-            $current=0;
-            $index=0;
-            for($i=0;$i<get_system_setting("popular");$i++)
-            {
-                if($list[$index]["request_count"] == 0)
-                {
-                    break;
-                }
-                $current=$list[$index]["request_count"];
-                while($index < count($list) && $list[$index]["request_count"] == $current)
-                {
-                    $songs[]=$list[$index];
-                    $index++;
-                }
-                if($index >= count($list))
-                {
-                    break;
-                }
-            }
-		}
-		else
-		{
-			foreach($list as $song)
-			{
-				//Get character to search
-				$character=substr($song["artist"],0,1);
-				//If searching "other", check if first letter of artist is a non-alpha character
-				if($term == "other" && preg_replace("/[^A-Za-z]/","",$character) == "")
-				{
-					$songs[]=$song;
-				}
-				elseif(strtolower($character) == $term)
-				{
-					$songs[]=$song;
-				}
-			}
-		}
-		return $songs;
-	}
-	
-	//Function for checking if open requests are allowed
-	function is_open_enabled()
-	{
-		/* Check methodology
-		-System is open or not
-		-Open requests are enabled
-		-No overload in system
-		-No pending request for user
-		-User has not exceeded request limit
-		*/
-		if(get_system_setting("posting") != "yes")
-		{
-			//echo ("DEBUG: posting disabled.<br>\r\n");
-			//System disabled
-			return false;
-		}
-		if(get_system_setting("open") != "yes")
-		{
-			//echo ("DEBUG: open disabled.<br>\r\n");
-			//Open requests disabled
-			return false;
-		}
-		
-		//Everything passed
-		return true;
-	}
-?>
-<?php
-	if(is_logging_enabled() === true)
-	{
-		//Change the timezone
-		set_timezone();
-		//Logging enabled on system
-		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited edit queue song selection page");
-		if(securitycheck() === false)
-		{
-			die("You are not an administrator. <a href=\"login.php?ref=listedit\">Log in</a> or <a href=\"index.php\">cancel</a>.");
-		}
-	}
-	else
-	{
-		if(securitycheck() === false)
-		{
-			die("You are not an administrator. <a href=\"login.php?ref=listedit\">Log in</a> or <a href=\"index.php\">cancel</a>.");
-		}
-	}
-?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
@@ -298,15 +60,7 @@
     <meta name="created" content="Wed, 17 Jun 2015 12:33:52 GMT">
     <meta name="description" content="Listening to a live stream? Got a song you have to hear? This is the place to request it!">
 	<link rel="shortcut icon" href="backend/favicon.ico">
-    <title><?php echo $sysname; ?>Music Request System-Select Songs To Edit</title>
-	<script type="text/javascript" src="backend/jquery.js"></script>
-	<script type="text/javascript" src="backend/tablesorter.js"></script>
-	<link rel="stylesheet" href="backend/tsstyle/style.css" type="text/css" media="print, projection, screen" />
-	<script type="text/javascript">
-	$(function() {
-		$("#reqtable").tablesorter();
-	});
-	</script>
+    <title><?php echo $sysname; ?>Music Request System-Edit Song List</title>
     
     <style type="text/css">
     <!--
@@ -324,250 +78,223 @@
     </style>
   </head>
   <body>
-  <h1 style="text-align:center; text-decoration:underline;"><?php echo $sysname; ?>MRS-Select Songs To Edit</h1>
-  <h3>There are currently <?php echo count(array_filter(explode(",",$_SESSION['listedit-order']),"is_numeric")); ?> songs in the edit queue.</h3>
-  <?php
-	//Make sure that searching is allowed
-	if(get_system_setting("searching") == "yes")
-	{
-		$search=true;
-	}
-	else
-	{
-		$search=false;
-	}
-  ?>
-  <form action="listedit.php" method="get">
-  <input type="hidden" name="s" value="y">
-  Search for a song: <input type="text" name="query" <?php if($search !== true) { echo ("value=\"Searching disabled\" disabled=\"disabled\""); } elseif(isset($_GET['query'])) { echo("value=\"" . $_GET['query'] . "\"");} ?>>
-  <input type="submit">
-  </form>
-  <p><a href="howtosearch.php">How to search</a><br>
-  Or, display songs: <a href="listedit.php?list=main&query=all">ALL</a> | <a href="listedit.php?list=main&query=new">NEW</a> | <a href="listedit.php?list=main&query=freq">POPULAR</a> | <a href="listedit.php?list=main&query=a">A</a> | <a href="listedit.php?list=main&query=b">B</a> | <a href="listedit.php?list=main&query=c">C</a> | <a href="listedit.php?list=main&query=d">D</a> | <a href="listedit.php?list=main&query=e">E</a> | <a href="listedit.php?list=main&query=f">F</a> | <a href="listedit.php?list=main&query=g">G</a> | <a href="listedit.php?list=main&query=h">H</a> | <a href="listedit.php?list=main&query=i">I</a> | <a href="listedit.php?list=main&query=j">J</a> | <a href="listedit.php?list=main&query=k">K</a> | <a href="listedit.php?list=main&query=l">L</a> | <a href="listedit.php?list=main&query=m">M</a> | <a href="listedit.php?list=main&query=n">N</a> | <a href="listedit.php?list=main&query=o">O</a> | <a href="listedit.php?list=main&query=p">P</a> | <a href="listedit.php?list=main&query=q">Q</a> | <a href="listedit.php?list=main&query=r">R</a> | <a href="listedit.php?list=main&query=s">S</a> | <a href="listedit.php?list=main&query=t">T</a> | <a href="listedit.php?list=main&query=u">U</a> | <a href="listedit.php?list=main&query=v">V</a> | <a href="listedit.php?list=main&query=w">W</a> | <a href="listedit.php?list=main&query=x">X</a> | <a href="listedit.php?list=main&query=y">Y</a> | <a href="listedit.php?list=main&query=z">Z</a> | <a href="listedit.php?list=main&query=other">Other</a>
-  <?php
-    if(get_system_setting("christmas") == "yes")
-    {
-        echo(" | <a href=\"listedit.php?list=christmas&query=all\">Christmas Music</a>");
-    }
-    foreach(explode(",",get_system_setting("extlists")) as $extlist)
-    {
-        $extlist=explode("=",$extlist);
-        if(count($extlist) == 2)
-        {
-            echo(" | <a href=\"listedit.php?list=" . $extlist[1] . "&query=all\">" . $extlist[0] . "</a>");
-        }
-    }
-  ?></p>
-  <hr>
-  <?php
-	/* Path to follow:
-	-Get posting status
-	-Get number of requests made by user+if they have active request
-	-Perform query
-	-Display results */
-		
+<?php
 	if(is_logging_enabled() === true)
 	{
-		//Change timezone
 		set_timezone();
-		//Logging enabled
-	
-		if(isset($_GET['blank']))
+		if(isset($_GET['clear']) && $_GET['clear'] == "yes" && isset($_SESSION['listedit-order']))
 		{
-			//User submitted blank query, or a query that eventually became blank
-			trigger_error("The query you submitted was blank, or contained no usable search terms. Please try again.");
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"User submitted blank search query");
+			unset($_SESSION['listedit-order']);
+			trigger_error("Successfully cleared current queue.");
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Cleared current edit list");
 		}
-		if(isset($_GET['add']) && ($add=preg_replace("/[^0-9]/","",$_GET['add'])) != "")
+		if(isset($_SESSION['listedit-order']))
 		{
-			//Add to edit queue
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Adding song $add to edit list");
 			$order=$_SESSION['listedit-order'];
-			if($order == "")
-			{
-				$order=array($add);
-			}
-			else
-			{
-				$order=array($order,$add);
-			}
-			$order=implode(",",$order);
-			$_SESSION['listedit-order']=$order;
-			echo ("<script type=\"text/javascript\">window.location = \"listedit.php\"</script>");
-		}
-	}
-	else
-	{
-		//Logging disabled
-	
-		if(isset($_GET['blank']))
-		{
-			//User submitted blank query, or a query that eventually became blank
-			trigger_error("The query you submitted was blank, or contained no usable search terms. Please try again.");
-		}
-		if(isset($_GET['add']) && ($add=preg_replace("/[^0-9]/","",$_GET['add'])) != "")
-		{
-			//Add to edit queue
-			$order=$_SESSION['listedit-order'];
-			if($order == "")
-			{
-				$order=array($add);
-			}
-			else
-			{
-				$order=array($order,$add);
-			}
-			$order=implode(",",$order);
-			$_SESSION['listedit-order']=$order;
-			echo ("<script type=\"text/javascript\">window.location = \"listedit.php\"</script>");
-		}
-	}
-?>
-  <table id="reqtable" class="tablesorter">
-  <thead>
-  <tr>
-  <th style="width:90px;"></th>
-  <?php
-	//Get user-readable song format
-	$humanreadable=explode("|",get_system_setting("songformathr"));
-	foreach($humanreadable as $hr)
-	{
-		//DO NOT OUTPUT IF FILE NAME!
-		if(strtolower(preg_replace("/[^A-Za-z]/","",$hr)) != "filename")
-		{
-			echo ("<th>$hr</th>\r\n");
-		}
-	}
-  ?>
-  <th>#</th>
-  </tr>
-  </thead>
-  <tbody>
-<?php
-	if(isset($_GET['query']) && $_GET['query'] != "")
-	{
-		$query=filter_var($_GET['query'],FILTER_SANITIZE_STRING);
-		if($query == "")
-		{
-			//Query is blank, this is disallowed
-			echo("<script type=\"text/javascript\">window.location = \"listedit.php?blank=yes\"</script>");
-		}
-		if(isset($_GET['list']) && ($list=preg_replace("/[^A-Za-z0-9]/","",$_GET['list'])) != "")
-		{
-			if(!file_exists("songs/$list.txt") && $list != "christmas")
-			{
-				$list="main";
-			}
 		}
 		else
 		{
-			$list="main";
+			$order="";
 		}
-		
-		if($list == "christmas" && is_christmas_allowed() === false)
+		$songs=array();
+		$delete="no";
+		$editsongs=array();
+		if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "1")
 		{
-			$songs=array(array("artist" => "CF","title" => "Christmas music gets played in December, DAMMIT!"));
-			$continue=false;
-		}
-		else
-		{
-			$continue=true;
-		}
-		
-		if($continue === true)
-		{
-			$query=explode(",",$query);
-			for($i=0;$i<count($query);$i++)
+			if(isset($_POST['add']) && ($add=preg_replace("/[^0-9]/","",$_POST['add'])) != "")
 			{
-				$query[$i]=trim($query[$i]);
-				if(strpos($query[$i],"list=") !== false)
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Adding song $add to edit list");
+				if($order == "")
 				{
-					$q=explode("=",$query[$i]);
-					$list=$q[1];
-					$query[$i]="";
-				}
-			}
-			$query=array_filter($query);
-			$query=implode(",",$query);
-			
-			if(isset($_GET['s']) && $_GET['s'] == "y")
-			{
-				$songs=search($list,$query);
-                if(get_system_setting("hidenr") >= 1)
-                {
-                    $hidenr=true;
-                }
-                else
-                {
-                    $hidenr=false;
-                }
-			}
-			else
-			{
-				$songs=query($list,$query);
-                if(get_system_setting("hidenr") >= 2)
-                {
-                    $hidenr=true;
-                }
-                else
-                {
-                    $hidenr=false;
-                }
-			}
-		}
-		
-		$rawformats=explode("|",get_system_setting("songformat"));
-		$formats=array();
-		foreach($rawformats as $format)
-		{
-			if(strpos($format,"*") === false)
-			{
-				$formats[]=$format;
-			}
-		}
-		
-		foreach($songs as $song)
-		{
-			if($song["artist"] == "CF")
-			{
-				$count=count($formats);
-				echo ("<tr>\r\n<td></td>\r\n<td colspan=" . ($count+1) . ">" . $song["title"] . "</td>\r\n</tr>\r\n");
-			}
-			else
-			{
-				if(isset($song[5]) && $song[5] != "")
-				{
-					$filename=$song[5];
+					$order=array($add);
 				}
 				else
 				{
-					$filename="";
+					$order=array($order,$add);
 				}
-				echo ("<tr>\r\n<td>");
-				if(($song["added_to_system"] + 7*24*60*60) > time())
-				{
-					echo ("<img src=\"backend/new.gif\" alt=\"New\">");
-				}
-				echo ("<a href=\"listedit.php?add=" . $song["ID"] . "\">Add to queue</a></td>\r\n");
-				foreach($formats as $format)
-				{
-					if(isset($song[$format]))
-					{
-						echo("<td>" . $song[$format] . "</td>\r\n");
-					}
-					else
-					{
-						echo("<td></td>\r\n");
-					}
-				}
-				echo("<td>" . $song["request_count"] . "</td>\r\n");
-				echo("</tr>\r\n");
+				$order=implode(",",$order);
+				$_SESSION['listedit-order']=$order;
+			}
+			foreach(explode(",",$order) as $song)
+			{
+				$rawsong=explode("|",get_raw_song("main",$song),4);
+				$editsongs[]=$rawsong[3];
 			}
 		}
+		elseif(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "2")
+		{
+			$order=explode(",",(preg_replace("/[^0-9\,]/","",$_POST['order'])));
+			if(isset($_POST['delete']) && $_POST['delete'] == "yes")
+			{
+				$debug=remove_from_song_list("main",$order);
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Deleted " . $debug[0] . " songs in song list \"main\" with " . $debug[1] . " errors");
+				trigger_error("Finished editing song list. Removed " . $debug[0] . " songs with " . $debug[1] . " errors.");
+				unset($_SESSION['listedit-order']);
+			}
+			else
+			{
+				$edited=explode("\r\n",htmlspecialchars($_POST['list']));
+				if(count($order) != count($edited))
+				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to edit song list \"main\": discrepancy in lists submitted");
+					trigger_error("Failed to edit song list \"main\": list of songs to edit and list of replacements are different lengths.",E_USER_ERROR);
+				}
+				else
+				{
+					$count=0;
+					$errors=0;
+					for($i=0;$i<count($order);$i++)
+					{
+						$debug=modify_song_list("main",$order[$i],$edited[$i]);
+						if($debug === false)
+						{
+							$errors++;
+						}
+						else
+						{
+							$count++;
+						}
+					}
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Edited $count songs in song list \"main\" with $errors errors");
+					trigger_error("Finished editing song list. Edited $count songs with $errors errors.");
+					unset($_SESSION['listedit-order']);
+				}
+			}
+		}
+		else
+		{
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited main list editing page");
+			if(securitycheck() === false)
+			{
+				die("You are not an administrator. <a href=\"login.php?ref=listedit\">Log in</a> or <a href=\"index.php\">cancel</a>.");
+			}
+		}
+		$rawsongs=explode("\r\n",stripcslashes(get_raw_songs("main")));
+		foreach($rawsongs as $song)
+		{
+			$song=explode("|",$song,4);
+			$songs[]=$song[3];
+		}
+		$editsongs=implode("\r\n",$editsongs);
+	}
+	else
+	{
+		if(isset($_GET['clear']) && $_GET['clear'] == "yes" && isset($_SESSION['listedit-order']))
+		{
+			unset($_SESSION['listedit-order']);
+			trigger_error("Successfully cleared current queue.");
+		}
+		if(isset($_SESSION['listedit-order']))
+		{
+			$order=$_SESSION['listedit-order'];
+		}
+		else
+		{
+			$order="";
+		}
+		$songs=array();
+		$delete="no";
+		$editsongs=array();
+		if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "1")
+		{
+			if(isset($_POST['add']) && ($add=preg_replace("/[^0-9]/","",$_POST['add'])) != "")
+			{
+				if($order == "")
+				{
+					$order=array($add);
+				}
+				else
+				{
+					$order=array($order,$add);
+				}
+				$order=implode(",",$order);
+				$_SESSION['listedit-order']=$order;
+			}
+			foreach(explode(",",$order) as $song)
+			{
+				$rawsong=explode("|",get_raw_song("main",$song),4);
+				$editsongs[]=$rawsong[3];
+			}
+		}
+		elseif(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "2")
+		{
+			$order=explode(",",(preg_replace("/[^0-9\,]/","",$_POST['order'])));
+			if(isset($_POST['delete']) && $_POST['delete'] == "yes")
+			{
+				$debug=remove_from_song_list("main",$order);
+				trigger_error("Finished editing song list. Removed " . $debug[0] . " songs with " . $debug[1] . " errors.");
+				unset($_SESSION['listedit-order']);
+			}
+			else
+			{
+				$edited=explode("\r\n",htmlspecialchars($_POST['list']));
+				if(count($order) != count($edited))
+				{
+					trigger_error("Failed to edit song list \"main\": list of songs to edit and list of replacements are different lengths.",E_USER_ERROR);
+				}
+				else
+				{
+					$count=0;
+					$errors=0;
+					for($i=0;$i<count($order);$i++)
+					{
+						$debug=modify_song_list("main",$order[$i],$edited[$i]);
+						if($debug === false)
+						{
+							$errors++;
+						}
+						else
+						{
+							$count++;
+						}
+					}
+					trigger_error("Finished editing song list. Edited $count songs with $errors errors.");
+					unset($_SESSION['listedit-order']);
+				}
+			}
+		}
+		else
+		{
+			if(securitycheck() === false)
+			{
+				die("You are not an administrator. <a href=\"login.php?ref=listedit\">Log in</a> or <a href=\"index.php\">cancel</a>.");
+			}
+		}
+		$rawsongs=explode("\r\n",stripcslashes(get_raw_songs("main")));
+		foreach($rawsongs as $song)
+		{
+			$song=explode("|",$song,4);
+			$songs[]=$song[3];
+		}
+		$editsongs=implode("\r\n",$editsongs);
 	}
 ?>
-</tbody>
-</table>
-  <br><a href="listedit2.php">Edit selected songs</a> | <a href="index.php">Cancel</a>
+  <h1 style="text-align:center; text-decoration:underline;"><?php echo $sysname; ?>MRS-Edit Song List</h1>
+  <p><a href="listadd.php">Add new songs</a> or <a href="listimport.php">add songs from file</a> instead.</p>
+  <p>First, choose songs to edit (or delete):</p>
+  <form method="post" action="listedit.php">
+  <input type="hidden" name="s" value="1">
+  <input type="hidden" name="order" value="<?php echo $order; ?>">
+  <select name="add">
+  <option value="">-----Select one-----</option>
+  <?php
+	for($i=0;$i<count($songs);$i++)
+	{
+		echo("<option value=\"$i\">" . $songs[$i] . "</option>\r\n");
+	}
+  ?>
+  </select><br>
+  <input type="submit" value="Add to queue"><input type="button" value="Clear queue" onclick="window.location.href='listedit.php?clear=yes'">
+  </form>
+  <p>Then edit the songs below.<br>
+  <b><u>WARNING:</u></b> Do not change the order of the songs in the box! It probably doesn't matter, but you may summon the program director by doing so.<br>
+  The format of this list is "<?php echo get_system_setting("songformat"); ?>". Likewise, there are characters (such as &amp; and +) that are not compatible with the request handling mechanisms and should not be used. Not following either of these conventions <b>WILL</b> break the system!</p>
+  <form method="post" action="listedit.php">
+  <input type="hidden" name="s" value="2">
+  <input type="hidden" name="order" value="<?php echo $order; ?>">
+  <input type="checkbox" name="delete" value="yes" <?php if($delete == "yes") { echo "checked=\"checked\""; } ?>>Delete these songs instead of editing (<b>this is PERMANENT</b>).<br>
+  <textarea name="list" rows="30" cols="100"><?php echo stripcslashes($editsongs); ?></textarea><br>
+  <input type="submit"><input type="button" value="Cancel" onclick="window.location.href='admin.php'">
+  </form>
   </body>
 </html>

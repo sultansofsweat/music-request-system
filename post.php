@@ -491,7 +491,7 @@
 <?php
 	if(isset($_GET['query']) && $_GET['query'] != "")
 	{
-		$query=filter_var($_GET['query'],FILTER_SANITIZE_STRING);
+		$query=htmlspecialchars($_GET['query']);
 		if($query == "")
 		{
 			//Query is blank, this is disallowed

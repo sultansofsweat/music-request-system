@@ -90,7 +90,7 @@
 					//Valid
 					if(isset($_POST['reason']))
 					{
-						$debug=ban_user($uname,filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
+						$debug=ban_user($uname,htmlspecialchars($_POST['reason']));
 					}
 					else
 					{
@@ -144,7 +144,7 @@
 					//Valid
 					if(isset($_POST['reason']))
 					{
-						$debug=ban_user($uname,filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
+						$debug=ban_user($uname,htmlspecialchars($_POST['reason']));
 					}
 					else
 					{

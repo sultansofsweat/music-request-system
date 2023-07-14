@@ -92,7 +92,7 @@
 				if(isset($_POST['comment']) && $_POST['comment'] != "")
 				{
 					//Sanitize comment
-					$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
+					$comment=htmlspecialchars($_POST['comment']);
 				}
 				else
 				{
@@ -155,7 +155,7 @@
 				if(isset($_POST['comment']) && $_POST['comment'] != "")
 				{
 					//Sanitize comment
-					$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
+					$comment=htmlspecialchars($_POST['comment']);
 				}
 				else
 				{

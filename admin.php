@@ -332,7 +332,7 @@
 				//Get all posted settings
 				if(isset($_POST['name']))
 				{
-					$name=filter_var($_POST['name'],FILTER_SANITIZE_STRING);
+					$name=htmlspecialchars($_POST['name']);
 					$debug=save_system_setting("name",$name);
 					if($debug !== true)
 					{
@@ -346,7 +346,7 @@
 				}
 				if(isset($_POST['sysmessage']))
 				{
-					$sysmessage=filter_var($_POST['sysmessage'],FILTER_SANITIZE_STRING);
+					$sysmessage=htmlspecialchars($_POST['sysmessage']);
 					$debug=save_system_setting("sysmessage",stripcslashes($sysmessage));
 					if($debug !== true)
 					{
@@ -658,7 +658,7 @@
 				}
 				if(isset($_POST['stripwords']))
 				{
-					$stripwords=filter_var($_POST['stripwords'],FILTER_SANITIZE_STRING);
+					$stripwords=htmlspecialchars($_POST['stripwords']);
 					$debug=save_system_setting("stripwords",stripcslashes($stripwords));
 					if($debug !== true)
 					{
@@ -672,7 +672,7 @@
 				}
 				if(isset($_POST['reqrestrict']))
 				{
-					$reqrestrict=filter_var($_POST['reqrestrict'],FILTER_SANITIZE_STRING);
+					$reqrestrict=htmlspecialchars($_POST['reqrestrict']);
 					$debug=save_system_setting("reqrestrict",$reqrestrict);
 					if($debug !== true)
 					{
@@ -732,7 +732,7 @@
 				}
 				if(isset($_POST['extlists']))
 				{
-					$extlists=filter_var($_POST['extlists'],FILTER_SANITIZE_STRING);
+					$extlists=htmlspecialchars($_POST['extlists']);
 					$debug=save_system_setting("extlists",$extlists);
 					if($debug !== true)
 					{
@@ -1054,7 +1054,7 @@
 				}
 				if(isset($_POST['datetime']))
 				{
-					$datetime=filter_var($_POST['datetime'],FILTER_SANITIZE_STRING);
+					$datetime=htmlspecialchars($_POST['datetime']);
 					if($datetime == "")
 					{
 						$datetime=get_system_setting("datetime");
@@ -1148,7 +1148,7 @@
 				}
 				if(isset($_POST['banwords']))
 				{
-					$banwords=preg_replace("/\s+/","", filter_var($_POST['banwords'],FILTER_SANITIZE_STRING));
+					$banwords=preg_replace("/\s+/","", htmlspecialchars($_POST['banwords']));
 					$debug=save_system_setting("banwords",$banwords);
 					if($debug !== true)
 					{
@@ -1452,7 +1452,7 @@
 				//Get all posted settings
 				if(isset($_POST['name']))
 				{
-					$name=filter_var($_POST['name'],FILTER_SANITIZE_STRING);
+					$name=htmlspecialchars($_POST['name']);
 					$debug=save_system_setting("name",$name);
 					if($debug !== true)
 					{
@@ -1461,7 +1461,7 @@
 				}
 				if(isset($_POST['sysmessage']))
 				{
-					$sysmessage=filter_var($_POST['sysmessage'],FILTER_SANITIZE_STRING);
+					$sysmessage=htmlspecialchars($_POST['sysmessage']);
 					$debug=save_system_setting("sysmessage",stripcslashes($sysmessage));
 					if($debug !== true)
 					{
@@ -1701,7 +1701,7 @@
 				}
 				if(isset($_POST['stripwords']))
 				{
-					$stripwords=filter_var($_POST['stripwords'],FILTER_SANITIZE_STRING);
+					$stripwords=htmlspecialchars($_POST['stripwords']);
 					$debug=save_system_setting("stripwords",stripcslashes($stripwords));
 					if($debug !== true)
 					{
@@ -1710,7 +1710,7 @@
 				}
 				if(isset($_POST['reqrestrict']))
 				{
-					$reqrestrict=filter_var($_POST['reqrestrict'],FILTER_SANITIZE_STRING);
+					$reqrestrict=htmlspecialchars($_POST['reqrestrict']);
 					$debug=save_system_setting("reqrestrict",$reqrestrict);
 					if($debug !== true)
 					{
@@ -1750,7 +1750,7 @@
 				}
 				if(isset($_POST['extlists']))
 				{
-					$extlists=filter_var($_POST['extlists'],FILTER_SANITIZE_STRING);
+					$extlists=htmlspecialchars($_POST['extlists']);
 					$debug=save_system_setting("extlists",$extlists);
 					if($debug !== true)
 					{
@@ -1986,7 +1986,7 @@
 				}
 				if(isset($_POST['datetime']))
 				{
-					$datetime=filter_var($_POST['datetime'],FILTER_SANITIZE_STRING);
+					$datetime=htmlspecialchars($_POST['datetime']);
 					if($datetime == "")
 					{
 						$datetime=get_system_setting("datetime");
@@ -2054,7 +2054,7 @@
 				}
 				if(isset($_POST['banwords']))
 				{
-					$banwords=preg_replace("/\s+/","", filter_var($_POST['banwords'],FILTER_SANITIZE_STRING));
+					$banwords=preg_replace("/\s+/","", htmlspecialchars($_POST['banwords']));
 					$debug=save_system_setting("banwords",$banwords);
 					if($debug !== true)
 					{
