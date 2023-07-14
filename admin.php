@@ -2406,7 +2406,6 @@
   <select name="mirror">
   <option value="">-Select one-</option>
   <option value="http://firealarms.mooo.com/mrs/" <?php if($mirror == "http://firealarms.mooo.com/mrs/") { echo("selected=\"selected\""); } ?>>firealarms.mooo.com (Canada)</option>
-  <option value="http://firealarms.redbat.ca/mrs/" <?php if($mirror == "http://firealarms.redbat.ca/mrs/") { echo("selected=\"selected\""); } ?>>firealarms.redbat.ca (Canada)</option>
   </select><br>
   <a href="upgrade/index.php">Check for updates</a><br>
   <hr>
