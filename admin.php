@@ -85,6 +85,11 @@
 	{
 		trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
 	}
+	//If deprecation log has entries, throw a notice
+	if(is_dep_log_blank() !== true)
+	{
+		trigger_error("There are entries in the deprecation log! Please report these if you have not done so!");
+	}
 ?>
 <?php
 	//Ancilliary page error handlers
@@ -2263,6 +2268,7 @@
   <a href="viewlog.php">View system logs</a><br>
   <a href="viewatt.php">View login attempts</a><br>
   <a href="viewerr.php">View error logs</a><br>
+  <a href="viewdep.php">View deprecation message log</a><?php if(is_dep_log_blank() !== true) { echo " <b>/!\NOT BLANK/!\</b>"; } ?><br>
   <a href="purgesess.php">Clear session storage location</a> (ONLY applicable when using alternative storage locations)<br>
   <hr>
   <a name="homepage"></a><h3>Homepage</h3>
