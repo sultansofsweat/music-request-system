@@ -1035,12 +1035,7 @@
 		$songs=array();
 		if(file_exists("songs/$listname.txt"))
 		{
-			$raw=explode("\r\n",get_raw_songs($listname));
-			for($i=0;$i<count($raw);$i++)
-			{
-				$raw[$i]=trim($raw[$i]);
-			}
-			$raw=array_filter($raw);
+			$raw=array_filter(explode("\r\n",get_raw_songs($listname)));
 			$format=array();
 			$rawformat=explode("|",get_system_setting("songformat"));
 			if(is_array($raw) && count($raw) > 0)
