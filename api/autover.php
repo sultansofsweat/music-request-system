@@ -167,41 +167,30 @@
 	{
 		if($allowed == "yes")
 		{
-			if(in_array(2,$pagenable))
+			if(in_array(0,$pagenable))
 			{
 				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
 				{
-					if($post_exists === true)
-					{
-						if(isset($_POST['comment']))
-						{
-							$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
-						}
-						else
-						{
-							$comment="";
-						}
-						$post=get_request($post);
-						while(count($post) < 9)
-						{
-							$post[]="";
-						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],3,$comment,$post[7],$post[8]);
-						if($debug === false)
-						{
-							http_response_code(500);
-							echo $default;
-						}
-						else
-						{
-							http_response_code(200);
-							echo $default;
-						}
-					}
-					else
+					if($verinfo["major"] == 0)
 					{
 						http_response_code(500);
 						echo $default;
+					}
+					else
+					{
+						http_response_code(200);
+						echo "major=" . $verinfo["major"] . "\nminor=" . $verinfo["minor"] . "\nrevision=" . $verinfo["revision"] . "\ntag=" . $verinfo["tag"] . "\nrelease=" . $verinfo["released"] . "\n";
+						switch($verinfo["beta"])
+						{
+							case 1:
+							echo "beta=yes";
+							break;
+							
+							case 0:
+							default:
+							echo "beta=no";
+							break;
+						}
 					}
 				}
 				else

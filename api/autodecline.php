@@ -125,7 +125,7 @@
 				{
 					if($post_exists === true)
 					{
-						$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
+						$comment=htmlspecialchars(str_replace("|","-",$_POST['comment']));
 						$post=get_request($post);
 						while(count($post) < 9)
 						{
@@ -180,7 +180,7 @@
 				{
 					if($post_exists === true)
 					{
-						$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
+						$comment=htmlspecialchars(str_replace("|","-",$_POST['comment']));
 						$post=get_request($post);
 						while(count($post) < 9)
 						{
