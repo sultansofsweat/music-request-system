@@ -85,7 +85,7 @@
 		if(isset($_POST['s']) && $_POST['s'] == "y" && securitycheck() === true)
 		{
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Began submitting new songs to list \"main\"");
-			$songs=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+			$songs=htmlspecialchars($_POST['list']);
 			$debug=add_to_song_list("main",$songs);
 			if($debug === true)
 			{
@@ -113,7 +113,7 @@
 	{
 		if(isset($_POST['s']) && $_POST['s'] == "y" && securitycheck() === true)
 		{
-			$songs=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+			$songs=htmlspecialchars($_POST['list']);
 			$debug=add_to_song_list("main",$songs);
 			if($debug === true)
 			{

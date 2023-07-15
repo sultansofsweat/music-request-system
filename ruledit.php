@@ -85,7 +85,7 @@
 			//Change the timezone
 			set_timezone();
 			//Sanitize rule list
-			$list=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+			$list=htmlspecialchars($_POST['list']);
 			//Write contents of submission to song list
 			$debug=save_rules($list);
 			if($debug === true)
@@ -102,7 +102,7 @@
 		else
 		{
 			//Sanitize rule list
-			$list=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+			$list=htmlspecialchars($_POST['list']);
 			//Write contents of submission to song list
 			$debug=save_rules($list);
 			if($debug === true)

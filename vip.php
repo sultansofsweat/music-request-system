@@ -87,7 +87,7 @@
 		}
 		if(isset($_GET['unban']))
 		{
-			$ip=filter_var($_GET['unban'],FILTER_SANITIZE_STRING);
+			$ip=htmlspecialchars($_GET['unban']);
 			if(filter_var($ip,FILTER_VALIDATE_IP))
 			{
 				echo "LOSER";
@@ -114,7 +114,7 @@
 		}
 		if(isset($_GET['unban']))
 		{
-			$ip=filter_var($_GET['unban'],FILTER_SANITIZE_STRING);
+			$ip=htmlspecialchars($_GET['unban']);
 			if(filter_var($ip,FILTER_VALIDATE_IP))
 			{
 				$debug=unban_ip($ip);

@@ -78,112 +78,57 @@
     </style>
   </head>
 <?php
-	if(is_logging_enabled() === true)
+	if(isset($_POST['delinfo']) && securitycheck() === true)
 	{
-		if(isset($_POST['delinfo']) && securitycheck() === true)
+		//Delete copyright information
+		$debug=clear_copyright_information();
+		if($debug === true)
 		{
-			//Delete copyright information
-			$debug=clear_copyright_information();
-			if($debug === true)
-			{
-				//Success
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Cleared copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
-			}
-			else
-			{
-				//Failure
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to clear copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
-			}
-		}
-		elseif(isset($_POST['copyinfo']) && $_POST['copyinfo'] != "" && securitycheck() === true)
-		{
-			//Write new copyright information
-			$copyinfo=strip_tags(filter_var($_POST['copyinfo'],FILTER_SANITIZE_STRING));
-			$debug=set_copyright_information($copyinfo);
-			if($debug === true)
-			{
-				//Success
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Wrote new copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
-			}
-			else
-			{
-				//Failure
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to write new copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
-			}
+			//Success
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Cleared copyright information");
+			echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
 		}
 		else
 		{
-			if(isset($_POST['copyinfo']))
-			{
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Improper attempt to clear info detected and stopped");
-				trigger_error("Failed to submit. Deleting the copyright information is done using the checkbox, not by blanking out the input.",E_USER_ERROR);
-			}
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited copyright info editing page");
-			if(securitycheck() === false)
-			{
-				die("You are not an administrator. <a href=\"login.php?ref=copyright\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
-			}
-			$copyinfo=get_raw_copyright_information();
-			if($copyinfo === false)
-			{
-				$copyinfo="";
-			}
+			//Failure
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to clear copyright information");
+			echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
+		}
+	}
+	elseif(isset($_POST['copyinfo']) && $_POST['copyinfo'] != "" && securitycheck() === true)
+	{
+		//Write new copyright information
+		$copyinfo=strip_tags(htmlspecialchars($_POST['copyinfo']));
+		$debug=set_copyright_information($copyinfo);
+		if($debug === true)
+		{
+			//Success
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Wrote new copyright information");
+			echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
+		}
+		else
+		{
+			//Failure
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to write new copyright information");
+			echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
 		}
 	}
 	else
 	{
-		if(isset($_POST['delinfo']) && securitycheck() === true)
+		if(isset($_POST['copyinfo']))
 		{
-			//Delete copyright information
-			$debug=clear_copyright_information();
-			if($debug === true)
-			{
-				//Success
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Cleared copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
-			}
-			else
-			{
-				//Failure
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to clear copyright information");
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
-			}
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Improper attempt to clear info detected and stopped");
+			trigger_error("Failed to submit. Deleting the copyright information is done using the checkbox, not by blanking out the input.",E_USER_ERROR);
 		}
-		elseif(isset($_POST['copyinfo']) && $_POST['copyinfo'] != "" && securitycheck() === true)
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited copyright info editing page");
+		if(securitycheck() === false)
 		{
-			//Write new copyright information
-			$copyinfo=strip_tags(filter_var($_POST['copyinfo'],FILTER_SANITIZE_STRING));
-			$debug=set_copyright_information($copyinfo);
-			if($debug === true)
-			{
-				//Success
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=yes\"</script>");
-			}
-			else
-			{
-				//Failure
-				echo ("<script type=\"text/javascript\">window.location = \"admin.php?copyset=no\"</script>");
-			}
+			die("You are not an administrator. <a href=\"login.php?ref=copyright\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
 		}
-		else
+		$copyinfo=get_raw_copyright_information();
+		if($copyinfo === false)
 		{
-			if(isset($_POST['copyinfo']))
-			{
-				trigger_error("Failed to submit. Deleting the copyright information is done using the checkbox, not by blanking out the input.",E_USER_ERROR);
-			}
-			if(securitycheck() === false)
-			{
-				die("You are not an administrator. <a href=\"login.php?ref=copyright\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
-			}
-			$copyinfo=get_raw_copyright_information();
-			if($copyinfo === false)
-			{
-				$copyinfo="";
-			}
+			$copyinfo="";
 		}
 	}
 ?>

@@ -92,9 +92,9 @@
 		{
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to upload file for processing");
             $name=preg_replace("/[^A-Za-z0-9]/","",$_POST['name']);
-            $dispname=filter_var($_POST['dispname'],FILTER_SANITIZE_STRING);
-			$delimiter=substr(filter_var($_POST['delimiter'],FILTER_SANITIZE_STRING),0,1);
-			$format=explode("|",filter_var($_POST['format'],FILTER_SANITIZE_STRING));
+            $dispname=htmlspecialchars($_POST['dispname']);
+			$delimiter=substr(htmlspecialchars($_POST['delimiter']),0,1);
+			$format=explode("|",htmlspecialchars($_POST['format']));
 			if(!isset($_FILES['file']) || $delimiter == "" || $format == "" || $name == "" || $dispname == "")
 			{
 				trigger_error("Failed to process file: file not successfully submitted, or delimiter, filename, file display name and/or format blank. Call the station manager and try again.",E_USER_WARNING);
@@ -185,9 +185,9 @@
 		if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "y")
 		{
             $name=preg_replace("/[^A-Za-z0-9]/","",$_POST['name']);
-            $dispname=filter_var($_POST['dispname'],FILTER_SANITIZE_STRING);
-			$delimiter=substr(filter_var($_POST['delimiter'],FILTER_SANITIZE_STRING),0,1);
-			$format=explode("|",filter_var($_POST['format'],FILTER_SANITIZE_STRING));
+            $dispname=htmlspecialchars($_POST['dispname']);
+			$delimiter=substr(htmlspecialchars($_POST['delimiter']),0,1);
+			$format=explode("|",htmlspecialchars($_POST['format']));
 			if(!isset($_FILES['file']) || $delimiter == "" || $format == "" || $name == "" || $dispname == "")
 			{
 				trigger_error("Failed to process file: file not successfully submitted, or delimiter, filename, file display name and/or format blank. Call the station manager and try again.",E_USER_WARNING);

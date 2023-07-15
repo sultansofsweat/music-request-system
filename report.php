@@ -97,8 +97,8 @@
 			$id=preg_replace("/[^0-9]/", "", $_POST['id']);
 			$username=preg_replace("/[^A-Za-z0-9 ]/", "", $_POST['name']);
 			$pdate=preg_replace("/[^0-9\/: ]/", "", $_POST['date']);
-			$request=filter_var($_POST['request'],FILTER_SANITIZE_STRING);
-			$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
+			$request=htmlspecialchars($_POST['request']);
+			$comment=htmlspecialchars($_POST['comment']);
 			//Write report
 			$debug=write_report($id,$username,$pdate,$request,$_SERVER['REMOTE_ADDR'],date("m/d/Y g:i A"),$comment);
 			if($debug === true)
@@ -166,8 +166,8 @@
 			$id=preg_replace("/[^0-9]/", "", $_POST['id']);
 			$username=preg_replace("/[^A-Za-z0-9 ]/", "", $_POST['name']);
 			$pdate=preg_replace("/[^0-9\/: ]/", "", $_POST['date']);
-			$request=filter_var($_POST['request'],FILTER_SANITIZE_STRING);
-			$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
+			$request=htmlspecialchars($_POST['request']);
+			$comment=htmlspecialchars($_POST['comment']);
 			//Write report
 			$debug=write_report($id,$username,$pdate,$request,$_SERVER['REMOTE_ADDR'],date("m/d/Y g:i A"),$comment);
 			if($debug === true)

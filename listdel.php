@@ -84,7 +84,7 @@
 		set_timezone();
         if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "y")
         {
-            $list=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+            $list=htmlspecialchars($_POST['list']);
             if(file_exists("songs/$list.txt"))
             {
                 $debug=unlink("songs/$list.txt");
@@ -143,7 +143,7 @@
 	{
 		if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "y")
         {
-            $list=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+            $list=htmlspecialchars($_POST['list']);
             if(file_exists("songs/$list.txt"))
             {
                 $debug=unlink("songs/$list.txt");
