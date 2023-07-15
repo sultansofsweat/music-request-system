@@ -112,9 +112,6 @@
   <p>You have attempted to access something you do not have permissions to access. Your computer will be microwaved if you do not <a href=\"../index.php\">leave</a> immediately. Save your computer the trouble!</p>\r\n
   </body>\r\n
 </html>";
-
-	/*if(is_logging_enabled() === true)
-	{*/
 		set_timezone();
 		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to decline post $post via API");
 		if($allowed == "yes")
@@ -127,7 +124,7 @@
 					{
 						if(isset($_POST['comment']))
 						{
-							$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
+							$comment=htmlspecialchars(str_replace("|","-",$_POST['comment']));
 						}
 						else
 						{
@@ -179,57 +176,4 @@
 			http_response_code(410);
 			echo $default;
 		}
-	/*}
-	else
-	{
-		if($allowed == "yes")
-		{
-			if(in_array(2,$pagenable))
-			{
-				if($key != "" && isset($_POST['key']) && password_verify($_POST['key'],$key) === true)
-				{
-					if($post_exists === true)
-					{
-						$comment=filter_var(str_replace("|","-",$_POST['comment']),FILTER_SANITIZE_STRING);
-						$post=get_request($post);
-						while(count($post) < 9)
-						{
-							$post[]="";
-						}
-						$debug=write_request($post[0],$post[1],$post[2],$post[3],$post[4],1,$comment,$post[7],$post[8]);
-						if($debug === false)
-						{
-							http_response_code(500);
-							echo $default;
-						}
-						else
-						{
-							http_response_code(200);
-							echo $default;
-						}
-					}
-					else
-					{
-						http_response_code(500);
-						echo $default;
-					}
-				}
-				else
-				{
-					http_response_code(403);
-					echo $default;
-				}
-			}
-			else
-			{
-				http_response_code(404);
-				echo $default;
-			}
-		}
-		else
-		{
-			http_response_code(410);
-			echo $default;
-		}
-	}*/
 ?>
