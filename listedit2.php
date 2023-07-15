@@ -119,7 +119,7 @@
         $lists=array_filter($lists);
         if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "y")
         {
-            $list=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+            $list=htmlspecialchars($_POST['list']);
             if(file_exists("songs/$list.txt"))
             {
                 $_SESSION['listedit2-list']=$list;
@@ -162,7 +162,7 @@
 			}
 			else
 			{
-				$edited=explode("\r\n",filter_var($_POST['list'],FILTER_SANITIZE_STRING));
+				$edited=explode("\r\n",htmlspecialchars($_POST['list']));
 				if(count($order) != count($edited))
 				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to edit song list \"$list\": discrepancy in lists submitted");
@@ -249,7 +249,7 @@
         $lists=array_filter($lists);
         if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "y")
         {
-            $list=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+            $list=htmlspecialchars($_POST['list']);
             if(file_exists("songs/$list.txt"))
             {
                 $_SESSION['listedit2-list']=$list;
@@ -289,7 +289,7 @@
 			}
 			else
 			{
-				$edited=explode("\r\n",filter_var($_POST['list'],FILTER_SANITIZE_STRING));
+				$edited=explode("\r\n",htmlspecialchars($_POST['list']));
 				if(count($order) != count($edited))
 				{
 					trigger_error("Failed to edit song list \"$list\": list of songs to edit and list of replacements are different lengths.",E_USER_ERROR);

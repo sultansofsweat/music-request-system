@@ -133,7 +133,7 @@
 			}
 			else
 			{
-				$edited=explode("\r\n",filter_var($_POST['list'],FILTER_SANITIZE_STRING));
+				$edited=explode("\r\n",htmlspecialchars($_POST['list']));
 				if(count($order) != count($edited))
 				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to edit song list \"main\": discrepancy in lists submitted");
@@ -227,7 +227,7 @@
 			}
 			else
 			{
-				$edited=explode("\r\n",filter_var($_POST['list'],FILTER_SANITIZE_STRING));
+				$edited=explode("\r\n",htmlspecialchars($_POST['list']));
 				if(count($order) != count($edited))
 				{
 					trigger_error("Failed to edit song list \"main\": list of songs to edit and list of replacements are different lengths.",E_USER_ERROR);

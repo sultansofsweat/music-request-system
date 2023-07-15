@@ -90,8 +90,8 @@
 		if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "1")
 		{
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Attempted to upload file for processing");
-			$delimiter=substr(filter_var($_POST['delimiter'],FILTER_SANITIZE_STRING),0,1);
-			$format=explode("|",filter_var($_POST['format'],FILTER_SANITIZE_STRING));
+			$delimiter=substr(htmlspecialchars($_POST['delimiter']),0,1);
+			$format=explode("|",htmlspecialchars($_POST['format']));
 			if(!isset($_FILES['file']) || $delimiter == "" || $format == "")
 			{
 				trigger_error("Failed to process file: file not successfully submitted, or delimiter and/or format blank. Call the station manager and try again.",E_USER_WARNING);
@@ -151,7 +151,7 @@
 		elseif(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "2")
 		{
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Began submitting new songs to list \"main\"");
-			$songs=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+			$songs=htmlspecialchars($_POST['list']);
 			$debug=add_to_song_list("main",$songs);
 			if($debug === true)
 			{
@@ -178,8 +178,8 @@
 	{
 		if(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "1")
 		{
-			$delimiter=substr(filter_var($_POST['delimiter'],FILTER_SANITIZE_STRING),0,1);
-			$format=explode("|",filter_var($_POST['format'],FILTER_SANITIZE_STRING));
+			$delimiter=substr(htmlspecialchars($_POST['delimiter']),0,1);
+			$format=explode("|",htmlspecialchars($_POST['format']));
 			if(!isset($_FILES['file']) || $delimiter == "" || $format == "")
 			{
 				trigger_error("Failed to process file: file not successfully submitted, or delimiter and/or format blank. Call the station manager and try again.",E_USER_WARNING);
@@ -233,7 +233,7 @@
 		}
 		elseif(securitycheck() === true && isset($_POST['s']) && $_POST['s'] == "2")
 		{
-			$songs=filter_var($_POST['list'],FILTER_SANITIZE_STRING);
+			$songs=htmlspecialchars($_POST['list']);
 			$debug=add_to_song_list("main",$songs);
 			if($debug === true)
 			{

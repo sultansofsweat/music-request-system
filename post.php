@@ -153,7 +153,7 @@
 			//If override submitted and allowed, set request to override instead
 			if(isset($_POST['override']) && preg_replace("/[^A-Za-z0-9]/","",$_POST['override']) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
 			{
-				$override=filter_var($_POST['override'],FILTER_SANITIZE_STRING);
+				$override=htmlspecialchars($_POST['override']);
 				$request="custom**=$override";
 				$list="whocares";
 				$reqid=false;
@@ -166,7 +166,7 @@
 			//Get comment
 			if(isset($_POST['comment']) && get_system_setting("comments") == "yes")
 			{
-				$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
+				$comment=htmlspecialchars($_POST['comment']);
 			}
 			else
 			{
@@ -486,9 +486,9 @@
 				$reqid="";
 			}
 			//If override submitted and allowed, set request to override instead
-			if(isset($_POST['override']) && filter_var($_POST['override'],FILTER_SANITIZE_STRING) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
+			if(isset($_POST['override']) && htmlspecialchars($_POST['override']) != "" && (get_system_setting("open") == "yes" || get_system_setting("light") == "yes"))
 			{
-				$override=filter_var($_POST['override'],FILTER_SANITIZE_STRING);
+				$override=htmlspecialchars($_POST['override']);
 				$request="custom**=$override";
 				$list="whocares";
 				$reqid=false;
@@ -501,7 +501,7 @@
 			//Get comment
 			if(isset($_POST['comment']) && get_system_setting("comments") == "yes")
 			{
-				$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
+				$comment=htmlspecialchars($_POST['comment']);
 			}
 			else
 			{

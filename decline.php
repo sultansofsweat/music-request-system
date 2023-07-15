@@ -77,125 +77,64 @@
   <?php  
 	//Change the timezone
 	set_timezone();
-  	if(is_logging_enabled() === true)
+	if(securitycheck() === true && isset($_POST['confirm']) && $_POST['confirm'] == "y")
 	{
-		//Logging enabled
-		if(securitycheck() === true && isset($_POST['confirm']) && $_POST['confirm'] == "y")
+		//Sanitize the post number!
+		$post=preg_replace("/[^0-9]/","",$_POST['p']);
+		//Make sure file exists
+		if($post != "" && does_post_exist($post))
 		{
-			//Sanitize the post number!
-			$post=preg_replace("/[^0-9]/","",$_POST['p']);
-			//Make sure file exists
-			if($post != "" && does_post_exist($post))
+			//Update file
+			$contents=get_request($post);
+			if(isset($_POST['comment']) && $_POST['comment'] != "")
 			{
-				//Update file
-				$contents=get_request($post);
-				if(isset($_POST['comment']) && $_POST['comment'] != "")
-				{
-					//Sanitize comment
-					$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
-				}
-				else
-				{
-					$comment="None";
-				}
-				$debug=write_request($post,$contents[1],$contents[2],$contents[3],$contents[4],1,$comment,$contents[7],$contents[8]);
-				if($debug === false)
-				{
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to update request $post");
-					echo ("<script type=\"text/javascript\">window.location = \"index.php?decstatus=1\"</script>");
-				}
-				else
-				{
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully updated request $post");
-					echo ("<script type=\"text/javascript\">window.location = \"index.php?decstatus=0\"</script>");
-				}
+				//Sanitize comment
+				$comment=htmlspecialchars($_POST['comment']);
 			}
 			else
+			{
+				$comment="None";
+			}
+			$debug=write_request($post,$contents[1],$contents[2],$contents[3],$contents[4],1,$comment,$contents[7],$contents[8]);
+			if($debug === false)
 			{
 				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to update request $post");
-				echo ("<script type=\"text/javascript\">window.location = \"index.php?decstatus=2\"</script>");
-			}
-		}
-		elseif(securitycheck() === true)
-		{
-			//Sanitize the post number!
-			$post=preg_replace("/[^0-9]/","",$_GET['p']);
-			//Get file info
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited post decline page for post $post");
-			if($post != "" && does_post_exist($post))
-			{
-				$contents=get_request($post);
+				echo ("<script type=\"text/javascript\">window.location = \"index.php?decstatus=1\"</script>");
 			}
 			else
 			{
-				die("Failed to obtain request information for post #" . $post . ". Microwave the request file.");
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Successfully updated request $post");
+				echo ("<script type=\"text/javascript\">window.location = \"index.php?decstatus=0\"</script>");
 			}
 		}
 		else
 		{
-			//Sanitize the post number!
-			$post=preg_replace("/[^0-9]/","",$_GET['p']);
-			//Nope.
-			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited post decline page for post $post");
-			die("You are not authorized to decline this post. <a href=\"login.php?ref=decline\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to update request $post");
+			echo ("<script type=\"text/javascript\">window.location = \"index.php?decstatus=2\"</script>");
+		}
+	}
+	elseif(securitycheck() === true)
+	{
+		//Sanitize the post number!
+		$post=preg_replace("/[^0-9]/","",$_GET['p']);
+		//Get file info
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited post decline page for post $post");
+		if($post != "" && does_post_exist($post))
+		{
+			$contents=get_request($post);
+		}
+		else
+		{
+			die("Failed to obtain request information for post #" . $post . ". Microwave the request file.");
 		}
 	}
 	else
 	{
-		if(securitycheck() === true && isset($_POST['confirm']) && $_POST['confirm'] == "y")
-		{
-			//Sanitize the post number!
-			$post=preg_replace("/[^0-9]/","",$_POST['p']);
-			//Make sure file exists
-			if($post != "" && does_post_exist($post))
-			{
-				//Update file
-				$contents=get_request($post);
-				if(isset($_POST['comment']) && $_POST['comment'] != "")
-				{
-					//Sanitize comment
-					$comment=filter_var($_POST['comment'],FILTER_SANITIZE_STRING);
-				}
-				else
-				{
-					$comment="None";
-				}
-				$debug=write_request($post,$contents[1],$contents[2],$contents[3],$contents[4],1,$comment,$contents[7],$contents[8]);
-				if($debug === false)
-				{
-					echo ("<script type=\"text/javascript\">window.location = \"index.php?decstatus=1\"</script>");
-				}
-				else
-				{
-					echo ("<script type=\"text/javascript\">window.location = \"index.php?decstatus=0\"</script>");
-				}
-			}
-			else
-			{
-				echo ("<script type=\"text/javascript\">window.location = \"index.php?decstatus=2\"</script>");
-			}
-		}
-		elseif(securitycheck() === true)
-		{
-			//Sanitize the post number!
-			$post=preg_replace("/[^0-9]/","",$_GET['p']);
-			//Get file info
-			if($post != "" && does_post_exist($post))
-			{
-				$contents=get_request($post);
-			}
-			else
-			{
-				die("Failed to obtain request information for post #" . $post . ". Microwave the request file.");
-			}
-		}
-		else
-		{
-			//Sanitize the post number!
-			$post=preg_replace("/[^0-9]/","",$_GET['p']);
-			//Nope.
-			die("You are not authorized to decline this post. <a href=\"login.php?ref=decline\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
-		}
+		//Sanitize the post number!
+		$post=preg_replace("/[^0-9]/","",$_GET['p']);
+		//Nope.
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited post decline page for post $post");
+		die("You are not authorized to decline this post. <a href=\"login.php?ref=decline\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
 	}
   ?>
   <h1 style="text-align:center; text-decoration:underline;"><?php echo system_name(); ?>Music Request System-Decline Request In Post #<?php echo $post; ?></h1>

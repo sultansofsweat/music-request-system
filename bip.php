@@ -78,109 +78,57 @@
     </style>
   </head>
   <?php
-	if(is_logging_enabled() === true)
+	date_default_timezone_set(get_system_setting("timezone"));
+	if(securitycheck() === true)
 	{
-		date_default_timezone_set(get_system_setting("timezone"));
-		if(securitycheck() === true)
+		if(isset($_POST['s']) && $_POST['s'] == "y" && isset($_POST['ip']) && $_POST['ip'] != "")
 		{
-			if(isset($_POST['s']) && $_POST['s'] == "y" && isset($_POST['ip']) && $_POST['ip'] != "")
+			if(filter_var(htmlspecialchars($_POST['ip']), FILTER_VALIDATE_IP))
 			{
-				if(filter_var(filter_var($_POST['ip'],FILTER_SANITIZE_STRING), FILTER_VALIDATE_IP))
+				//Valid
+				if(isset($_POST['reason']))
 				{
-					//Valid
-					if(isset($_POST['reason']))
-					{
-						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING),filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
-					}
-					else
-					{
-						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING));
-					}
-					if($debug === true)
-					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Added IP address \"" . filter_var($_POST['ip'],FILTER_SANITIZE_STRING) . "\" to banlist");
-						echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=0\"</script>");
-					}
-					else
-					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add IP address \"" . filter_var($_POST['ip'],FILTER_SANITIZE_STRING) . "\" to banlist");
-						echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=2\"</script>");
-					}
+					$debug=ban_ip(htmlspecialchars($_POST['ip']),htmlspecialchars($_POST['reason']));
 				}
 				else
 				{
-					//Invalid
-					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add IP address \"" . filter_var($_POST['ip'],FILTER_SANITIZE_STRING) . "\" to banlist");
-					echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=1\"</script>");
+					$debug=ban_ip(htmlspecialchars($_POST['ip']));
+				}
+				if($debug === true)
+				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Added IP address \"" . htmlspecialchars($_POST['ip']) . "\" to banlist");
+					echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=0\"</script>");
+				}
+				else
+				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add IP address \"" . htmlspecialchars($_POST['ip']) . "\" to banlist");
+					echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=2\"</script>");
 				}
 			}
 			else
 			{
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited IP ban page");
-				if(isset($_GET['p']) && $_GET['p'] != "")
-				{
-					$uip=filter_var($_GET['p'],FILTER_SANITIZE_STRING);
-				}
-				else
-				{
-					$uip="";
-				}
+				//Invalid
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add IP address \"" . htmlspecialchars($_POST['ip']) . "\" to banlist");
+				echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=1\"</script>");
 			}
 		}
 		else
 		{
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited IP ban page");
-			die("You are not an administrator. <a href=\"login.php?ref=bip\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
+			if(isset($_GET['p']) && $_GET['p'] != "")
+			{
+				$uip=htmlspecialchars($_GET['p']);
+			}
+			else
+			{
+				$uip="";
+			}
 		}
 	}
 	else
 	{
-		if(securitycheck() === true)
-		{
-			if(isset($_POST['s']) && $_POST['s'] == "y" && isset($_POST['ip']) && $_POST['ip'] != "")
-			{
-				if(filter_var(filter_var($_POST['ip'],FILTER_SANITIZE_STRING), FILTER_VALIDATE_IP))
-				{
-					//Valid
-					if(isset($_POST['reason']))
-					{
-						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING),filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
-					}
-					else
-					{
-						$debug=ban_ip(filter_var($_POST['ip'],FILTER_SANITIZE_STRING));
-					}
-					if($debug === true)
-					{
-						echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=0\"</script>");
-					}
-					else
-					{
-						echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=2\"</script>");
-					}
-				}
-				else
-				{
-					//Invalid
-					echo ("<script type=\"text/javascript\">window.location = \"index.php?ipstatus=1\"</script>");
-				}
-			}
-			else
-			{
-				if(isset($_GET['p']) && $_GET['p'] != "")
-				{
-					$uip=filter_var($_GET['p'],FILTER_SANITIZE_STRING);
-				}
-				else
-				{
-					$uip="";
-				}
-			}
-		}
-		else
-		{
-			die("You are not an administrator. <a href=\"login.php?ref=bip\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
-		}
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited IP ban page");
+		die("You are not an administrator. <a href=\"login.php?ref=bip\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
 	}
 ?>
   <body>

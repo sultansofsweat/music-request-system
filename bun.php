@@ -78,109 +78,57 @@
     </style>
   </head>
   <?php
-	if(is_logging_enabled() === true)
+	date_default_timezone_set(get_system_setting("timezone"));
+	if(securitycheck() === true)
 	{
-		date_default_timezone_set(get_system_setting("timezone"));
-		if(securitycheck() === true)
+		if(isset($_POST['s']) && $_POST['s'] == "y" && isset($_POST['name']) && $_POST['name'] != "")
 		{
-			if(isset($_POST['s']) && $_POST['s'] == "y" && isset($_POST['name']) && $_POST['name'] != "")
+			if(($uname=preg_replace("/[^A-Za-z0-9 ]/","",$_POST['name'])) != "")
 			{
-				if(($uname=preg_replace("/[^A-Za-z0-9 ]/","",$_POST['name'])) != "")
+				//Valid
+				if(isset($_POST['reason']))
 				{
-					//Valid
-					if(isset($_POST['reason']))
-					{
-						$debug=ban_user($uname,filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
-					}
-					else
-					{
-						$debug=ban_user($uname);
-					}
-					if($debug === true)
-					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Added username \"$uname\" to banlist");
-						echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=0\"</script>");
-					}
-					else
-					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add username \"$uname\" to banlist");
-						echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=2\"</script>");
-					}
+					$debug=ban_user($uname,htmlspecialchars($_POST['reason']));
 				}
 				else
 				{
-					//Invalid
+					$debug=ban_user($uname);
+				}
+				if($debug === true)
+				{
+					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Added username \"$uname\" to banlist");
+					echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=0\"</script>");
+				}
+				else
+				{
 					write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add username \"$uname\" to banlist");
-					echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=1\"</script>");
+					echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=2\"</script>");
 				}
 			}
 			else
 			{
-				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited username ban page");
-				if(isset($_GET['p']) && $_GET['p'] != "")
-				{
-					$uname=preg_replace("/[^A-Za-z0-9 ]/","",$_GET['p']);
-				}
-				else
-				{
-					$uname="";
-				}
+				//Invalid
+				write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Did not add username \"$uname\" to banlist");
+				echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=1\"</script>");
 			}
 		}
 		else
 		{
 			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited username ban page");
-			die("You are not an administrator. <a href=\"login.php?ref=bun\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
+			if(isset($_GET['p']) && $_GET['p'] != "")
+			{
+				$uname=preg_replace("/[^A-Za-z0-9 ]/","",$_GET['p']);
+			}
+			else
+			{
+				$uname="";
+			}
 		}
 	}
 	else
 	{
-		if(securitycheck() === true)
-		{
-			if(isset($_POST['s']) && $_POST['s'] == "y" && isset($_POST['name']) && $_POST['name'] != "")
-			{
-				if(($uname=preg_replace("/[^A-Za-z0-9 ]/","",$_POST['name'])) != "")
-				{
-					//Valid
-					if(isset($_POST['reason']))
-					{
-						$debug=ban_user($uname,filter_var($_POST['reason'],FILTER_SANITIZE_STRING));
-					}
-					else
-					{
-						$debug=ban_user($uname);
-					}
-					if($debug === true)
-					{
-						echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=0\"</script>");
-					}
-					else
-					{
-						echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=2\"</script>");
-					}
-				}
-				else
-				{
-					//Invalid
-					echo ("<script type=\"text/javascript\">window.location = \"index.php?unstatus=1\"</script>");
-				}
-			}
-			else
-			{
-				if(isset($_GET['p']) && $_GET['p'] != "")
-				{
-					$uname=preg_replace("/[^A-Za-z0-9 ]/","",$_GET['p']);
-				}
-				else
-				{
-					$uname="";
-				}
-			}
-		}
-		else
-		{
-			die("You are not an administrator. <a href=\"login.php?ref=bun\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
-		}
+		write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited username ban page");
+		die("You are not an administrator. <a href=\"login.php?ref=bun\">Sign in</a> or <a href=\"index.php\">Cancel</a>.");
 	}
 ?>
   <body>
