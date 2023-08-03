@@ -91,16 +91,6 @@
 	}
 ?>
 <?php
-	//Check for a "first use" flag file and notify the admin that they should change the poassword
-	if(first_use() === true)
-	{
-		trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
-	}
-	//Check for PHP version compliance and issue a notice if non-compliance is found
-	if(determine_compliance() === false)
-	{
-		trigger_error("Use of non-compliant PHP versions may not be allowed in future releases. Please upgrade to at least PHP 5.5.0 before installing further MRS upgrades.",E_USER_DEPRECATED);
-	}
 ?>
 <?php
 	//Ancilliary page error handlers
@@ -1394,6 +1384,16 @@
 			{
 				die("<p>You are not an administrator. Please <a href=\"login.php?ref=admin\">sign in</a> or <a href=\"index.php\">cancel</a>.</p>");
 			}
+			//Check for a "first use" flag file and notify the admin that they should change the poassword
+			if(first_use() === true)
+			{
+				trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
+			}
+			//Check for PHP version compliance and issue a notice if non-compliance is found
+			if(determine_compliance() === false)
+			{
+				trigger_error("Use of non-compliant PHP versions may not be allowed in future releases. Please upgrade to at least PHP 5.5.0 before installing further MRS upgrades.",E_USER_DEPRECATED);
+			}
 		}
 	}
 	else
@@ -2239,6 +2239,16 @@
 			if(securitycheck() === false)
 			{
 				die("<p>You are not an administrator. Please <a href=\"login.php?ref=admin\">sign in</a> or <a href=\"index.php\">cancel</a>.</p>");
+			}
+			//Check for a "first use" flag file and notify the admin that they should change the poassword
+			if(first_use() === true)
+			{
+				trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
+			}
+			//Check for PHP version compliance and issue a notice if non-compliance is found
+			if(determine_compliance() === false)
+			{
+				trigger_error("Use of non-compliant PHP versions may not be allowed in future releases. Please upgrade to at least PHP 5.5.0 before installing further MRS upgrades.",E_USER_DEPRECATED);
 			}
 		}
 	}
