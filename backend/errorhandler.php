@@ -39,6 +39,27 @@
 			trigger_error("Unable to output error information to log: file could not be opened.",E_USER_WARNING);
 		}
 	}
+	function write_deprecation($timestamp,$string,$file,$line)
+	{
+		$output=implode("|",array($timestamp,$string,$file,$line));
+		if(file_exists(dirname(__FILE__) . "/../error"))
+		{
+			$fh=fopen(dirname(__FILE__) . "/../error/deprecation-messages.txt",'a');
+		}
+		else
+		{
+			$fh=false;
+		}
+		if($fh)
+		{
+			fwrite($fh,stripcslashes($output) . "\r\n");
+			fclose($fh);
+		}
+		else
+		{
+			trigger_error("Unable to output error information to log: file could not be opened.",E_USER_WARNING);
+		}
+	}
 	
 	function eh($errno, $errstr, $errfile, $errline)
 	{
@@ -77,6 +98,7 @@
 			
 			case E_DEPRECATED:
 			case E_USER_DEPRECATED:
+			write_deprecation(time(),$errstr,basename($errfile),$errline);
 			if(get_error_mode() == 0)
 			{
 				break;
