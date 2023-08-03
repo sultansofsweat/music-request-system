@@ -409,7 +409,7 @@
 				$setting=explode("|",$setting);
 				if(isset($setting[0]) && isset($setting[1]) && isset($setting[2]))
 				{
-					if($file_exists("backend/" . $setting[0] . ".txt"))
+					if(file_exists("backend/" . $setting[0] . ".txt"))
 					{
 						$existing=file_get_contents("backend/" . $setting[0] . ".txt");
 						if($existing != $setting[1])
