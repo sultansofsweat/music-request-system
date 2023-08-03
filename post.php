@@ -468,27 +468,8 @@
 		}
 	}
 ?>
-  <table id="reqtable" class="tablesorter">
-  <thead>
-  <tr>
-  <th style="width:90px;"></th>
-  <?php
-	//Get user-readable song format
-	$humanreadable=explode("|",get_system_setting("songformathr"));
-	foreach($humanreadable as $hr)
-	{
-		//DO NOT OUTPUT IF FILE NAME!
-		if(strtolower(preg_replace("/[^A-Za-z]/","",$hr)) != "filename")
-		{
-			echo ("<th>$hr</th>\r\n");
-		}
-	}
-  ?>
-  <th>#</th>
-  </tr>
-  </thead>
-  <tbody>
 <?php
+	$songs=array();
 	if(isset($_GET['query']) && $_GET['query'] != "")
 	{
 		$query=htmlspecialchars($_GET['query']);
@@ -570,72 +551,94 @@
 				$formats[]=$format;
 			}
 		}
-		
-		foreach($songs as $song)
+		echo("<h3>Songs matching your search terms: <u>" . count($songs) . "</u></h3>");
+	}
+?>
+  <table id="reqtable" class="tablesorter">
+  <thead>
+  <tr>
+  <th style="width:90px;"></th>
+  <?php
+	//Get user-readable song format
+	$humanreadable=explode("|",get_system_setting("songformathr"));
+	foreach($humanreadable as $hr)
+	{
+		//DO NOT OUTPUT IF FILE NAME!
+		if(strtolower(preg_replace("/[^A-Za-z]/","",$hr)) != "filename")
 		{
-			if($song["artist"] == "CF")
+			echo ("<th>$hr</th>\r\n");
+		}
+	}
+  ?>
+  <th>#</th>
+  </tr>
+  </thead>
+  <tbody>
+  <?php
+	foreach($songs as $song)
+	{
+		if($song["artist"] == "CF")
+		{
+			$count=count($formats);
+			echo ("<tr>\r\n<td></td>\r\n<td colspan=" . ($count+1) . ">" . $song["title"] . "</td>\r\n</tr>\r\n");
+		}
+		else
+		{
+			if(isset($song[5]) && $song[5] != "")
 			{
-				$count=count($formats);
-				echo ("<tr>\r\n<td></td>\r\n<td colspan=" . ($count+1) . ">" . $song["title"] . "</td>\r\n</tr>\r\n");
+				$filename=$song[5];
 			}
 			else
 			{
-				if(isset($song[5]) && $song[5] != "")
+				$filename="";
+			}
+			if(($posting === true || $posting == "yes") && current_request($song) === false)
+			{
+				echo ("<tr>\r\n<td>");
+				if(($song["added_to_system"] + 7*24*60*60) > time())
 				{
-					$filename=$song[5];
+					echo ("<img src=\"backend/new.gif\" alt=\"New\">");
 				}
-				else
+				echo ("<a href=\"post2.php?list=$list&req=" . $song["ID"] . "\">Request this</a></td>\r\n");
+				foreach($formats as $format)
 				{
-					$filename="";
+					if(isset($song[$format]))
+					{
+						echo("<td>" . $song[$format] . "</td>\r\n");
+					}
+					else
+					{
+						echo("<td></td>\r\n");
+					}
 				}
-				if(($posting === true || $posting == "yes") && current_request($song) === false)
+				echo("<td>" . $song["request_count"] . "</td>\r\n");
+				echo("</tr>\r\n");
+			}
+			elseif($hidenr === false)
+			{
+				echo ("<tr>\r\n<td>");
+				if(($song["added_to_system"] + 7*24*60*60) > time())
 				{
-					echo ("<tr>\r\n<td>");
-					if(($song["added_to_system"] + 7*24*60*60) > time())
-					{
-						echo ("<img src=\"backend/new.gif\" alt=\"New\">");
-					}
-					echo ("<a href=\"post2.php?list=$list&req=" . $song["ID"] . "\">Request this</a></td>\r\n");
-					foreach($formats as $format)
-					{
-						if(isset($song[$format]))
-						{
-							echo("<td>" . $song[$format] . "</td>\r\n");
-						}
-						else
-						{
-							echo("<td></td>\r\n");
-						}
-					}
-                    echo("<td>" . $song["request_count"] . "</td>\r\n");
-					echo("</tr>\r\n");
+					echo ("<img src=\"backend/new.gif\" alt=\"New\">");
 				}
-				elseif($hidenr === false)
+				echo ("<strike>Request this</strike></td>\r\n");
+				foreach($formats as $format)
 				{
-					echo ("<tr>\r\n<td>");
-					if(($song["added_to_system"] + 7*24*60*60) > time())
+					if(isset($song[$format]))
 					{
-						echo ("<img src=\"backend/new.gif\" alt=\"New\">");
+						echo("<td>" . $song[$format] . "</td>\r\n");
 					}
-					echo ("<strike>Request this</strike></td>\r\n");
-					foreach($formats as $format)
+					else
 					{
-						if(isset($song[$format]))
-						{
-							echo("<td>" . $song[$format] . "</td>\r\n");
-						}
-						else
-						{
-							echo("<td></td>\r\n");
-						}
+						echo("<td></td>\r\n");
 					}
-                    echo("<td>" . $song["request_count"] . "</td>\r\n");
-					echo("</tr>\r\n");
 				}
+				echo("<td>" . $song["request_count"] . "</td>\r\n");
+				echo("</tr>\r\n");
 			}
 		}
 	}
-?>
+  ?>
 </tbody>
 </table>
   <br><a href="index.php">Cancel</a>
