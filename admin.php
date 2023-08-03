@@ -34,11 +34,22 @@
 	//Function for determining if the system password has not been changed
 	function first_use()
 	{
-		if(!file_exists("backend/firstuse.txt"))
+		if(password_verify("admin",get_system_password()) === true)
 		{
-			return false;
+			return true;
 		}
-		return true;
+		return false;
+	}
+	//Function for determining if the MRS is running on a "compliant" (i.e. 5.5.0 or newer) PHP version
+	function determine_compliance()
+	{
+		if(function_exists("version_compare"))
+		{
+			//Return the result of a version compare with the running PHP version and 5.5.0.
+			return version_compare(phpversion(),"5.5.0",">=");
+		}
+		//Automatically assume non-compliance since it can't be checked
+		return false;
 	}
 	
 	//Function for reformatting all dates
@@ -80,16 +91,6 @@
 	}
 ?>
 <?php
-	//Check for a "first use" flag file and notify the admin that they should change the poassword
-	if(first_use() === true)
-	{
-		trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
-	}
-	//If deprecation log has entries, throw a notice
-	if(is_dep_log_blank() !== true)
-	{
-		trigger_error("There are entries in the deprecation log! Please report these if you have not done so!");
-	}
 ?>
 <?php
 	//Ancilliary page error handlers
@@ -241,7 +242,7 @@
 	$daylock=get_system_setting("dayrestrict");
 	$overflow=get_system_setting("limit");
 	$api=get_system_setting("interface");
-	$apiuid=get_system_setting("sysid");
+	$sysuid=get_system_setting("sysid");
 	$apipages=explode(",",get_system_setting("apipages"));
 	$upgrade=get_system_setting("stable");
 	$datetime=get_system_setting("datetime");
@@ -303,7 +304,7 @@
 				$daylock=get_system_default("dayrestrict");
 				$overflow=get_system_default("limit");
 				$api=get_system_default("interface");
-				$apiuid=get_system_default("sysid");
+				$sysuid=get_system_default("sysid");
 				$apipages=explode(",",get_system_default("apipages"));
 				$upgrade=get_system_default("stable");
 				$datetime=get_system_default("datetime");
@@ -983,18 +984,18 @@
 						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"interface\" to \"$api\"");
 					}
 				}
-				if(isset($_POST['apiuid']))
+				if(isset($_POST['genuid']) && $_POST['genuid'] == "y")
 				{
-					$apiuid=preg_replace("/[^A-Za-z0-9]/","",$_POST['apiuid']);
-					$debug=save_system_setting("sysid",$apiuid);
+					$sysuid=uniqid("",true);
+					$debug=save_system_setting("sysid",$sysuid);
 					if($debug !== true)
 					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"sysid\" to \"$apiuid\"");
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"sysid\" to \"$sysuid\"");
 						$error=true;
 					}
 					else
 					{
-						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"sysid\" to \"$apiuid\"");
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"sysid\" to \"$sysuid\"");
 					}
 				}
 				if(isset($_POST['napipass']) && $_POST['napipass'] != "" && isset($_POST['capipass']) && $_POST['napipass'] == $_POST['capipass'])
@@ -1023,7 +1024,8 @@
 					{
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
-					$apipages=implode(",",array_filter(array_unique($apipages),"is_numeric"));
+					$apipages=implode(",",array_filter(array_unique($apipages)));
+					trigger_error($apipages);
 					$debug=save_system_setting("apipages",$apipages);
 					if($debug !== true)
 					{
@@ -1382,6 +1384,16 @@
 			{
 				die("<p>You are not an administrator. Please <a href=\"login.php?ref=admin\">sign in</a> or <a href=\"index.php\">cancel</a>.</p>");
 			}
+			//Check for a "first use" flag file and notify the admin that they should change the poassword
+			if(first_use() === true)
+			{
+				trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
+			}
+			//Check for PHP version compliance and issue a notice if non-compliance is found
+			if(determine_compliance() === false)
+			{
+				trigger_error("Use of non-compliant PHP versions may not be allowed in future releases. Please upgrade to at least PHP 5.5.0 before installing further MRS upgrades.",E_USER_DEPRECATED);
+			}
 		}
 	}
 	else
@@ -1426,7 +1438,7 @@
 				$daylock=get_system_default("dayrestrict");
 				$overflow=get_system_default("limit");
 				$api=get_system_default("interface");
-				$apiuid=get_system_default("sysid");
+				$sysuid=get_system_default("sysid");
 				$apipages=explode(",",get_system_default("apipages"));
 				$upgrade=get_system_default("stable");
 				$datetime=get_system_default("datetime");
@@ -1936,10 +1948,10 @@
 						$error=true;
 					}
 				}
-				if(isset($_POST['apiuid']))
+				if(isset($_POST['genuid']) && $_POST['genuid'] == "y")
 				{
-					$apiuid=preg_replace("/[^A-Za-z0-9]/","",$_POST['apiuid']);
-					$debug=save_system_setting("sysid",$apiuid);
+					$sysuid=uniqid("",true);
+					$debug=save_system_setting("sysid",$sysuid);
 					if($debug !== true)
 					{
 						$error=true;
@@ -1966,6 +1978,7 @@
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
 					$apipages=implode(",",array_filter(array_unique($apipages),"is_numeric"));
+					trigger_error($apipages);
 					$debug=save_system_setting("apipages",$apipages);
 					if($debug !== true)
 					{
@@ -2227,6 +2240,16 @@
 			{
 				die("<p>You are not an administrator. Please <a href=\"login.php?ref=admin\">sign in</a> or <a href=\"index.php\">cancel</a>.</p>");
 			}
+			//Check for a "first use" flag file and notify the admin that they should change the poassword
+			if(first_use() === true)
+			{
+				trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
+			}
+			//Check for PHP version compliance and issue a notice if non-compliance is found
+			if(determine_compliance() === false)
+			{
+				trigger_error("Use of non-compliant PHP versions may not be allowed in future releases. Please upgrade to at least PHP 5.5.0 before installing further MRS upgrades.",E_USER_DEPRECATED);
+			}
 		}
 	}
   ?>
@@ -2251,6 +2274,7 @@
   <form method="post" action="admin.php">
   <input type="hidden" name="s" value="y">
   <a name="system"></a><h3>System</h3>
+  System ID: <?php echo $sysuid; ?> | <input type="checkbox" name="genuid" value="y">Generate new system ID<br>
   System name: <input type="text" name="name" size="50" value="<?php echo $name; ?>"><br>
   System message:<br>
   <textarea name="sysmessage" rows="5" cols="50"><?php echo $sysmessage; ?></textarea><br>
@@ -2268,7 +2292,6 @@
   <a href="viewlog.php">View system logs</a><br>
   <a href="viewatt.php">View login attempts</a><br>
   <a href="viewerr.php">View error logs</a><br>
-  <a href="viewdep.php">View deprecation message log</a><?php if(is_dep_log_blank() !== true) { echo " <b>/!\NOT BLANK/!\</b>"; } ?><br>
   <a href="purgesess.php">Clear session storage location</a> (ONLY applicable when using alternative storage locations)<br>
   <hr>
   <a name="homepage"></a><h3>Homepage</h3>
@@ -2394,7 +2417,6 @@
   <hr>
   <a name="api"></a><h3>API</h3>
   System API: <input type="radio" name="api" value="yes" <?php if($api == "yes") {echo("checked=\"checked\""); } ?>>Enabled | <input type="radio" name="api" value="no" <?php if($api == "no") {echo("checked=\"checked\""); } ?>>Disabled<br>
-  API ID: <input type="text" name="apiuid" value="<?php echo $apiuid; ?>"><br>
   New API Password: <input type="password" name="napipass"><br>
   Confirm new API Password: <input type="password" name="capipass"><br>
   Pages:<br>
@@ -2407,7 +2429,6 @@
   <input type="checkbox" name="apipages[]" value="6" <?php if(in_array(6,$apipages)) { echo("checked=\"checked\""); } ?> disabled="disabled">Remote API configuration<br>
   <hr>
   <a name="upgrade"></a><h3>System Upgrades</h3>
-  Check for these updates: <input type="radio" name="upgrade" value="yes"  <?php if ($upgrade == "yes") { echo ("checked=\"checked\""); } ?>>Stable only | <input type="radio" name="upgrade" value="no"  <?php if ($upgrade == "no") { echo ("checked=\"checked\""); } ?>>Stable and Beta<br>
   Mirror to check:&nbsp;
   <select name="mirror">
   <option value="">-Select one-</option>
