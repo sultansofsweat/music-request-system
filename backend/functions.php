@@ -935,6 +935,10 @@
 		{
 			foreach($logs1 as $log)
 			{
+				if(strpos($log,"deprecation") !== false)
+				{
+					continue;
+				}
 				$logs[]=substr($log,6,-4);
 			}
 		}
@@ -951,6 +955,33 @@
 			trigger_error("File \"$log\" doesn't exist in error log directory.",E_USER_WARNING);
 			return "";
 		}
+	}
+	function get_dep_log()
+	{
+		if(file_exists("error/deprecation-messages.txt"))
+		{
+			return get_error_log("deprecation-messages");
+		}
+		else
+		{
+			return "";
+		}
+	}
+	function is_dep_log_blank()
+	{
+		if(file_exists("error/deprecation-messages.txt") && filesize("error/deprecation-messages.txt") > 0)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	function clear_dep_log()
+	{
+		$fh=fopen("error/deprecation-messages.txt",'w');
+		fclose($fh);
 	}
 	
 	function get_all_logs()

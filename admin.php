@@ -1394,6 +1394,11 @@
 			{
 				trigger_error("Use of non-compliant PHP versions may not be allowed in future releases. Please upgrade to at least PHP 5.5.0 before installing further MRS upgrades.",E_USER_DEPRECATED);
 			}
+			//If deprecation log has entries, throw a notice
+			if(is_dep_log_blank() !== true)
+			{
+				trigger_error("There are entries in the deprecation log! Please report these if you have not done so!");
+			}
 		}
 	}
 	else
@@ -2250,6 +2255,11 @@
 			{
 				trigger_error("Use of non-compliant PHP versions may not be allowed in future releases. Please upgrade to at least PHP 5.5.0 before installing further MRS upgrades.",E_USER_DEPRECATED);
 			}
+			//If deprecation log has entries, throw a notice
+			if(is_dep_log_blank() !== true)
+			{
+				trigger_error("There are entries in the deprecation log! Please report these if you have not done so!");
+			}
 		}
 	}
   ?>
@@ -2292,6 +2302,7 @@
   <a href="viewlog.php">View system logs</a><br>
   <a href="viewatt.php">View login attempts</a><br>
   <a href="viewerr.php">View error logs</a><br>
+  <a href="viewdep.php">View deprecation message log</a><?php if(is_dep_log_blank() !== true) { echo " <b>/!\NOT BLANK/!\</b>"; } ?><br>
   <a href="purgesess.php">Clear session storage location</a> (ONLY applicable when using alternative storage locations)<br>
   <hr>
   <a name="homepage"></a><h3>Homepage</h3>
