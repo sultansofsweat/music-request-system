@@ -273,8 +273,8 @@
 	//If no error occurred, clean up created files
 	if($error === false)
 	{
-		$codeadd=implode("\r\n",array_filter(explode("\r\n",file_get_contents("upgrade/prepare/code-add.txt"))));
-		$coderem=implode("\r\n",array_filter(explode("\r\n",file_get_contents("upgrade/prepare/code-rem.txt"))));
+		$codeadd=implode("\r\n",array_unique(array_filter(explode("\r\n",file_get_contents("upgrade/prepare/code-add.txt")))));
+		$coderem=implode("\r\n",array_unique(array_filter(explode("\r\n",file_get_contents("upgrade/prepare/code-rem.txt")))));
 		$confadd=implode("\r\n",array_filter(explode("\r\n",file_get_contents("upgrade/prepare/conf-add.txt"))));
 		$confchg=implode("\r\n",array_filter(explode("\r\n",file_get_contents("upgrade/prepare/conf-chg.txt"))));
 		$confrem=implode("\r\n",array_filter(explode("\r\n",file_get_contents("upgrade/prepare/conf-rem.txt"))));
