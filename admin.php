@@ -248,6 +248,7 @@
 	$datetime=get_system_setting("datetime");
 	$timelimit=30; //$timelimit=get_system_setting("timelimit");
 	$popular=get_system_setting("popular");
+	$recent=get_system_setting("recent");
     $rss=get_system_setting("rss");
 	$autoban=get_system_setting("autoban");
 	$banwords=get_system_setting("banwords");
@@ -310,6 +311,7 @@
 				$datetime=get_system_default("datetime");
 				$timelimit=30; //$timelimit=get_system_default("timelimit");
                 $popular=get_system_default("popular");
+				$recent=get_system_default("recent");
                 $rss=get_system_default("rss");
 				$autoban=get_system_default("autoban");
 				$banwords=get_system_default("banwords");
@@ -1025,7 +1027,6 @@
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
 					$apipages=implode(",",array_filter(array_unique($apipages)));
-					trigger_error($apipages);
 					$debug=save_system_setting("apipages",$apipages);
 					if($debug !== true)
 					{
@@ -1403,6 +1404,7 @@
 	}
 	else
 	{
+		set_timezone();
 		if(isset($_POST['s']) && $_POST['s'] == "y" && securitycheck() === true)
 		{
 			//Begin submission
@@ -1449,6 +1451,7 @@
 				$datetime=get_system_default("datetime");
 				$timelimit=30; //$timelimit=get_system_default("timelimit");
                 $popular=get_system_default("popular");
+				$recent=get_system_default("recent");
 				$autoban=get_system_default("autoban");
 				$banwords=get_system_default("banwords");
 				$partial=get_system_default("partial");
@@ -1983,7 +1986,6 @@
 						$apipages[]=preg_replace("/[^0-6]/","",$page);
 					}
 					$apipages=implode(",",array_filter(array_unique($apipages),"is_numeric"));
-					trigger_error($apipages);
 					$debug=save_system_setting("apipages",$apipages);
 					if($debug !== true)
 					{
@@ -2041,6 +2043,20 @@
 					if($debug !== true)
 					{
 						$error=true;
+					}
+				}
+				if(isset($_POST['recent']))
+				{
+					$recent=max(1,preg_replace("/[^0-9]/","",$_POST['recent']));
+					$debug=save_system_setting("recent",$recent);
+					if($debug !== true)
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Failed to change setting \"recent\" to \"$recent\"");
+						$error=true;
+					}
+					else
+					{
+						write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Changed setting \"recent\" to \"$recent\"");
 					}
 				}
 				if(isset($_POST['rss']))
@@ -2241,6 +2257,7 @@
 		else
 		{
 			//Visiting page
+			write_log($_SERVER['REMOTE_ADDR'],date("g:i:s"),"Visited administration console");
 			if(securitycheck() === false)
 			{
 				die("<p>You are not an administrator. Please <a href=\"login.php?ref=admin\">sign in</a> or <a href=\"index.php\">cancel</a>.</p>");
@@ -2323,6 +2340,7 @@
   Display fields as: <input type="text" name="songformathr" size="50" value="<?php echo $songformathr; ?>"> (fields are separated by '|' character, letters and spaces only, must be in same order as above less static data fields marked with '*')<br>
   Hide non-requestable songs: <input type="radio" name="hidenr" value="0" <?php if($hidehr == 0) { echo("checked=\"checked\""); } ?>>Never | <input type="radio" name="hidenr" value="1" <?php if($hidehr == 1) { echo("checked=\"checked\""); } ?>>Only when searching | <input type="radio" name="hidenr" value="2" <?php if($hidehr == 2) { echo("checked=\"checked\""); } ?>>Always<br>
   Popular request search uses: <input type="text" name="popular" size="2" value="<?php echo $popular; ?>"> most popular request counts (minimum 1, maximum unlimited but should be fairly small)<br>
+  Recently added request search uses: <input type="text" name="recent" size="2" value="<?php echo $recent; ?>"> most recent addition times (minimum 1, maximum unlimited but should be fairly small)<br>
   <a href="listformat.php">Reformat song lists</a><br>
   <hr>
   <a name="database"></a><h3>Song Database</h3>
