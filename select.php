@@ -199,7 +199,7 @@
 				}
 			}
 		}
-		//If query is for new songs, get the songs requested the most frequent (system configurable)
+		//If query is for popular songs, get the songs requested the most frequent (system configurable)
 		elseif($term == "freq")
 		{
             usort($list,"sort_by_popularity");
@@ -213,6 +213,27 @@
                 }
                 $current=$list[$index]["request_count"];
                 while($index < count($list) && $list[$index]["request_count"] == $current)
+                {
+                    $songs[]=$list[$index];
+                    $index++;
+                }
+                if($index >= count($list))
+                {
+                    break;
+                }
+            }
+		}
+		//If query is for recently added songs, get the songs corresponding to the most recent addition times (system configurable)
+		elseif($term == "recadd")
+		{
+            usort($list,"sort_by_date_added");
+            $current=0;
+			$count=0;
+            $index=0;
+            for($i=0;$i<get_system_setting("recent");$i++)
+            {
+                $current=$list[$index]["added_to_system"];
+                while($index < count($list) && $list[$index]["added_to_system"] == $current)
                 {
                     $songs[]=$list[$index];
                     $index++;
@@ -354,7 +375,7 @@
   <input type="submit">
   </form>
   <p><a href="howtosearch.php">How to search</a><br>
-  Or, display songs: <a href="select.php?list=main&query=all">ALL</a> | <a href="select.php?list=main&query=new">NEW</a> | <a href="select.php?list=main&query=freq">POPULAR</a> | <a href="select.php?list=main&query=a">A</a> | <a href="select.php?list=main&query=b">B</a> | <a href="select.php?list=main&query=c">C</a> | <a href="select.php?list=main&query=d">D</a> | <a href="select.php?list=main&query=e">E</a> | <a href="select.php?list=main&query=f">F</a> | <a href="select.php?list=main&query=g">G</a> | <a href="select.php?list=main&query=h">H</a> | <a href="select.php?list=main&query=i">I</a> | <a href="select.php?list=main&query=j">J</a> | <a href="select.php?list=main&query=k">K</a> | <a href="select.php?list=main&query=l">L</a> | <a href="select.php?list=main&query=m">M</a> | <a href="select.php?list=main&query=n">N</a> | <a href="select.php?list=main&query=o">O</a> | <a href="select.php?list=main&query=p">P</a> | <a href="select.php?list=main&query=q">Q</a> | <a href="select.php?list=main&query=r">R</a> | <a href="select.php?list=main&query=s">S</a> | <a href="select.php?list=main&query=t">T</a> | <a href="select.php?list=main&query=u">U</a> | <a href="select.php?list=main&query=v">V</a> | <a href="select.php?list=main&query=w">W</a> | <a href="select.php?list=main&query=x">X</a> | <a href="select.php?list=main&query=y">Y</a> | <a href="select.php?list=main&query=z">Z</a> | <a href="select.php?list=main&query=other">Other</a>
+  Or, display songs: <a href="select.php?list=main&query=all">ALL</a> | <a href="select.php?list=main&query=new">NEW</a> | <a href="select.php?list=main&query=freq">POPULAR</a> | <a href="select.php?list=main&query=recadd">RECENT ADDITIONS</a> | <a href="select.php?list=main&query=a">A</a> | <a href="select.php?list=main&query=b">B</a> | <a href="select.php?list=main&query=c">C</a> | <a href="select.php?list=main&query=d">D</a> | <a href="select.php?list=main&query=e">E</a> | <a href="select.php?list=main&query=f">F</a> | <a href="select.php?list=main&query=g">G</a> | <a href="select.php?list=main&query=h">H</a> | <a href="select.php?list=main&query=i">I</a> | <a href="select.php?list=main&query=j">J</a> | <a href="select.php?list=main&query=k">K</a> | <a href="select.php?list=main&query=l">L</a> | <a href="select.php?list=main&query=m">M</a> | <a href="select.php?list=main&query=n">N</a> | <a href="select.php?list=main&query=o">O</a> | <a href="select.php?list=main&query=p">P</a> | <a href="select.php?list=main&query=q">Q</a> | <a href="select.php?list=main&query=r">R</a> | <a href="select.php?list=main&query=s">S</a> | <a href="select.php?list=main&query=t">T</a> | <a href="select.php?list=main&query=u">U</a> | <a href="select.php?list=main&query=v">V</a> | <a href="select.php?list=main&query=w">W</a> | <a href="select.php?list=main&query=x">X</a> | <a href="select.php?list=main&query=y">Y</a> | <a href="select.php?list=main&query=z">Z</a> | <a href="select.php?list=main&query=other">Other</a>
   <?php
     if(get_system_setting("christmas") == "yes")
     {
