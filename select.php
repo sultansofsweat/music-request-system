@@ -468,27 +468,8 @@
 		}
 	}
 ?>
-  <table id="reqtable" class="tablesorter">
-  <thead>
-  <tr>
-  <th style="width:90px;"></th>
-  <?php
-	//Get user-readable song format
-	$humanreadable=explode("|",get_system_setting("songformathr"));
-	foreach($humanreadable as $hr)
-	{
-		//DO NOT OUTPUT IF FILE NAME!
-		if(strtolower(preg_replace("/[^A-Za-z]/","",$hr)) != "filename")
-		{
-			echo ("<th>$hr</th>\r\n");
-		}
-	}
-  ?>
-  <th>#</th>
-  </tr>
-  </thead>
-  <tbody>
 <?php
+	$songs=array();
 	if(isset($_GET['query']) && $_GET['query'] != "")
 	{
 		$query=htmlspecialchars($_GET['query']);
@@ -571,6 +552,30 @@
 			}
 		}
 		
+		echo("<h3>Songs matching your search terms: <u>" . count($songs) . "</u></h3>");
+	}
+?>
+  <table id="reqtable" class="tablesorter">
+  <thead>
+  <tr>
+  <th style="width:90px;"></th>
+  <?php
+	//Get user-readable song format
+	$humanreadable=explode("|",get_system_setting("songformathr"));
+	foreach($humanreadable as $hr)
+	{
+		//DO NOT OUTPUT IF FILE NAME!
+		if(strtolower(preg_replace("/[^A-Za-z]/","",$hr)) != "filename")
+		{
+			echo ("<th>$hr</th>\r\n");
+		}
+	}
+  ?>
+  <th>#</th>
+  </tr>
+  </thead>
+  <tbody>
+	<?php
 		foreach($songs as $song)
 		{
 			if($song["artist"] == "CF")
@@ -634,8 +639,7 @@
 				}
 			}
 		}
-	}
-?>
+	?>
 </tbody>
 </table>
   <br><a href="index.php">Cancel</a>
