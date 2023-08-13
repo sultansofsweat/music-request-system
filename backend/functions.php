@@ -7,16 +7,19 @@
 	//Function for writing log message to system log
 	function write_log($ip,$time,$message)
 	{
-		if(file_exists("log"))
+		if(get_system_setting("logging") == "yes")
 		{
-			$fh=fopen("log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
+			if(file_exists("log"))
+			{
+				$fh=fopen("log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
+			}
+			else
+			{
+				$fh=fopen("../log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
+			}
+			fwrite($fh,$ip . " at " . $time . ": " . stripcslashes($message) . "\r\n");
+			fclose($fh);
 		}
-		else
-		{
-			$fh=fopen("../log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
-		}
-		fwrite($fh,$ip . " at " . $time . ": " . stripcslashes($message) . "\r\n");
-		fclose($fh);
 	}
 	//Function for getting alternative session store information
 	function alt_ses_store()
@@ -572,6 +575,7 @@
 					"logerr" => "no",
 					"datetime" => "m/d/Y g:i A",
 					"popular" => 5,
+					"recent" => 5,
 					"timelimit" => 30,
 					"extlists" => "",
 					"rss" => "no",
@@ -1358,6 +1362,26 @@
             return 1;
         }
         elseif($a["request_count"] > $b["request_count"])
+        {
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    function sort_by_date_added($a,$b)
+    {
+        if(!isset($a["added_to_system"]) || !isset($b["added_to_system"]))
+        {
+            trigger_error("One of the songs supplied to sort_by_time_added(song,song) is in an invalid format.",E_USER_ERROR);
+            return 0;
+        }
+        if($a["added_to_system"] < $b["added_to_system"])
+        {
+            return 1;
+        }
+        elseif($a["added_to_system"] > $b["added_to_system"])
         {
             return -1;
         }
