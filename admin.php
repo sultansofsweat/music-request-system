@@ -80,18 +80,6 @@
 	}
 ?>
 <?php
-	//Check for a "first use" flag file and notify the admin that they should change the poassword
-	if(first_use() === true)
-	{
-		trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
-	}
-	//If deprecation log has entries, throw a notice
-	if(is_dep_log_blank() !== true)
-	{
-		trigger_error("There are entries in the deprecation log! Please report these if you have not done so!");
-	}
-?>
-<?php
 	//Ancilliary page error handlers
 	if(isset($_GET['slstatus']))
 	{
@@ -2230,6 +2218,18 @@
 		}
 	}
   ?>
+<?php
+	//Check for a "first use" flag file and notify the admin that they should change the poassword
+	if(first_use() === true)
+	{
+		trigger_error("The administrator password is the default! Please consider changing it.",E_USER_WARNING);
+	}
+	//If deprecation log has entries, throw a notice
+	if(is_dep_log_blank() !== true)
+	{
+		trigger_error("There are entries in the deprecation log! Please report these if you have not done so!");
+	}
+?>
   <body>
   <?php
 	if(verify_request_db() !== true)
