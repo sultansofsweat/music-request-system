@@ -1890,6 +1890,38 @@
 			return false;
 		}
 	}
+	
+	function get_mirror_list()
+	{
+		if(file_exists("backend/mirrorlist.txt"))
+		{
+			return unserialize(file_get_contents("backend/mirrorlist.txt"));
+		}
+		return array("firealarms.mooo.com (Canada)"=>"http://firealarms.mooo.com/mrs/");
+	}
+	function set_mirror_list($mirrorlist)
+	{
+		$fh=fopen("backend/mirrorlist.txt",'w');
+		if($fh)
+		{
+			fwrite($fh,serialize($mirrorlist));
+			fclose($fh);
+			return true;
+		}
+		return false;
+	}
+	function add_mirror($name,$url)
+	{
+		$mirrorlist=get_mirror_list();
+		$mirrorlist[$name]=$url;
+		return set_mirror_list($mirrorlist);
+	}
+	function remove_mirror($name)
+	{
+		$mirrorlist=get_mirror_list();
+		unset($mirrorlist[$name]);
+		return set_mirror_list($mirrorlist);
+	}
 ?>
 <?php
     //Set new script time limit

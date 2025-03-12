@@ -247,6 +247,7 @@
 	$autoopen=get_system_setting("autoopen");
 	$mirror=get_system_setting("mirror");
 	$ipundlimit=get_system_setting("ipundlimit");
+	$mirrors=get_mirror_list();
 	if(is_logging_enabled() === true)
 	{
 		set_timezone();
@@ -2411,7 +2412,17 @@
   Mirror to check:&nbsp;
   <select name="mirror">
   <option value="">-Select one-</option>
-  <option value="http://firealarms.mooo.com/mrs/" <?php if($mirror == "http://firealarms.mooo.com/mrs/") { echo("selected=\"selected\""); } ?>>firealarms.mooo.com (Canada)</option>
+  <?php
+	foreach($mirrors as $name=>$url)
+	{
+		echo("<option value=\"$url\"");
+		if($mirror == $url)
+		{
+			echo(" selected=\"selected\"");
+		}
+		echo(">$name</option>");
+	}
+  ?>
   </select><br>
   <a href="upgrade/index.php">Check for updates</a><br>
   <hr>
