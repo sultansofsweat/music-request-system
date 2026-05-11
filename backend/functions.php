@@ -1922,6 +1922,18 @@
 		unset($mirrorlist[$name]);
 		return set_mirror_list($mirrorlist);
 	}
+	
+	function display_license()
+	{
+		if(file_exists("backend/mrs-license.txt"))
+		{
+			return file_get_contents("backend/mrs-license.txt");
+		}
+		else
+		{
+			return "Couldn't find license file.";
+		}
+	}
 ?>
 <?php
     //Set new script time limit
