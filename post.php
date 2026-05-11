@@ -207,7 +207,7 @@
             $index=0;
             for($i=0;$i<get_system_setting("popular");$i++)
             {
-                if($list[$index]["request_count"] == 0)
+                if(empty($list[$index]) || $list[$index]["request_count"] == 0)
                 {
                     break;
                 }
