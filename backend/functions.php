@@ -7,16 +7,19 @@
 	//Function for writing log message to system log
 	function write_log($ip,$time,$message)
 	{
-		if(file_exists("log"))
+		if(get_system_setting("logging") == "yes")
 		{
-			$fh=fopen("log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
+			if(file_exists("log"))
+			{
+				$fh=fopen("log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
+			}
+			else
+			{
+				$fh=fopen("../log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
+			}
+			fwrite($fh,$ip . " at " . $time . ": " . stripcslashes($message) . "\r\n");
+			fclose($fh);
 		}
-		else
-		{
-			$fh=fopen("../log/" . date("Ymd") . ".txt",'a') or die("Failed to open file \"log/" . date("Ymd") . ".txt\" in append mode. It should now be microwaved.");
-		}
-		fwrite($fh,$ip . " at " . $time . ": " . stripcslashes($message) . "\r\n");
-		fclose($fh);
 	}
 	//Function for getting alternative session store information
 	function alt_ses_store()
@@ -90,6 +93,7 @@
 	function get_request($id)
 	{
 		//Set up post details array
+		//FORMAT: ID|Poster|IP|Date|Request|Status|Comment|Response|Filename (deprecated and never set but included for compatibility reasons)
 		$content=array(-1,"Error","127.0.0.1","01/01/1970 12:00 AM","This request could not be displayed due to an internal error",3,"","Please microwave the system.","");
 		if(!file_exists("posts/$id.txt"))
 		{
@@ -193,14 +197,14 @@
 		return false;
 	}
 	//Function for writing a request
-	function write_request($id,$poster,$ip,$date,$request,$status,$response,$comment,$filename)
+	function write_request($id,$poster,$ip,$date,$request,$status,$response,$comment)
 	{
-		if(func_num_args() < 9)
+		/*if(func_num_args() < 9)
 		{
 			trigger_error("Invalid call to function write_request(id,poster,ip,date,request,status,response,comment,filename): too few arguments passed.",E_USER_ERROR);
 			return false;
-		}
-		$content="$id\r\n$poster\r\n$ip\r\n$date\r\n" . stripcslashes($request) . "\r\n$status|" . stripcslashes($response) . "\r\n" . stripcslashes($comment) . "\r\n$filename\r\n";
+		}*/
+		$content="$id\r\n$poster\r\n$ip\r\n$date\r\n" . stripcslashes($request) . "\r\n$status|" . stripcslashes($response) . "\r\n" . stripcslashes($comment) . "\r\n";
 		$fh=fopen("posts/$id.txt",'w');
 		if(!$fh)
 		{
@@ -552,7 +556,6 @@
 					"timezone" => "America/Toronto",
 					"type" => "0",
 					"unlock" => 2,
-					"stable" => "yes",
 					"security" => 7,
 					"timeout" => 20,
 					"postexpiry" => 10800,
@@ -572,6 +575,7 @@
 					"logerr" => "no",
 					"datetime" => "m/d/Y g:i A",
 					"popular" => 5,
+					"recent" => 5,
 					"timelimit" => 30,
 					"extlists" => "",
 					"rss" => "no",
@@ -588,7 +592,9 @@
                     "baninvpass" => "yes",
 					"autoopen" => "no",
 					"mirror" => "http://firealarms.mooo.com/mrs/",
-					"ipundlimit" => 1);
+					"ipundlimit" => 1,
+					"theme" => 0,
+					"autokey" => "");
 		if($setting == "RETURN_ALL")
 		{
 			return array_keys($defaults);
@@ -1075,10 +1081,6 @@
                 {
                     $song=array("artist" => "SystemHad","title" => "OneJob","added_to_system" => 0);
                     $rawsong=explode("|",$raw[$i]);
-					if(count($rawsong) < 4)
-					{
-						continue;
-					}
 					$mtime=preg_replace("/[^0-9]/","",array_shift($rawsong));
                     $reqcount=preg_replace("/[^0-9]/","",array_shift($rawsong));
                     $lastreq=preg_replace("/[^0-9]/","",array_shift($rawsong));
@@ -1360,6 +1362,26 @@
             return 1;
         }
         elseif($a["request_count"] > $b["request_count"])
+        {
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    function sort_by_date_added($a,$b)
+    {
+        if(!isset($a["added_to_system"]) || !isset($b["added_to_system"]))
+        {
+            trigger_error("One of the songs supplied to sort_by_time_added(song,song) is in an invalid format.",E_USER_ERROR);
+            return 0;
+        }
+        if($a["added_to_system"] < $b["added_to_system"])
+        {
+            return 1;
+        }
+        elseif($a["added_to_system"] > $b["added_to_system"])
         {
             return -1;
         }
@@ -1879,16 +1901,36 @@
 	//Function for getting version information
 	function get_version_information()
 	{
+		$version=array("major"=>0,"minor"=>0,"revision"=>0,"buildcode"=>0,"released"=>"January 1 1970 at 12:00 AM GMT");
 		if(file_exists("backend/version.txt"))
 		{
 			$verinfo=explode("\r\n",file_get_contents("backend/version.txt"));
-			$verinfo[0]=explode("|",$verinfo[0]);
-			return $verinfo;
+			if(count($verinfo) == 3)
+			{
+				$version["buildcode"]=$verinfo[1];
+				$version["released"]=$verinfo[2];
+				$verinfo=explode("|",$verinfo[0]);
+				if(count($verinfo) == 3)
+				{
+					$version["major"]=$verinfo[0];
+					$version["minor"]=$verinfo[1];
+					$version["revision"]=$verinfo[2];
+				}
+				else
+				{
+					trigger_error("Failed to obtain version information. The version information isn't complete and must therefore have been defenestrated by aliens.",E_USER_ERROR);
+				}
+			}
+			else
+			{
+				trigger_error("Failed to obtain version information. The file is missing information and must therefore have been defenestrated by aliens.",E_USER_ERROR);
+			}
 		}
 		else
 		{
-			return false;
+			trigger_error("Failed to obtain version information. The file is missing and must therefore have been defenestrated by aliens.",E_USER_ERROR);
 		}
+		return $version;
 	}
 	
 	function get_mirror_list()
@@ -1921,18 +1963,6 @@
 		$mirrorlist=get_mirror_list();
 		unset($mirrorlist[$name]);
 		return set_mirror_list($mirrorlist);
-	}
-	
-	function display_license()
-	{
-		if(file_exists("backend/mrs-license.txt"))
-		{
-			return file_get_contents("backend/mrs-license.txt");
-		}
-		else
-		{
-			return "Couldn't find license file.";
-		}
 	}
 ?>
 <?php
