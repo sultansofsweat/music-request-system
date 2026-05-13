@@ -93,7 +93,7 @@
 
 > Version 1.1, December 2016
 
-> Copyright (C) 2017-2018 Brad Hunter
+> Copyright (C) 2017-2026 Brad Hunter
 
 Everyone is permitted to copy and distribute verbatim or modified
 copies of this license document.
