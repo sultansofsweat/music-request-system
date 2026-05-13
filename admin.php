@@ -2470,7 +2470,7 @@
 		{
 			echo(" selected=\"selected\"");
 		}
-		echo(">$name</option>"
+		echo(">$name</option>");
 	}
   ?>
   </select><br>
